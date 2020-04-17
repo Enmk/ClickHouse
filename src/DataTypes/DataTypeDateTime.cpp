@@ -17,12 +17,12 @@
 namespace
 {
 using namespace DB;
-inline void readText(time_t & x, ReadBuffer & istr, const FormatSettings & settings, const DateLUTImpl & time_zone, const DateLUTImpl & utc_time_zone)
+inline void readText(time_t & x, ReadBuffer & istr, const FormatSettings & settings, const TimeZoneImpl & time_zone, const TimeZoneImpl & utc_time_zone)
 {
     switch (settings.date_time_input_format)
     {
         case FormatSettings::DateTimeInputFormat::Basic:
-            readDateTimeText(x, istr, time_zone);
+            readDateTimeText(x, istr, time_zone.getDefaultLUT());
             return;
         case FormatSettings::DateTimeInputFormat::BestEffort:
             parseDateTimeBestEffort(x, istr, time_zone, utc_time_zone);
@@ -36,8 +36,8 @@ namespace DB
 
 TimezoneMixin::TimezoneMixin(const String & time_zone_name)
     : has_explicit_time_zone(!time_zone_name.empty()),
-    time_zone(DateLUT::instance(time_zone_name)),
-    utc_time_zone(DateLUT::instance("UTC"))
+    time_zone(DateLUT::getTimeZone(time_zone_name)),
+    utc_time_zone(DateLUT::getTimeZone("UTC"))
 {}
 
 DataTypeDateTime::DataTypeDateTime(const String & time_zone_name)
@@ -65,7 +65,7 @@ void DataTypeDateTime::serializeText(const IColumn & column, size_t row_num, Wri
     switch (settings.date_time_output_format)
     {
         case FormatSettings::DateTimeOutputFormat::Simple:
-            writeDateTimeText(value, ostr, time_zone);
+            writeDateTimeText(value, ostr, time_zone.getDefaultLUT());
             return;
         case FormatSettings::DateTimeOutputFormat::UnixTimestamp:
             writeIntText(value, ostr);

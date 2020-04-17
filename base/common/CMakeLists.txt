@@ -19,6 +19,7 @@ set (SRCS
     errnoToString.cpp
     getResource.cpp
     StringRef.cpp
+    TimeZone.cpp
 )
 
 if (ENABLE_REPLXX)

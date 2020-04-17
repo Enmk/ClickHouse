@@ -10,9 +10,7 @@
 #include <cassert>
 #include <chrono>
 #include <cstring>
-#include <iostream>
 #include <memory>
-
 
 namespace
 {
@@ -35,10 +33,9 @@ UInt8 getDayOfWeek(const cctz::civil_day & date)
 
 }
 
-
 __attribute__((__weak__)) extern bool inside_main;
 
-DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
+DateLUTImpl::DateLUTImpl(const std::string & time_zone_, const Int64 time_offset_in_seconds)
     : time_zone(time_zone_)
 {
     /// DateLUT should not be initialized in global constructors for the following reasons:
@@ -47,17 +44,29 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         assert(inside_main);
 
     size_t i = 0;
-    time_t start_of_day = 0;
+    const cctz::time_zone cctz_time_zone = getCCTZ();
 
-    cctz::time_zone cctz_time_zone;
-    if (!cctz::load_time_zone(time_zone, &cctz_time_zone))
-        throw Poco::Exception("Cannot load time zone " + time_zone_);
+    const cctz::civil_day epoch{1970, 1, 1};
+    // to simplify toFirst(DayNum|Day)Of(Year|Quarter|Month) implementation, every LUT begins on January 1st of corresponding year.
+    // That does not chnge LUT with zero offset, but creates an overlap for neighbouring LUTS.
+    const cctz::civil_day lut_start = cctz::civil_year(cctz::civil_second(epoch) + time_offset_in_seconds);
+    time_t start_of_day = std::chrono::system_clock::to_time_t(cctz_time_zone.lookup(lut_start).pre);
 
     cctz::time_zone::absolute_lookup start_of_epoch_lookup = cctz_time_zone.lookup(std::chrono::system_clock::from_time_t(start_of_day));
     offset_at_start_of_epoch = start_of_epoch_lookup.offset;
     offset_is_whole_number_of_hours_everytime = true;
 
-    cctz::civil_day date{1970, 1, 1};
+    cctz::civil_day date = lut_start;
+    if (time_offset_in_seconds != 0)
+    {
+        date_lut_min = start_of_day;
+        daynum_lut_min = cctz::civil_day(lut_start) - epoch;
+    }
+
+    date_lut_min_year = date.year();
+    if (date_lut_min_year > std::numeric_limits<decltype(Values::year)>::max())
+        throw Poco::Exception("LUT offset is too big: " + std::to_string(time_offset_in_seconds)
+            + " resulting start year is too big: " + std::to_string(date_lut_min_year));
 
     do
     {
@@ -72,7 +81,7 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         values.day_of_week = getDayOfWeek(date);
         values.date = start_of_day;
 
-        assert(values.year >= DATE_LUT_MIN_YEAR && values.year <= DATE_LUT_MAX_YEAR);
+        assert(values.year >= date_lut_min_year && values.year <= date_lut_min_year + DATE_LUT_YEARS);
         assert(values.month >= 1 && values.month <= 12);
         assert(values.day_of_month >= 1 && values.day_of_month <= 31);
         assert(values.day_of_week >= 1 && values.day_of_week <= 7);
@@ -94,10 +103,10 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         /// If UTC offset was changed in previous day.
         if (i != 0)
         {
-            auto amount_of_offset_change_at_prev_day = 86400 - (lut[i].date - lut[i - 1].date);
+            const auto amount_of_offset_change_at_prev_day = 86400 - (lut[i].date - lut[i - 1].date);
             if (amount_of_offset_change_at_prev_day)
             {
-                lut[i - 1].amount_of_offset_change = amount_of_offset_change_at_prev_day;
+                lut[i - 1].amount_of_offset_change = amount_of_offset_change_at_prev_day / 900;
 
                 const auto utc_offset_at_beginning_of_day = cctz_time_zone.lookup(std::chrono::system_clock::from_time_t(lut[i - 1].date)).offset;
 
@@ -116,7 +125,7 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
                     time_at_offset_change += 900;
                 }
 
-                lut[i - 1].time_at_offset_change = time_at_offset_change;
+                lut[i - 1].time_at_offset_change = time_at_offset_change / 900;
 
                 /// We doesn't support cases when time change results in switching to previous day.
                 if (static_cast<int>(lut[i - 1].time_at_offset_change) + static_cast<int>(lut[i - 1].amount_of_offset_change) < 0)
@@ -128,7 +137,9 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         ++date;
         ++i;
     }
-    while (start_of_day <= DATE_LUT_MAX && i <= DATE_LUT_MAX_DAY_NUM);
+    while (/*start_of_day <= date_lut_max &&*/ i < DATE_LUT_SIZE && lut[i - 1].year - lut_start.year() <= DATE_LUT_YEARS); // +14 is a HACK to reduce number of misses when we lookup LUT by day index.
+
+    date_lut_max = start_of_day;
 
     /// Fill excessive part of lookup table. This is needed only to simplify handling of overflow cases.
     while (i < DATE_LUT_SIZE)
@@ -137,22 +148,27 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         ++i;
     }
 
+    const auto max_year = date_lut_min_year + DATE_LUT_YEARS - 1;
+
     /// Fill lookup table for years and months.
     size_t year_months_lut_index = 0;
     size_t first_day_of_last_month = 0;
 
-    for (size_t day = 0; day < DATE_LUT_SIZE; ++day)
+    for (size_t day = 0; day < DATE_LUT_SIZE && lut[day].year <= max_year; ++day)
     {
         const Values & values = lut[day];
-
         if (values.day_of_month == 1)
         {
-            if (values.month == 1)
-                years_lut[values.year - DATE_LUT_MIN_YEAR] = day;
+            const auto y = values.year - date_lut_min_year;
+            year_months_lut_index = y * 12 + values.month - 1;
 
-            year_months_lut_index = (values.year - DATE_LUT_MIN_YEAR) * 12 + values.month - 1;
+            if (values.month == 1)
+                years_lut[y] = day;
+
             years_months_lut[year_months_lut_index] = day;
             first_day_of_last_month = day;
+
+            day += values.days_in_month - 1; // -1 is due to ++day in `for` header
         }
     }
 
@@ -162,7 +178,6 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         years_months_lut[year_months_lut_index] = first_day_of_last_month;
     }
 }
-
 
 #if !defined(ARCADIA_BUILD) /// Arcadia's variant of CCTZ already has the same implementation.
 
@@ -223,3 +238,12 @@ namespace cctz_extension
 }
 
 #endif
+
+cctz::time_zone DateLUTImpl::getCCTZ() const
+{
+    cctz::time_zone cctz_time_zone;
+    if (!cctz::load_time_zone(time_zone, &cctz_time_zone))
+        throw Poco::Exception("Cannot load time zone " + time_zone);
+
+    return cctz_time_zone;
+}

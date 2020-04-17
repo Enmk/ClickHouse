@@ -706,14 +706,14 @@ inline T parseFromString(const std::string_view & str)
 UInt128 stringToUUID(const String & str);
 #pragma GCC diagnostic pop
 
-template <typename ReturnType = void>
-ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut);
+template <typename ReturnType = void, typename TimezoneType /*= (DateLUTImpl | TimeZoneImpl)*/>
+ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const TimezoneType & date_lut);
 
 /** In YYYY-MM-DD hh:mm:ss or YYYY-MM-DD format, according to specified time zone.
   * As an exception, also supported parsing of unix timestamp in form of decimal number.
   */
-template <typename ReturnType = void>
-inline ReturnType readDateTimeTextImpl(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
+template <typename ReturnType = void, typename TimezoneType /*= (DateLUTImpl | TimeZoneImpl)*/>
+inline ReturnType readDateTimeTextImpl(time_t & datetime, ReadBuffer & buf, const TimezoneType & date_lut)
 {
     /** Read 10 characters, that could represent unix timestamp.
       * Only unix timestamp of 5-10 characters is supported.
@@ -756,11 +756,12 @@ inline ReturnType readDateTimeTextImpl(time_t & datetime, ReadBuffer & buf, cons
         return readDateTimeTextFallback<ReturnType>(datetime, buf, date_lut);
 }
 
-template <typename ReturnType>
-inline ReturnType readDateTimeTextImpl(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const DateLUTImpl & date_lut)
+// TODO(vnemkov): get rid of TimezoneType
+template <typename ReturnType, typename TimezoneType /*= (DateLUTImpl | TimeZoneImpl)*/>
+inline ReturnType readDateTimeTextImpl(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const TimezoneType & time_zone)
 {
     time_t whole;
-    if (!readDateTimeTextImpl<bool>(whole, buf, date_lut))
+    if (!readDateTimeTextImpl<bool>(whole, buf, time_zone))
     {
         return ReturnType(false);
     }
@@ -802,9 +803,9 @@ inline void readDateTimeText(time_t & datetime, ReadBuffer & buf, const DateLUTI
     readDateTimeTextImpl<void>(datetime, buf, date_lut);
 }
 
-inline void readDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
+inline void readDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const TimeZoneImpl & time_zone = DateLUT::getTimeZone())
 {
-    readDateTimeTextImpl<void>(datetime64, scale, buf, date_lut);
+    readDateTimeTextImpl<void>(datetime64, scale, buf, time_zone);
 }
 
 inline bool tryReadDateTimeText(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
@@ -812,9 +813,9 @@ inline bool tryReadDateTimeText(time_t & datetime, ReadBuffer & buf, const DateL
     return readDateTimeTextImpl<bool>(datetime, buf, date_lut);
 }
 
-inline bool tryReadDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
+inline bool tryReadDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const TimeZoneImpl & time_zone = DateLUT::getTimeZone())
 {
-    return readDateTimeTextImpl<bool>(datetime64, scale, buf, date_lut);
+    return readDateTimeTextImpl<bool>(datetime64, scale, buf, time_zone);
 }
 
 inline void readDateTimeText(LocalDateTime & datetime, ReadBuffer & buf)

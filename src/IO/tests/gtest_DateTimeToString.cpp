@@ -103,7 +103,7 @@ public:
         }
         else if constexpr (std::is_same_v<ValueType, DateTime64WithScale>)
         {
-            writeDateTimeText(input.value, input.scale, out, DateLUT::instance(timezone_name));
+            writeDateTimeText(input.value, input.scale, out, DateLUT::getTimeZone(timezone_name));
         }
         else
         {

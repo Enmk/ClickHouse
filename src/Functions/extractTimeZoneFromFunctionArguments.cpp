@@ -52,27 +52,28 @@ std::string extractTimeZoneNameFromFunctionArguments(const ColumnsWithTypeAndNam
     }
 }
 
-const DateLUTImpl & extractTimeZoneFromFunctionArguments(const ColumnsWithTypeAndName & arguments, size_t time_zone_arg_num, size_t datetime_arg_num)
+const TimeZoneImpl & extractTimeZoneFromFunctionArguments(const ColumnsWithTypeAndName & arguments, size_t time_zone_arg_num, size_t datetime_arg_num)
 {
     if (arguments.size() == time_zone_arg_num + 1)
     {
         std::string time_zone = extractTimeZoneNameFromColumn(*arguments[time_zone_arg_num].column);
         if (time_zone.empty())
             throw Exception("Provided time zone must be non-empty and be a valid time zone", ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
-        return DateLUT::instance(time_zone);
+        return DateLUT::getTimeZone(time_zone);
     }
     else
     {
         if (arguments.empty())
-            return DateLUT::instance();
+            return DateLUT::getTimeZone();
 
+        const auto & dt_arg = arguments[datetime_arg_num].type.get();
         /// If time zone is attached to an argument of type DateTime.
-        if (const auto * type = checkAndGetDataType<DataTypeDateTime>(arguments[datetime_arg_num].type.get()))
+        if (const auto * type = checkAndGetDataType<DataTypeDateTime>(dt_arg))
             return type->getTimeZone();
-        if (const auto * type = checkAndGetDataType<DataTypeDateTime64>(arguments[datetime_arg_num].type.get()))
+        if (const auto * type = checkAndGetDataType<DataTypeDateTime64>(dt_arg))
             return type->getTimeZone();
 
-        return DateLUT::instance();
+        return DateLUT::getTimeZone();
     }
 }
 

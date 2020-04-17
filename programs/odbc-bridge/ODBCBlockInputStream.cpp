@@ -81,7 +81,7 @@ namespace
             case ValueType::vtDate:
             {
                 Poco::DateTime date = value.convert<Poco::DateTime>();
-                assert_cast<ColumnUInt16 &>(column).insertValue(UInt16{LocalDate(date.year(), date.month(), date.day()).getDayNum()});
+                assert_cast<ColumnUInt16 &>(column).insertValue(static_cast<UInt64>(LocalDate(date.year(), date.month(), date.day()).getDayNum().toUnderType()));
                 break;
             }
             case ValueType::vtDateTime:

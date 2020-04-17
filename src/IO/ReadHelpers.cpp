@@ -825,8 +825,8 @@ template void readDateTextFallback<void>(LocalDate &, ReadBuffer &);
 template bool readDateTextFallback<bool>(LocalDate &, ReadBuffer &);
 
 
-template <typename ReturnType>
-ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
+template <typename ReturnType, typename TimezoneType /*= (DateLUTImpl | TimeZoneImpl)*/>
+ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const TimezoneType & time_zone)
 {
     static constexpr bool throw_exception = std::is_same_v<ReturnType, void>;
 
@@ -884,7 +884,7 @@ ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const D
         if (unlikely(year == 0))
             datetime = 0;
         else
-            datetime = date_lut.makeDateTime(year, month, day, hour, minute, second);
+            datetime = time_zone.makeDateTime(year, month, day, hour, minute, second);
     }
     else
     {
@@ -910,6 +910,8 @@ ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const D
 
 template void readDateTimeTextFallback<void>(time_t &, ReadBuffer &, const DateLUTImpl &);
 template bool readDateTimeTextFallback<bool>(time_t &, ReadBuffer &, const DateLUTImpl &);
+template void readDateTimeTextFallback<void>(time_t &, ReadBuffer &, const TimeZoneImpl &);
+template bool readDateTimeTextFallback<bool>(time_t &, ReadBuffer &, const TimeZoneImpl &);
 
 
 void skipJSONField(ReadBuffer & buf, const StringRef & name_of_field)

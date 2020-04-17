@@ -3,6 +3,7 @@
 #include <Core/Types.h>
 #include <DataTypes/DataTypeDateTime.h>
 #include <DataTypes/DataTypeDecimalBase.h>
+#include <common/TimeZone.h>
 
 class DateLUTImpl;
 
@@ -103,7 +104,7 @@ public:
         else
         {
             const auto components = DecimalUtils::splitWithScaleMultiplier(t, scale_multiplier);
-            return transform->execute(static_cast<UInt32>(components.whole), std::forward<Args>(args)...);
+            return transform->execute(static_cast<Int64>(components.whole), std::forward<Args>(args)...);
         }
     }
 

@@ -25,11 +25,12 @@ namespace ErrorCodes
     extern const int ILLEGAL_COLUMN;
 }
 
-/// AddOnDateTime64DefaultImpl provides default implementation of add-X functionality for DateTime64.
-///
-/// Default implementation is not to change fractional part, but only modify whole part as if it was DateTime.
-/// That means large whole values (for scale less than 9) might not fit into UInt32-range,
-/// and hence default implementation will produce incorrect results.
+/** AddOnDateTime64DefaultImpl provides default implementation of add-X functionality for DateTime64.
+ *
+ * Default implementation is not to change fractional part, but only modify only whole part
+ * with corresponding overload of T::execute().
+ *
+ */
 template <typename T>
 struct AddOnDateTime64DefaultImpl
 {
@@ -38,11 +39,12 @@ struct AddOnDateTime64DefaultImpl
     {}
 
     // Default implementation for add/sub on DateTime64: do math on whole part (the same way as for DateTime), leave fractional as it is.
-    inline DateTime64 execute(const DateTime64 & t, Int64 delta, const DateLUTImpl & time_zone) const
+    inline DateTime64 execute(const DateTime64 & t, Int64 delta, const TimeZoneImpl & time_zone) const
     {
+        // TODO(vnemkov): ensure that T::execute has following overload `Int64 T::execute(Int64, Int64, const TimeZoneImpl &)
         const auto components = DecimalUtils::splitWithScaleMultiplier(t, scale_multiplier);
+        const auto whole = static_cast<const T *>(this)->execute(components.whole, delta, time_zone);
 
-        const auto whole = static_cast<const T *>(this)->execute(static_cast<UInt32>(components.whole), delta, time_zone);
         return DecimalUtils::decimalFromComponentsWithMultiplier<DateTime64>(static_cast<DateTime64::NativeType>(whole), components.fractional, scale_multiplier);
     }
 
@@ -68,14 +70,19 @@ struct AddSecondsImpl : public AddOnDateTime64DefaultImpl<AddSecondsImpl>
 
     static constexpr auto name = "addSeconds";
 
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl &)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl &)
     {
         return t + delta;
     }
 
-    static inline UInt32 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl &)
     {
-        return time_zone.fromDayNum(DayNum(d)) + delta;
+        return t + delta;
+    }
+
+    static inline UInt32 execute(UInt16 d, Int64 delta, const TimeZoneImpl & time_zone)
+    {
+        return time_zone.getDefaultLUT().fromDayNum(DayNum(d)) + delta;
     }
 };
 
@@ -87,14 +94,19 @@ struct AddMinutesImpl : public AddOnDateTime64DefaultImpl<AddMinutesImpl>
 
     static constexpr auto name = "addMinutes";
 
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl &)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl &)
     {
         return t + delta * 60;
     }
 
-    static inline UInt32 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl &)
     {
-        return time_zone.fromDayNum(DayNum(d)) + delta * 60;
+        return t + delta * 60;
+    }
+
+    static inline UInt32 execute(UInt16 d, Int64 delta, const TimeZoneImpl & time_zone)
+    {
+        return time_zone.getDefaultLUT().fromDayNum(DayNum(d)) + delta * 60;
     }
 };
 
@@ -106,14 +118,18 @@ struct AddHoursImpl : public AddOnDateTime64DefaultImpl<AddHoursImpl>
 
     static constexpr auto name = "addHours";
 
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl &)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl &)
+    {
+        return t + delta * 3600;
+    }
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl &)
     {
         return t + delta * 3600;
     }
 
-    static inline UInt32 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(UInt16 d, Int64 delta, const TimeZoneImpl & time_zone)
     {
-        return time_zone.fromDayNum(DayNum(d)) + delta * 3600;
+        return time_zone.getDefaultLUT().fromDayNum(DayNum(d)) + delta * 3600;
     }
 };
 
@@ -125,18 +141,17 @@ struct AddDaysImpl : public AddOnDateTime64DefaultImpl<AddDaysImpl>
 
     static constexpr auto name = "addDays";
 
-//    static inline UInt32 execute(UInt64 t, Int64 delta, const DateLUTImpl & time_zone)
-//    {
-//        // TODO (nemkov): LUT does not support out-of range date values for now.
-//        return time_zone.addDays(t, delta);
-//    }
-
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl & time_zone)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
         return time_zone.addDays(t, delta);
     }
 
-    static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl &)
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl & time_zone)
+    {
+        return time_zone.getDefaultLUT().addDays(t, delta);
+    }
+
+    static inline UInt16 execute(UInt16 d, Int64 delta, const TimeZoneImpl &)
     {
         return d + delta;
     }
@@ -150,12 +165,17 @@ struct AddWeeksImpl : public AddOnDateTime64DefaultImpl<AddWeeksImpl>
 
     static constexpr auto name = "addWeeks";
 
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl & time_zone)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
         return time_zone.addWeeks(t, delta);
     }
 
-    static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl &)
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl & time_zone)
+    {
+        return time_zone.getDefaultLUT().addWeeks(t, delta);
+    }
+
+    static inline UInt16 execute(UInt16 d, Int64 delta, const TimeZoneImpl &)
     {
         return d + delta * 7;
     }
@@ -169,14 +189,19 @@ struct AddMonthsImpl : public AddOnDateTime64DefaultImpl<AddMonthsImpl>
 
     static constexpr auto name = "addMonths";
 
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl & time_zone)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
         return time_zone.addMonths(t, delta);
     }
 
-    static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
-        return time_zone.addMonths(DayNum(d), delta);
+        return time_zone.getDefaultLUT().addMonths(t, delta);
+    }
+
+    static inline UInt16 execute(UInt16 d, Int64 delta, const TimeZoneImpl & time_zone)
+    {
+        return time_zone.getDefaultLUT().addMonths(DayNum(d), delta);
     }
 };
 
@@ -188,14 +213,19 @@ struct AddQuartersImpl : public AddOnDateTime64DefaultImpl<AddQuartersImpl>
 
     static constexpr auto name = "addQuarters";
 
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl & time_zone)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
         return time_zone.addQuarters(t, delta);
     }
 
-    static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
-        return time_zone.addQuarters(DayNum(d), delta);
+        return time_zone.getDefaultLUT().addQuarters(t, delta);
+    }
+
+    static inline UInt16 execute(UInt16 d, Int64 delta, const TimeZoneImpl & time_zone)
+    {
+        return time_zone.getDefaultLUT().addQuarters(DayNum(d), delta);
     }
 };
 
@@ -207,14 +237,19 @@ struct AddYearsImpl : public AddOnDateTime64DefaultImpl<AddYearsImpl>
 
     static constexpr auto name = "addYears";
 
-    static inline UInt32 execute(UInt32 t, Int64 delta, const DateLUTImpl & time_zone)
+    static inline Int64 execute(Int64 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
         return time_zone.addYears(t, delta);
     }
 
-    static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(UInt32 t, Int64 delta, const TimeZoneImpl & time_zone)
     {
-        return time_zone.addYears(DayNum(d), delta);
+        return time_zone.getDefaultLUT().addYears(t, delta);
+    }
+
+    static inline UInt16 execute(UInt16 d, Int64 delta, const TimeZoneImpl & time_zone)
+    {
+        return time_zone.getDefaultLUT().addYears(DayNum(d), delta);
     }
 };
 
@@ -224,7 +259,7 @@ struct SubtractIntervalImpl : public Transform
     using Transform::Transform;
 
     template <typename T>
-    inline auto execute(T t, Int64 delta, const DateLUTImpl & time_zone) const
+    inline auto execute(T t, Int64 delta, const TimeZoneImpl & time_zone) const
     {
         return Transform::execute(t, -delta, time_zone);
     }
@@ -250,7 +285,7 @@ struct Adder
     {}
 
     template <typename FromVectorType, typename ToVectorType>
-    void NO_INLINE vectorConstant(const FromVectorType & vec_from, ToVectorType & vec_to, Int64 delta, const DateLUTImpl & time_zone) const
+    void NO_INLINE vectorConstant(const FromVectorType & vec_from, ToVectorType & vec_to, Int64 delta, const TimeZoneImpl & time_zone) const
     {
         size_t size = vec_from.size();
         vec_to.resize(size);
@@ -260,7 +295,7 @@ struct Adder
     }
 
     template <typename FromVectorType, typename ToVectorType>
-    void vectorVector(const FromVectorType & vec_from, ToVectorType & vec_to, const IColumn & delta, const DateLUTImpl & time_zone) const
+    void vectorVector(const FromVectorType & vec_from, ToVectorType & vec_to, const IColumn & delta, const TimeZoneImpl & time_zone) const
     {
         size_t size = vec_from.size();
         vec_to.resize(size);
@@ -273,7 +308,7 @@ struct Adder
     }
 
     template <typename FromType, typename ToVectorType>
-    void constantVector(const FromType & from, ToVectorType & vec_to, const IColumn & delta, const DateLUTImpl & time_zone) const
+    void constantVector(const FromType & from, ToVectorType & vec_to, const IColumn & delta, const TimeZoneImpl & time_zone) const
     {
         size_t size = delta.size();
         vec_to.resize(size);
@@ -287,14 +322,14 @@ struct Adder
 
 private:
     template <typename FromVectorType, typename ToVectorType, typename DeltaColumnType>
-    void NO_INLINE vectorVector(const FromVectorType & vec_from, ToVectorType & vec_to, const DeltaColumnType & delta, const DateLUTImpl & time_zone, size_t size) const
+    void NO_INLINE vectorVector(const FromVectorType & vec_from, ToVectorType & vec_to, const DeltaColumnType & delta, const TimeZoneImpl & time_zone, size_t size) const
     {
         for (size_t i = 0; i < size; ++i)
             vec_to[i] = transform.execute(vec_from[i], delta.getData()[i], time_zone);
     }
 
     template <typename FromType, typename ToVectorType, typename DeltaColumnType>
-    void NO_INLINE constantVector(const FromType & from, ToVectorType & vec_to, const DeltaColumnType & delta, const DateLUTImpl & time_zone, size_t size) const
+    void NO_INLINE constantVector(const FromType & from, ToVectorType & vec_to, const DeltaColumnType & delta, const TimeZoneImpl & time_zone, size_t size) const
     {
         for (size_t i = 0; i < size; ++i)
             vec_to[i] = transform.execute(from, delta.getData()[i], time_zone);
@@ -313,7 +348,7 @@ struct DateTimeAddIntervalImpl
 
         auto op = Adder<Transform>{std::move(transform)};
 
-        const DateLUTImpl & time_zone = extractTimeZoneFromFunctionArguments(arguments, 2, 0);
+        const auto & time_zone = extractTimeZoneFromFunctionArguments(arguments, 2, 0);
 
         const ColumnPtr source_col = arguments[0].column;
 
@@ -356,6 +391,7 @@ template <> struct ResultDataTypeMap<Int16>      { using ResultDataType = DataTy
 template <> struct ResultDataTypeMap<UInt32>     { using ResultDataType = DataTypeDateTime; };
 template <> struct ResultDataTypeMap<Int32>      { using ResultDataType = DataTypeDateTime; };
 template <> struct ResultDataTypeMap<DateTime64> { using ResultDataType = DataTypeDateTime64; };
+template <> struct ResultDataTypeMap<Int64>      { using ResultDataType = DataTypeDateTime64; };
 }
 
 template <typename Transform>
@@ -425,7 +461,7 @@ public:
     /// Helper templates to deduce return type based on argument type, since some overloads may promote or denote types,
     /// e.g. addSeconds(Date, 1) => DateTime
     template <typename FieldType>
-    using TransformExecuteReturnType = decltype(std::declval<Transform>().execute(FieldType(), 0, std::declval<DateLUTImpl>()));
+    using TransformExecuteReturnType = decltype(std::declval<Transform>().execute(FieldType(), 0, std::declval<TimeZoneImpl>()));
 
     // Deduces RETURN DataType from INPUT DataType, based on return type of Transform{}.execute(INPUT_TYPE, UInt64, DateLUTImpl).
     // e.g. for Transform-type that has execute()-overload with 'UInt16' input and 'UInt32' return,
