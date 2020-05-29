@@ -93,10 +93,10 @@ public:
         return GlobalDayNum{value};
     }
 
-    inline Int32 toUnderType() const
-    {
-        return value;
-    }
+//    inline Int32 toUnderType() const
+//    {
+//        return value;
+//    }
 };
 
 template <typename ...Args>
@@ -120,8 +120,8 @@ TEST_P(TimeZone_VS_DateLUT_Test, SameAsDateLUTImpl)
     const auto daynum_value = UniversalDayNum(lut.toDayNum(time_value).toUnderType());
     const auto [year, month, day_of_month, hour, minute, second] = splitYYYYMMDDhhmmss(lut.toNumYYYYMMDDhhmmss(time_value));
 
-    SCOPED_TRACE(toString("\ntimezone: ", timezone_name, "\ndaynum_value: ", daynum_value.toUnderType(), "\ntime_value:", time_value,
-            "\nhuman time: ", year, ".", static_cast<UInt32>(month), ".", static_cast<UInt32>(day_of_month), "T", static_cast<UInt32>(hour), ":", static_cast<UInt32>(minute), ":", static_cast<UInt32>(second)));
+//    SCOPED_TRACE(toString("\ntimezone: ", timezone_name, "\ndaynum_value: ", daynum_value.toUnderType(), "\ntime_value:", time_value,
+//            "\nhuman time: ", year, ".", static_cast<UInt32>(month), ".", static_cast<UInt32>(day_of_month), "T", static_cast<UInt32>(hour), ":", static_cast<UInt32>(minute), ":", static_cast<UInt32>(second)));
 
     EXPECT_EQ(tz.getTimeZone(), lut.getTimeZone());
 
@@ -138,7 +138,7 @@ TEST_P(TimeZone_VS_DateLUT_Test, SameAsDateLUTImpl)
 
     for (Int32 day_shift : {-7, -1, 0, 1, 7})
     {
-        SCOPED_TRACE(toString("day_shift: ", day_shift));
+//        SCOPED_TRACE(toString("day_shift: ", day_shift));
 
         EXPECT_EQ(tz.toDateAndShift(time_value, day_shift), lut.toDateAndShift(time_value, day_shift));
     }
@@ -178,7 +178,7 @@ TEST_P(TimeZone_VS_DateLUT_Test, SameAsDateLUTImpl)
     for (const auto & mode : {WeekModeFlag::MONDAY_FIRST, WeekModeFlag::YEAR, WeekModeFlag::FIRST_WEEKDAY, WeekModeFlag::NEWYEAR_DAY})
     {
         const UInt8 week_mode = static_cast<UInt8>(mode);
-        SCOPED_TRACE(toString("week_mode: ", static_cast<UInt32>(week_mode)));
+//        SCOPED_TRACE(toString("week_mode: ", static_cast<UInt32>(week_mode)));
 
         EXPECT_EQ(tz.toYearWeek(daynum_value, week_mode), lut.toYearWeek(daynum_value, week_mode));
         EXPECT_EQ(tz.toFirstDayNumOfWeek(daynum_value, week_mode), lut.toFirstDayNumOfWeek(daynum_value, week_mode));
@@ -187,14 +187,14 @@ TEST_P(TimeZone_VS_DateLUT_Test, SameAsDateLUTImpl)
 
     for (const auto monday_first_mode : {true, false})
     {
-        SCOPED_TRACE(toString("monday_first_mode: ", monday_first_mode));
+//        SCOPED_TRACE(toString("monday_first_mode: ", monday_first_mode));
 
         EXPECT_EQ(tz.toYearWeekOfNewyearMode(daynum_value, monday_first_mode), lut.toYearWeekOfNewyearMode(daynum_value, monday_first_mode));
     }
 
     for (const auto sunday_first_day_of_week : {true, false})
     {
-        SCOPED_TRACE(toString("sunday_first_day_of_week: ", sunday_first_day_of_week));
+//        SCOPED_TRACE(toString("sunday_first_day_of_week: ", sunday_first_day_of_week));
 
         EXPECT_EQ(tz.calc_weekday(daynum_value, sunday_first_day_of_week), lut.calc_weekday(daynum_value, sunday_first_day_of_week));
     }
@@ -236,7 +236,7 @@ TEST_P(TimeZone_VS_DateLUT_Test, SameAsDateLUTImpl)
     //
     for (Int64 delta : {-7, -1, 0, 1, 7})
     {
-        SCOPED_TRACE(toString("delta:", delta));
+//        SCOPED_TRACE(toString("delta:", delta));
 
         EXPECT_EQ(tz.addWeeks(time_value, delta), lut.addWeeks(time_value, delta));
         EXPECT_EQ(tz.addMonths(time_value, delta), lut.addMonths(time_value, delta));
@@ -249,7 +249,7 @@ TEST_P(TimeZone_VS_DateLUT_Test, SameAsDateLUTImpl)
 
     for (UInt64 interval : {/*0, */1, 7}) // zero interval would result a run-time floating exception, caused by division by zero.
     {
-        SCOPED_TRACE(toString("interval:", interval));
+//        SCOPED_TRACE(toString("interval:", interval));
 
         EXPECT_EQ(tz.toStartOfYearInterval(daynum_value, interval), lut.toStartOfYearInterval(daynum_value, interval));
         EXPECT_EQ(tz.toStartOfQuarterInterval(daynum_value, interval), lut.toStartOfQuarterInterval(daynum_value, interval));
@@ -308,7 +308,7 @@ TEST(DateLUTTest, DISABLED_NonZeroOffset)
     const Int64 FIRST_DAY_TIME_T = LUT_OFFSET - 8*3600;
     const DateLUTImpl lut("UTC", LUT_OFFSET);
 
-    SCOPED_TRACE(LUT_OFFSET);
+//    SCOPED_TRACE(LUT_OFFSET);
 
 //    EXPECT_EQ(lut.getDateLutMin(), FIRST_DAY_TIME_T);
 //    EXPECT_EQ(lut.toGlobalDayNum(DateLUTImpl::LutDayNum(0)), 73000);
@@ -535,7 +535,7 @@ TEST_P(DateLUTRangeTest, UTC)
 
     for (time_t expected_time_t = begin; expected_time_t < end; expected_time_t += step)
     {
-        SCOPED_TRACE(expected_time_t);
+//        SCOPED_TRACE(expected_time_t);
 
         tm tm;
         ASSERT_NE(gmtime_r(&expected_time_t, &tm), nullptr);
@@ -545,7 +545,7 @@ TEST_P(DateLUTRangeTest, UTC)
                  "%04d-%02d-%02d %02d:%02d:%02d",
                  tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-        SCOPED_TRACE(expected_time_string);
+//        SCOPED_TRACE(expected_time_string);
 
         EXPECT_EQ(tm.tm_year + 1900, lut.toYear(expected_time_t));
         EXPECT_EQ(tm.tm_mon + 1, lut.toMonth(expected_time_t));
@@ -731,8 +731,8 @@ TEST_P(TimeZoneRangeTest, UTC)
     for (time_t expected_time_t = begin; begin < end ? expected_time_t < end : expected_time_t > end; expected_time_t += step, ++i)
     {
         const auto lut_index = tz.getLUTIndex(expected_time_t);
-        const auto & lut = tz.getLUTByIndex(lut_index);
-        SCOPED_TRACE(toString("LUT index:", lut_index, " lut:", lut.getDateLutMin(), ", ", lut.getDayNumLutMin()));
+//        const auto & lut = tz.getLUTByIndex(lut_index);
+//        SCOPED_TRACE(toString("LUT index:", lut_index, " lut:", lut.getDateLutMin(), ", ", lut.getDayNumLutMin()));
 
         tm tm;
         ASSERT_NE(gmtime_r(&expected_time_t, &tm), nullptr);
@@ -742,7 +742,7 @@ TEST_P(TimeZoneRangeTest, UTC)
                  "%04d-%02d-%02d %02d:%02d:%02d",
                  tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-        SCOPED_TRACE(toString("#", i, " time value: ", expected_time_t));
+//        SCOPED_TRACE(toString("#", i, " time value: ", expected_time_t));
 
         const auto report_interval = 1'567'000LL;
         if (lut_index != prev_lut_index
@@ -754,7 +754,7 @@ TEST_P(TimeZoneRangeTest, UTC)
                       << " LUT INDEX: " << tz.getLUTIndex(expected_time_t) << std::endl;
         }
 
-        SCOPED_TRACE(toString("time: ", expected_time_string));
+//        SCOPED_TRACE(toString("time: ", expected_time_string));
 
         EXPECT_EQ(tm.tm_year + 1900, tz.toYear(expected_time_t));
         EXPECT_EQ(tm.tm_mon + 1, tz.toMonth(expected_time_t));
