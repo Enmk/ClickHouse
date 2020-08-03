@@ -1,10 +1,14 @@
 # pylint: disable=line-too-long
 
+import re
 import pytest
 from helpers.cluster import ClickHouseCluster
 
 cluster = ClickHouseCluster(__file__)
 node = cluster.add_instance("node", config_dir="configs")
+
+def strip(s):
+    return re.sub(r'[\s]+', ' ', s.strip().replace('\\n', '\n'))
 
 @pytest.fixture(scope="module", autouse=True)
 def started_cluster():
@@ -15,10 +19,12 @@ def started_cluster():
             CREATE DATABASE mydb ENGINE=Ordinary;
 
             CREATE TABLE mydb.prewhere_filter (a UInt8, b UInt8, c UInt8, s String) ENGINE MergeTree ORDER BY a PARTITION BY a SETTINGS index_granularity=1;
-            INSERT INTO mydb.prewhere_filter SELECT number, number, number, randomString(1000) FROM numbers(10);
+            INSERT INTO mydb.prewhere_filter SELECT number, number, number, randomPrintableASCII(1000) FROM numbers(10);
 
             CREATE TABLE mydb.prewhere_no_filter (a UInt8, b UInt8, c UInt8, s String) ENGINE MergeTree ORDER BY a PARTITION BY a SETTINGS index_granularity=1;
-            INSERT INTO mydb.prewhere_no_filter SELECT number, number, number, randomString(1000) FROM numbers(10);
+            INSERT INTO mydb.prewhere_no_filter SELECT number, number, number, randomPrintableASCII(1000) FROM numbers(10);
+
+            CREATE TABLE mydb.dist_prewhere_filter AS mydb.prewhere_filter ENGINE Distributed(test_cluster, mydb, prewhere_filter);
         ''')
 
         yield cluster
@@ -26,13 +32,37 @@ def started_cluster():
     finally:
         cluster.shutdown()
 
+def test_optimize_move_to_prewhere():
+    settings = {
+        'optimize_move_to_prewhere': 1,
+        'enable_debug_queries': 1,
+    }
+    assert strip(node.query("ANALYZE SELECT s FROM mydb.prewhere_no_filter PREWHERE b = 3 WHERE c = 3", settings=settings)) == \
+        strip("""
+        SELECT s
+        FROM mydb.prewhere_no_filter
+        PREWHERE b = 3
+        WHERE (b = 3) AND (c = 3)
+        """)
+
+    settings = {
+        'optimize_move_to_prewhere': 2,
+        'enable_debug_queries': 1,
+    }
+    assert strip(node.query("ANALYZE SELECT s FROM mydb.prewhere_no_filter PREWHERE b = 3 WHERE c = 3", settings=settings)) == \
+        strip("""
+        SELECT s
+        FROM mydb.prewhere_no_filter
+        PREWHERE (b = 3) AND (c = 3)
+        """)
 
 def test_PREWHERE():
     settings = {
         'max_threads': 1,
         'optimize_move_to_prewhere': 1,
         # enough to trigger an error if PREWHERE does not works
-        'max_bytes_to_read': 1000 + 10*4,
+        'max_bytes_to_read': 1000 + 30,
+        'enable_debug_queries': 1,
     }
 
     # Check that filter does works
@@ -40,13 +70,61 @@ def test_PREWHERE():
     assert int(node.query("SELECT count() FROM mydb.prewhere_filter")) == 1
 
     # PREWHERE
-    node.query("SELECT * FROM mydb.prewhere_no_filter PREWHERE c = 1 AND b = 1 FORMAT Null", settings=settings)
-    node.query("SELECT * FROM mydb.prewhere_filter    PREWHERE c = 1 FORMAT Null", settings=settings)
+    node.query("SELECT * FROM mydb.prewhere_no_filter PREWHERE c = 3 AND b = 3 FORMAT Null", settings=settings)
+    node.query("SELECT * FROM mydb.prewhere_filter    PREWHERE c = 3 FORMAT Null", settings=settings)
 
     # WHERE w/ optimize_move_to_prewhere
-    node.query("SELECT * FROM mydb.prewhere_no_filter WHERE c = 1 AND b = 1 FORMAT Null", settings=settings)
-    node.query("SELECT * FROM mydb.prewhere_filter    WHERE c = 1 FORMAT Null", settings=settings)
+    node.query("SELECT * FROM mydb.prewhere_no_filter WHERE c = 3 AND b = 3 FORMAT Null", settings=settings)
+    node.query("SELECT * FROM mydb.prewhere_filter    WHERE c = 3 FORMAT Null", settings=settings)
+
+    # PREWHERE and WHERE w/ optimize_move_to_prewhere
+    node.query("SELECT s FROM mydb.prewhere_filter PREWHERE 1 WHERE c = 3 FORMAT Null", settings=settings)
+    # ANALYZE PREWHERE and WHERE w/ optimize_move_to_prewhere
+    assert strip(node.query("ANALYZE SELECT s FROM mydb.prewhere_no_filter WHERE b = 3 AND 1 = 1 AND c = 3", settings=settings)) == \
+        strip("""
+        SELECT s
+        FROM mydb.prewhere_no_filter
+        PREWHERE (b = 3) AND (c = 3)
+        """)
+    assert strip(node.query("ANALYZE SELECT s FROM mydb.prewhere_filter WHERE c = 3", settings=settings)) == \
+        strip("""
+        SELECT s
+        FROM mydb.prewhere_filter
+        PREWHERE (b = 3) AND (c = 3)
+        """)
 
     # WHERE w/o optimize_move_to_prewhere (just make sure it works)
-    node.query("SELECT * FROM mydb.prewhere_no_filter WHERE a = 1 AND b = 1 FORMAT Null")
-    node.query("SELECT * FROM mydb.prewhere_filter    WHERE a = 1 FORMAT Null")
+    node.query("SELECT * FROM mydb.prewhere_no_filter WHERE a = 3 AND b = 3 FORMAT Null", settings={'optimize_move_to_prewhere': 0})
+    node.query("SELECT * FROM mydb.prewhere_filter    WHERE a = 3 FORMAT Null", settings={'optimize_move_to_prewhere': 0})
+
+def test_distributed():
+    settings = {
+        'max_threads': 1,
+        'optimize_move_to_prewhere': 1,
+        # enough to trigger an error if PREWHERE does not works
+        'max_bytes_to_read': 1000 + 30,
+        'enable_debug_queries': 1,
+    }
+
+    assert strip(node.query("ANALYZE SELECT s FROM mydb.dist_prewhere_filter WHERE c = 3", settings=settings)) == \
+        strip("""
+        SELECT s
+        FROM mydb.dist_prewhere_filter
+        PREWHERE b = 3
+        WHERE (b = 3) AND (c = 3)
+        """)
+    assert strip(node.query("ANALYZE SELECT s FROM mydb.dist_prewhere_filter PREWHERE c = 3", settings=settings)) == \
+        strip("""
+        SELECT s
+        FROM mydb.dist_prewhere_filter
+        PREWHERE (b = 3) AND (c = 3)
+        """)
+
+    # 1 for 127.1, 1 for 127.2
+    assert int(node.query("SELECT count() FROM mydb.dist_prewhere_filter")) == 2
+
+    node.query("SELECT s FROM mydb.dist_prewhere_filter WHERE c = 3")
+    node.query("SELECT s FROM mydb.dist_prewhere_filter PREWHERE c = 3")
+    # XXX: query after optimize_move_to_prewhere cannot be checked, since
+    # query_log does not contains query after optimization
+    # (logs can be checked though).

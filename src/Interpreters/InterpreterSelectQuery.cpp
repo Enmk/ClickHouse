@@ -99,6 +99,10 @@
 #include <Processors/Pipe.h>
 #include <Processors/Executors/TreeExecutorBlockInputStream.h>
 
+namespace
+{
+const UInt64 OPTIMIZE_MOVE_TO_PREWHERE_ALWAYS = 2;
+}
 
 namespace DB
 {
@@ -297,8 +301,13 @@ InterpreterSelectQuery::InterpreterSelectQuery(
 //=======
     ASTPtr row_policy_filter;
     if (storage)
+    {
         row_policy_filter = context->getRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER);
+        row_policy_filter = RowPolicyContext::combineConditionsUsingAnd(row_policy_filter, context->getInitialRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER));
+    }
 
+    /// Does the orignal query has PREWHERE (for optimize_move_to_prewhere check)
+    bool has_prewhere_in_query = !!query.prewhere();
     /// If allow_insecure_prewhere enabled, move row-policy filters into PREWHERE
     /// (WHERE cannot be used here, since it will introduce more security breaches)
     if (row_policy_filter && storage->supportsPrewhere() && context->getAllowInsecurePrewhere())
@@ -309,6 +318,11 @@ InterpreterSelectQuery::InterpreterSelectQuery(
         else
             query.setExpression(ASTSelectQuery::Expression::PREWHERE, row_policy_filter->clone());
         row_policy_filter.reset();
+
+        /// To force optimize_move_to_prehwere even when PREWHERE exists (after optimization above)
+        /// for the underlying tables.
+        if (storage->isRemote())
+            context->setSetting("optimize_move_to_prewhere", OPTIMIZE_MOVE_TO_PREWHERE_ALWAYS);
     }
 
 //>>>>>>> e79460833d... Implement allow_insecure_prewhere server setting [DRAFT]
@@ -368,10 +382,7 @@ InterpreterSelectQuery::InterpreterSelectQuery(
         {
             source_header = storage->getSampleBlockForColumns(required_columns);
 
-            /// Append columns from the table filter to required
-            row_policy_filter = context->getRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER);
             /// Fix source_header for filter actions.
-            row_policy_filter = RowPolicyContext::combineConditionsUsingAnd(row_policy_filter, context->getInitialRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER));
             if (row_policy_filter)
             {
                 filter_info = std::make_shared<FilterInfo>();
@@ -384,7 +395,7 @@ InterpreterSelectQuery::InterpreterSelectQuery(
             throw Exception("PREWHERE is not supported if the table is filtered by row-level security expression", ErrorCodes::ILLEGAL_PREWHERE);
 
         /// Calculate structure of the result.
-        result_header = getSampleBlockImpl(try_move_to_prewhere);
+        result_header = getSampleBlockImpl(try_move_to_prewhere, has_prewhere_in_query);
     };
 
     analyze();
@@ -484,7 +495,7 @@ QueryPipeline InterpreterSelectQuery::executeWithProcessors()
 }
 
 
-Block InterpreterSelectQuery::getSampleBlockImpl(bool try_move_to_prewhere)
+Block InterpreterSelectQuery::getSampleBlockImpl(bool try_move_to_prewhere, bool has_prewhere_in_query)
 {
     auto & query = getSelectQuery();
     const Settings & settings = context->getSettingsRef();
@@ -498,8 +509,9 @@ Block InterpreterSelectQuery::getSampleBlockImpl(bool try_move_to_prewhere)
 
         /// PREWHERE optimization.
         /// Turn off, if the table filter (row-level security) is applied.
-        if (!context->getRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER)
-            && !context->getInitialRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER))
+        if (context->getAllowInsecurePrewhere() || (true
+            && !context->getRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER)
+            && !context->getInitialRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER)))
         {
             auto optimize_prewhere = [&](auto & merge_tree)
             {
@@ -509,7 +521,10 @@ Block InterpreterSelectQuery::getSampleBlockImpl(bool try_move_to_prewhere)
                 current_info.sets = query_analyzer->getPreparedSets();
 
                 /// Try transferring some condition from WHERE to PREWHERE if enabled and viable
-                if (settings.optimize_move_to_prewhere && try_move_to_prewhere && query.where() && !query.prewhere() && !query.final())
+                bool move_to_prewhere = try_move_to_prewhere && settings.optimize_move_to_prewhere;
+                if (move_to_prewhere && settings.optimize_move_to_prewhere != OPTIMIZE_MOVE_TO_PREWHERE_ALWAYS)
+                    move_to_prewhere = !has_prewhere_in_query;
+                if (move_to_prewhere && query.where() && !query.final())
                     MergeTreeWhereOptimizer{current_info, *context, merge_tree,
                                             syntax_analyzer_result->requiredSourceColumns(), log};
             };
@@ -1136,6 +1151,8 @@ void InterpreterSelectQuery::executeFetchColumns(
         {
             /// Append columns from the table filter to required
             auto row_policy_filter = context->getRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER);
+            row_policy_filter = RowPolicyContext::combineConditionsUsingAnd(row_policy_filter, context->getInitialRowPolicy()->getCondition(table_id.getDatabaseName(), table_id.getTableName(), RowPolicy::SELECT_FILTER));
+
             if (row_policy_filter)
             {
                 auto initial_required_columns = required_columns;
