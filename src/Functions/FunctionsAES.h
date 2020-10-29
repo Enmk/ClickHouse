@@ -307,7 +307,7 @@ private:
             }
 
             const auto input_value = input_column->getDataAt(r);
-            auto aad_value = StringRef{};
+            [[maybe_unused]] auto aad_value = StringRef{};
             if constexpr (mode == CipherMode::RFC5116_AEAD_AES_GCM && !std::is_same_v<nullptr_t, std::decay_t<AadColumnType>>)
             {
                 aad_value = aad_column->getDataAt(r);
