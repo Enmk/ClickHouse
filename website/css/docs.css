@@ -1,3 +1,16 @@
+details {
+    background: #444451;
+    color: #eee;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+}
+
+summary {
+    font-weight: bold;
+    color: #eee;
+}
+
 #sidebar {
     position: fixed;
     z-index: 50;
@@ -21,13 +34,8 @@
 }
 
 .headerlink {
-    display: none;
     text-decoration: none !important;
     margin-left: .5rem;
-}
-
-#content {
-    overflow-x: scroll;
 }
 
 #content table {
@@ -56,15 +64,19 @@
 }
 
 #content code {
-    color: #111;
+    color: #000;
     background: #eee;
-    padding: 2px;
+    padding: 0.125rem 0.25rem;
 }
 
+#content code.syntax {
+    padding: 0;
+}
 
 #content pre {
-    background: #eee;
+    background: #efefef;
     padding: 1rem;
+    line-height: 1.25;
 }
 
 #docsearch-input:focus, #docsearch-input:active {
@@ -109,6 +121,15 @@
     border-color: #333;
 }
 
+.algolia-autocomplete .algolia-docsearch-suggestion--content {
+    background-color: #333;
+}
+
+.algolia-autocomplete .algolia-docsearch-suggestion--content:hover,
+.algolia-autocomplete .ds-dropdown-menu .ds-suggestion.ds-cursor .algolia-docsearch-suggestion:not(.suggestion-layout-simple) .algolia-docsearch-suggestion--content {
+    background-color: #444451 !important;
+}
+
 .algolia-autocomplete .algolia-docsearch-suggestion--category-header,
 .algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column,
 .algolia-autocomplete .algolia-docsearch-suggestion--title,
@@ -150,9 +171,13 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    body[data-spy] {
+    body[data-spy], body.amp, body.blog, #to-full-website {
         background: #1c1c1c;
         color: #efefef;
+    }
+
+    .invert-dark {
+        filter: invert(100%);
     }
 
     #sidebar {
@@ -170,12 +195,14 @@
     #content td {
         border: 1px solid #444451;
     }
+
     #content code {
         background: #444;
         color: #eee;
+        padding: 0.125rem 0.25rem;
     }
 
-    #content pre {
+    #content pre, .blog .tag, .blog .dropdown-menu {
         background: #444;
         color: #eee;
     }
@@ -184,4 +211,3 @@
         color: #bbb;
     }
 }
-

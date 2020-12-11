@@ -1,13 +1,15 @@
 #pragma once
 
-#include "config_core.h"
-#if USE_EMBEDDED_COMPILER
+#if !defined(ARCADIA_BUILD)
+#    include "config_core.h"
+#endif
 
-#include <Functions/IFunctionImpl.h>
-#include <Interpreters/Context.h>
-#include <Interpreters/ExpressionActions.h>
-#include <Common/LRUCache.h>
-#include <set>
+#if USE_EMBEDDED_COMPILER
+#    include <set>
+#    include <Functions/IFunctionImpl.h>
+#    include <Interpreters/Context.h>
+#    include <Interpreters/ExpressionActions.h>
+#    include <Common/LRUCache.h>
 
 
 namespace DB
@@ -20,16 +22,46 @@ struct LLVMModuleState;
 class LLVMFunction : public IFunctionBaseImpl
 {
     std::string name;
-    Names arg_names;
     DataTypes arg_types;
 
     std::vector<FunctionBasePtr> originals;
-    std::unordered_map<StringRef, CompilableExpression> subexpressions;
+    CompilableExpression expression;
 
     std::unique_ptr<LLVMModuleState> module_state;
 
 public:
-    LLVMFunction(const ExpressionActions::Actions & actions, const Block & sample_block);
+
+    /// LLVMFunction is a compiled part of ActionsDAG.
+    /// We store this part as independent DAG with minial required information to compile it.
+    struct CompileNode
+    {
+        enum class NodeType
+        {
+            INPUT = 0,
+            CONSTANT = 1,
+            FUNCTION = 2,
+        };
+
+        NodeType type;
+        DataTypePtr result_type;
+
+        /// For CONSTANT
+        ColumnPtr column;
+
+        /// For FUNCTION
+        FunctionBasePtr function;
+        std::vector<size_t> arguments;
+    };
+
+    /// DAG is represented as list of nodes stored in in-order traverse order.
+    /// Expression (a + 1) + (b + 1) will be represented like chain: a, 1, a + 1, b, b + 1, (a + 1) + (b + 1).
+    struct CompileDAG : public std::vector<CompileNode>
+    {
+        std::string dump() const;
+        UInt128 hash() const;
+    };
+
+    explicit LLVMFunction(const CompileDAG & dag);
 
     bool isCompilable() const override { return true; }
 
@@ -37,13 +69,11 @@ public:
 
     String getName() const override { return name; }
 
-    const Names & getArgumentNames() const { return arg_names; }
-
     const DataTypes & getArgumentTypes() const override { return arg_types; }
 
-    const DataTypePtr & getReturnType() const override { return originals.back()->getReturnType(); }
+    const DataTypePtr & getResultType() const override { return originals.back()->getResultType(); }
 
-    ExecutableFunctionImplPtr prepare(const Block &, const ColumnNumbers &, size_t) const override;
+    ExecutableFunctionImplPtr prepare(const ColumnsWithTypeAndName &) const override;
 
     bool isDeterministic() const override;
 
@@ -51,7 +81,7 @@ public:
 
     bool isSuitableForConstantFolding() const override;
 
-    bool isInjective(const Block & sample_block) override;
+    bool isInjective(const ColumnsWithTypeAndName & sample_block) const override;
 
     bool hasInformationAboutMonotonicity() const override;
 
@@ -69,10 +99,6 @@ public:
     using Base = LRUCache<UInt128, IFunctionBase, UInt128Hash>;
     using Base::Base;
 };
-
-/// For each APPLY_FUNCTION action, try to compile the function to native code; if the only uses of a compilable
-/// function's result are as arguments to other compilable functions, inline it and leave the now-redundant action as-is.
-void compileFunctions(ExpressionActions::Actions & actions, const Names & output_columns, const Block & sample_block, std::shared_ptr<CompiledExpressionCache> compilation_cache, size_t min_count_to_compile_expression);
 
 }
 

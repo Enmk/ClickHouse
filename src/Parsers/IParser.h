@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <Core/Defines.h>
-#include <Core/Types.h>
+#include <common/types.h>
 #include <Core/Settings.h>
 #include <IO/WriteHelpers.h>
 #include <Parsers/IAST.h>
@@ -56,8 +56,6 @@ public:
     /// Token iterator augmented with depth information. This allows to control recursion depth.
     struct Pos : TokenIterator
     {
-        using TokenIterator::TokenIterator;
-
         uint32_t depth = 0;
         uint32_t max_depth = 0;
 

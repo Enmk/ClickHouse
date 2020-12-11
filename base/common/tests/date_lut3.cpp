@@ -18,7 +18,7 @@ static std::string toString(time_t Value)
     return buf;
 }
 
-static time_t orderedIdentifierToDate(unsigned value)
+static time_t YYYYMMDDValueToTimeT(unsigned value)
 {
     struct tm tm;
 
@@ -55,8 +55,8 @@ void loop(time_t begin, time_t end, int step)
 
 int main(int, char **)
 {
-    loop(orderedIdentifierToDate(20101031), orderedIdentifierToDate(20101101), 15 * 60);
-    loop(orderedIdentifierToDate(20100328), orderedIdentifierToDate(20100330), 15 * 60);
+    loop(YYYYMMDDValueToTimeT(20101031), YYYYMMDDValueToTimeT(20101101), 15 * 60);
+    loop(YYYYMMDDValueToTimeT(20100328), YYYYMMDDValueToTimeT(20100330), 15 * 60);
 
     return 0;
 }

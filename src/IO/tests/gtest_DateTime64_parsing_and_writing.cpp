@@ -18,7 +18,7 @@ struct DateTime64StringsTestParam
     const std::string_view string;
     DateTime64 dt64;
     UInt32 scale;
-    const DateLUTImpl & timezone;
+    const TimeZoneImpl & timezone;
 };
 
 static std::ostream & operator << (std::ostream & ostr, const DateTime64StringsTestParam & param)
@@ -49,7 +49,7 @@ TEST_P(DateTime64StringParseTest, parseDateTime64BestEffort)
     ReadBufferFromMemory read_buffer(param.string.data(), param.string.size());
 
     DateTime64 actual;
-    EXPECT_TRUE(tryParseDateTime64BestEffort(actual, param.scale, read_buffer, param.timezone, DateLUT::instance("UTC")));
+    EXPECT_TRUE(tryParseDateTime64BestEffort(actual, param.scale, read_buffer, param.timezone, DateLUT::getTimeZone("UTC")));
 
     EXPECT_EQ(param.dt64, actual);
 }
@@ -72,7 +72,7 @@ TEST_P(DateTime64StringParseBestEffortTest, parse)
     ReadBufferFromMemory read_buffer(param.string.data(), param.string.size());
 
     DateTime64 actual;
-    EXPECT_TRUE(tryParseDateTime64BestEffort(actual, param.scale, read_buffer, param.timezone, DateLUT::instance("UTC")));
+    EXPECT_TRUE(tryParseDateTime64BestEffort(actual, param.scale, read_buffer, param.timezone, DateLUT::getTimeZone("UTC")));
 
     EXPECT_EQ(param.dt64, actual);
 }
@@ -87,56 +87,56 @@ INSTANTIATE_TEST_SUITE_P(Basic,
             "2019-09-16 19:20:17",
             1568650817'000,
             3,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When subsecond part is present in string, but it is zero, it is set to zero.",
             "2019-09-16 19:20:17.0",
             1568650817'000,
             3,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When scale is 0, subsecond part is not set.",
             "2019-09-16 19:20:17",
             1568650817ULL,
             0,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When scale is 0, subsecond part is 0 despite being present in string.",
             "2019-09-16 19:20:17.123",
             1568650817ULL,
             0,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When subsecond part is present in string, it is set correctly to DateTime64 value of scale 3.",
             "2019-09-16 19:20:17.123",
             1568650817'123,
             3,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When subsecond part is present in string (and begins with 0), it is set correctly to DateTime64 value of scale 3.",
             "2019-09-16 19:20:17.012",
             1568650817'012,
             3,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When subsecond part scale is smaller than DateTime64 scale, subsecond part is properly adjusted (as if padded from right with zeroes).",
             "2019-09-16 19:20:17.123",
             1568650817'12300ULL,
             5,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When subsecond part scale is larger than DateTime64 scale, subsecond part is truncated.",
             "2019-09-16 19:20:17.123",
             1568650817'1ULL,
             1,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         }
     })
 );
@@ -149,7 +149,7 @@ INSTANTIATE_TEST_SUITE_P(BestEffort,
             "2019-09-16 19:20:17.12345678910111213141516171819202122233435363738393031323334353637383940414243444546474849505152535455565758596061626364",
             1568650817'123456ULL,
             6,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         }
     })
 );
@@ -165,35 +165,35 @@ INSTANTIATE_TEST_SUITE_P(Basic,
             "2019-09-16 19:20:17.123",
             1568650817'123,
             3,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "non-zero subsecond part on DateTime64 with scale of 5",
             "2019-09-16 19:20:17.12345",
             1568650817'12345ULL,
             5,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "Zero subsecond part is written to string",
             "2019-09-16 19:20:17.000",
             1568650817'000ULL,
             3,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "When scale is 0, subsecond part (and separtor) is missing from string",
             "2019-09-16 19:20:17",
             1568650817ULL,
             0,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         },
         {
             "Subsecond part with leading zeroes is written to string correctly",
             "2019-09-16 19:20:17.001",
             1568650817'001ULL,
             3,
-            DateLUT::instance("Europe/Minsk")
+            DateLUT::getTimeZone("Europe/Minsk")
         }
     })
 );

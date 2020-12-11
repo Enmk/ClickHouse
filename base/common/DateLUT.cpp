@@ -75,7 +75,7 @@ std::string determineDefaultTimeZone()
 
     try
     {
-        tz_database_path = fs::canonical(tz_database_path);
+        tz_database_path = fs::weakly_canonical(tz_database_path);
 
         /// The tzdata file exists. If it is inside the tz_database_dir,
         /// then the relative path is the time zone id.
@@ -91,7 +91,7 @@ std::string determineDefaultTimeZone()
             if (!tz_file_path.is_absolute())
                 tz_file_path = tz_database_path / tz_file_path;
 
-            tz_file_path = fs::canonical(tz_file_path);
+            tz_file_path = fs::weakly_canonical(tz_file_path);
 
             fs::path relative_path = tz_file_path.lexically_relative(tz_database_path);
             if (!relative_path.empty() && *relative_path.begin() != ".." && *relative_path.begin() != ".")
@@ -140,19 +140,20 @@ std::string determineDefaultTimeZone()
 
 DateLUT::DateLUT()
 {
-    /// Initialize the pointer to the default DateLUTImpl.
+    /// Initialize the pointer to the default TimeZoneImpl.
     std::string default_time_zone = determineDefaultTimeZone();
-    default_impl.store(&getImplementation(default_time_zone), std::memory_order_release);
+    default_timezone.store(&getImplementation(default_time_zone), std::memory_order_release);
 }
 
+DateLUT::~DateLUT() = default;
 
-const DateLUTImpl & DateLUT::getImplementation(const std::string & time_zone) const
+const TimeZoneImpl & DateLUT::getImplementation(const std::string & time_zone) const
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto it = impls.emplace(time_zone, nullptr).first;
+    auto it = timezones.emplace(time_zone, nullptr).first;
     if (!it->second)
-        it->second = std::make_unique<DateLUTImpl>(time_zone);
+        it->second = std::make_unique<TimeZoneImpl>(time_zone);
 
     return *it->second;
 }

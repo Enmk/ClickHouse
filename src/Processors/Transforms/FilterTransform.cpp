@@ -27,13 +27,14 @@ static void replaceFilterToConstant(Block & block, const String & filter_column_
     }
 }
 
-static Block transformHeader(
+Block FilterTransform::transformHeader(
     Block header,
     const ExpressionActionsPtr & expression,
     const String & filter_column_name,
     bool remove_filter_column)
 {
-    expression->execute(header);
+    size_t num_rows = header.rows();
+    expression->execute(header, num_rows);
 
     if (remove_filter_column)
         header.erase(filter_column_name);
@@ -47,11 +48,13 @@ FilterTransform::FilterTransform(
     const Block & header_,
     ExpressionActionsPtr expression_,
     String filter_column_name_,
-    bool remove_filter_column_)
+    bool remove_filter_column_,
+    bool on_totals_)
     : ISimpleTransform(header_, transformHeader(header_, expression_, filter_column_name_, remove_filter_column_), true)
     , expression(std::move(expression_))
     , filter_column_name(std::move(filter_column_name_))
     , remove_filter_column(remove_filter_column_)
+    , on_totals(on_totals_)
 {
     transformed_header = getInputPort().getHeader();
     expression->execute(transformed_header);
@@ -64,11 +67,12 @@ FilterTransform::FilterTransform(
 
 IProcessor::Status FilterTransform::prepare()
 {
-    if (constant_filter_description.always_false
-        /// Optimization for `WHERE column in (empty set)`.
-        /// The result will not change after set was created, so we can skip this check.
-        /// It is implemented in prepare() stop pipeline before reading from input port.
-        || (!are_prepared_sets_initialized && expression->checkColumnIsAlwaysFalse(filter_column_name)))
+    if (!on_totals
+        && (constant_filter_description.always_false
+            /// Optimization for `WHERE column in (empty set)`.
+            /// The result will not change after set was created, so we can skip this check.
+            /// It is implemented in prepare() stop pipeline before reading from input port.
+            || (!are_prepared_sets_initialized && expression->checkColumnIsAlwaysFalse(filter_column_name))))
     {
         input.close();
         output.finish();
@@ -85,7 +89,7 @@ IProcessor::Status FilterTransform::prepare()
 }
 
 
-void FilterTransform::removeFilterIfNeed(Chunk & chunk)
+void FilterTransform::removeFilterIfNeed(Chunk & chunk) const
 {
     if (chunk && remove_filter_column)
         chunk.erase(filter_column_position);
@@ -93,18 +97,19 @@ void FilterTransform::removeFilterIfNeed(Chunk & chunk)
 
 void FilterTransform::transform(Chunk & chunk)
 {
-    size_t num_rows_before_filtration;
+    size_t num_rows_before_filtration = chunk.getNumRows();
     auto columns = chunk.detachColumns();
 
     {
         Block block = getInputPort().getHeader().cloneWithColumns(columns);
         columns.clear();
-        expression->execute(block);
-        num_rows_before_filtration = block.rows();
+
+        expression->execute(block, num_rows_before_filtration);
+
         columns = block.getColumns();
     }
 
-    if (constant_filter_description.always_true)
+    if (constant_filter_description.always_true || on_totals)
     {
         chunk.setColumns(std::move(columns), num_rows_before_filtration);
         removeFilterIfNeed(chunk);

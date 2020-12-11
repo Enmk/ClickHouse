@@ -1,9 +1,11 @@
+#pragma once
 #include <stddef.h>
 #include <time.h>
 
 #include <Core/Types.h>
 
 class DateLUTImpl;
+class TimeZoneImpl;
 
 namespace DB
 {
@@ -56,8 +58,11 @@ class ReadBuffer;
   */
 
 void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone);
+void parseDateTimeBestEffortUS(time_t & res, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
 bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone);
-void parseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone);
-bool tryParseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone);
+void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
+bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
+void parseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
+bool tryParseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
 
 }

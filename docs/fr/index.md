@@ -1,11 +1,11 @@
 ---
 machine_translated: true
-machine_translated_rev: f865c9653f9df092694258e0ccdd733c339112f5
-toc_priority: 3
+machine_translated_rev: 72537a2d527c63c07aa5d2361a8829f3895cf2bd
+toc_priority: 0
 toc_title: "Aper\xE7u"
 ---
 
-# Qu'est-ce que ClickHouse? {#what-is-clickhouse}
+# Qu'Est-Ce Que ClickHouse? {#what-is-clickhouse}
 
 ClickHouse est un système de gestion de base de données orienté colonne (SGBD) pour le traitement analytique en ligne des requêtes (OLAP).
 
@@ -13,10 +13,10 @@ Dans un “normal” SGBD orienté ligne, les données sont stockées dans cet o
 
 | Rangée | WatchID     | JavaEnable | Intitulé                         | GoodEvent | EventTime           |
 |--------|-------------|------------|----------------------------------|-----------|---------------------|
-| \#0    | 89354350662 | 1          | Relations Avec Les Investisseurs | 1         | 2016-05-18 05:19:20 |
-| \#1    | 90329509958 | 0          | Contacter                        | 1         | 2016-05-18 08:10:20 |
-| \#2    | 89953706054 | 1          | Mission                          | 1         | 2016-05-18 07:38:00 |
-| \#N    | …           | …          | …                                | …         | …                   |
+| #0    | 89354350662 | 1          | Relations Avec Les Investisseurs | 1         | 2016-05-18 05:19:20 |
+| #1    | 90329509958 | 0          | Contacter                        | 1         | 2016-05-18 08:10:20 |
+| #2    | 89953706054 | 1          | Mission                          | 1         | 2016-05-18 07:38:00 |
+| #N    | …           | …          | …                                | …         | …                   |
 
 En d'autres termes, toutes les valeurs liées à une ligne sont physiquement stockées l'une à côté de l'autre.
 
@@ -24,7 +24,7 @@ Des exemples d'un SGBD orienté ligne sont MySQL, Postgres et MS SQL Server.
 
 Dans un SGBD orienté colonne, les données sont stockées comme ceci:
 
-| Rangée:     | \#0                              | \#1                 | \#2                 | \#N |
+| Rangée:     | #0                              | #1                 | #2                 | #N |
 |-------------|----------------------------------|---------------------|---------------------|-----|
 | WatchID:    | 89354350662                      | 90329509958         | 89953706054         | …   |
 | JavaEnable: | 1                                | 0                   | 1                   | …   |
@@ -64,11 +64,11 @@ Les bases de données orientées colonne sont mieux adaptées aux scénarios OLA
 
 **SGBD orienté ligne**
 
-![Row-oriented](images/row_oriented.gif#)
+![Row-oriented](images/row-oriented.gif#)
 
 **SGBD orienté colonne**
 
-![Column-oriented](images/column_oriented.gif#)
+![Column-oriented](images/column-oriented.gif#)
 
 Vous voyez la différence?
 
@@ -79,48 +79,6 @@ Vous voyez la différence?
 3.  En raison de la réduction des E / S, Plus de données s'insèrent dans le cache du système.
 
 Par exemple, la requête “count the number of records for each advertising platform” nécessite la lecture d'un “advertising platform ID” colonne, qui prend 1 octet non compressé. Si la majeure partie du trafic ne provenait pas de plates-formes publicitaires, vous pouvez vous attendre à une compression d'au moins 10 fois de cette colonne. Lors de l'utilisation d'un algorithme de compression rapide, la décompression des données est possible à une vitesse d'au moins plusieurs gigaoctets de données non compressées par seconde. En d'autres termes, cette requête ne peut être traitée qu'à une vitesse d'environ plusieurs milliards de lignes par seconde sur un seul serveur. Cette vitesse est effectivement atteinte dans la pratique.
-
-<details markdown="1">
-
-<summary>Exemple</summary>
-
-``` bash
-$ clickhouse-client
-ClickHouse client version 0.0.52053.
-Connecting to localhost:9000.
-Connected to ClickHouse server version 0.0.52053.
-```
-
-``` sql
-SELECT CounterID, count() FROM hits GROUP BY CounterID ORDER BY count() DESC LIMIT 20
-```
-
-``` text
-┌─CounterID─┬──count()─┐
-│    114208 │ 56057344 │
-│    115080 │ 51619590 │
-│      3228 │ 44658301 │
-│     38230 │ 42045932 │
-│    145263 │ 42042158 │
-│     91244 │ 38297270 │
-│    154139 │ 26647572 │
-│    150748 │ 24112755 │
-│    242232 │ 21302571 │
-│    338158 │ 13507087 │
-│     62180 │ 12229491 │
-│     82264 │ 12187441 │
-│    232261 │ 12148031 │
-│    146272 │ 11438516 │
-│    168777 │ 11403636 │
-│   4120072 │ 11227824 │
-│  10938808 │ 10519739 │
-│     74088 │  9047015 │
-│    115079 │  8837972 │
-│    337234 │  8205961 │
-└───────────┴──────────┘
-```
-
-</details>
 
 ### CPU {#cpu}
 

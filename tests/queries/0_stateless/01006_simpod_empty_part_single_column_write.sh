@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 CURDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. $CURDIR/../shell_config.sh
+. "$CURDIR"/../shell_config.sh
 
-. $CURDIR/mergetree_mutations.lib
+. "$CURDIR"/mergetree_mutations.lib
 
 
 ${CLICKHOUSE_CLIENT} --query="DROP TABLE IF EXISTS table_with_empty_part"
@@ -16,7 +16,7 @@ ${CLICKHOUSE_CLIENT} --query="CREATE TABLE table_with_empty_part
 ENGINE = MergeTree()
 ORDER BY id
 PARTITION BY id
-SETTINGS vertical_merge_algorithm_min_rows_to_activate=0, vertical_merge_algorithm_min_columns_to_activate=0
+SETTINGS vertical_merge_algorithm_min_rows_to_activate=0, vertical_merge_algorithm_min_columns_to_activate=0, remove_empty_parts = 0
 "
 
 
@@ -28,7 +28,7 @@ ${CLICKHOUSE_CLIENT} --query="ALTER TABLE table_with_empty_part DELETE WHERE id 
 
 sleep 0.5
 
-mutation_id=`${CLICKHOUSE_CLIENT} --query="SELECT max(mutation_id) FROM system.mutations WHERE table='table_with_empty_part'"`
+mutation_id=$(${CLICKHOUSE_CLIENT} --query="SELECT max(mutation_id) FROM system.mutations WHERE table='table_with_empty_part'")
 
 wait_for_mutation "table_with_empty_part" "$mutation_id"
 

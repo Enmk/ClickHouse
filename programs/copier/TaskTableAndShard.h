@@ -4,6 +4,12 @@
 #include "Internals.h"
 #include "ClusterPartition.h"
 
+#include <Core/Defines.h>
+
+#include <ext/map.h>
+#include <boost/algorithm/string/join.hpp>
+
+
 namespace DB
 {
 namespace ErrorCodes
@@ -45,9 +51,9 @@ struct TaskTable
     String getCertainPartitionPieceTaskStatusPath(const String & partition_name, const size_t piece_number) const;
 
 
-    bool isReplicatedTable() const { return engine_push_zk_path != ""; }
+    bool isReplicatedTable() const { return is_replicated_table; }
 
-    /// Partitions will be splitted into number-of-splits pieces.
+    /// Partitions will be split into number-of-splits pieces.
     /// Each piece will be copied independently. (10 by default)
     size_t number_of_splits;
 
@@ -75,6 +81,7 @@ struct TaskTable
 
     /// First argument of Replicated...MergeTree()
     String engine_push_zk_path;
+    bool is_replicated_table;
 
     ASTPtr rewriteReplicatedCreateQueryToPlain();
 
@@ -88,8 +95,8 @@ struct TaskTable
     ASTPtr main_engine_split_ast;
 
     /*
-     * To copy partiton piece form one cluster to another we have to use Distributed table.
-     * In case of usage separate table (engine_push) for each partiton piece,
+     * To copy partition piece form one cluster to another we have to use Distributed table.
+     * In case of usage separate table (engine_push) for each partition piece,
      * we have to use many Distributed tables.
      * */
     ASTs auxiliary_engine_split_asts;
@@ -110,7 +117,7 @@ struct TaskTable
     /**
      * Prioritized list of shards
      * all_shards contains information about all shards in the table.
-     * So we have to check whether particular shard have current partiton or not while processing.
+     * So we have to check whether particular shard have current partition or not while processing.
      */
     TasksShard all_shards;
     TasksShard local_shards;
@@ -119,7 +126,7 @@ struct TaskTable
     ClusterPartitions cluster_partitions;
     NameSet finished_cluster_partitions;
 
-    /// Parition names to process in user-specified order
+    /// Partition names to process in user-specified order
     Strings ordered_partition_names;
 
     ClusterPartition & getClusterPartition(const String & partition_name)
@@ -260,12 +267,13 @@ inline TaskTable::TaskTable(TaskCluster & parent, const Poco::Util::AbstractConf
                + "." + escapeForFileName(table_push.second);
 
     engine_push_str = config.getString(table_prefix + "engine");
+
     {
         ParserStorage parser_storage;
-        engine_push_ast = parseQuery(parser_storage, engine_push_str, 0);
+        engine_push_ast = parseQuery(parser_storage, engine_push_str, 0, DBMS_DEFAULT_MAX_PARSER_DEPTH);
         engine_push_partition_key_ast = extractPartitionKey(engine_push_ast);
-        primary_key_comma_separated = createCommaSeparatedStringFrom(extractPrimaryKeyColumnNames(engine_push_ast));
-        engine_push_zk_path = extractReplicatedTableZookeeperPath(engine_push_ast);
+        primary_key_comma_separated = boost::algorithm::join(extractPrimaryKeyColumnNames(engine_push_ast), ", ");
+        is_replicated_table = isReplicatedTableEngine(engine_push_ast);
     }
 
     sharding_key_str = config.getString(table_prefix + "sharding_key");
@@ -273,7 +281,7 @@ inline TaskTable::TaskTable(TaskCluster & parent, const Poco::Util::AbstractConf
     auxiliary_engine_split_asts.reserve(number_of_splits);
     {
         ParserExpressionWithOptionalAlias parser_expression(false);
-        sharding_key_ast = parseQuery(parser_expression, sharding_key_str, 0);
+        sharding_key_ast = parseQuery(parser_expression, sharding_key_str, 0, DBMS_DEFAULT_MAX_PARSER_DEPTH);
         main_engine_split_ast = createASTStorageDistributed(cluster_push_name, table_push.first, table_push.second,
                                                             sharding_key_ast);
 
@@ -291,7 +299,7 @@ inline TaskTable::TaskTable(TaskCluster & parent, const Poco::Util::AbstractConf
     if (!where_condition_str.empty())
     {
         ParserExpressionWithOptionalAlias parser_expression(false);
-        where_condition_ast = parseQuery(parser_expression, where_condition_str, 0);
+        where_condition_ast = parseQuery(parser_expression, where_condition_str, 0, DBMS_DEFAULT_MAX_PARSER_DEPTH);
 
         // Will use canonical expression form
         where_condition_str = queryToString(where_condition_ast);
@@ -368,14 +376,17 @@ inline ASTPtr TaskTable::rewriteReplicatedCreateQueryToPlain()
     auto & new_storage_ast = prev_engine_push_ast->as<ASTStorage &>();
     auto & new_engine_ast = new_storage_ast.engine->as<ASTFunction &>();
 
-    auto & replicated_table_arguments = new_engine_ast.arguments->children;
-
-    /// Delete first two arguments of Replicated...MergeTree() table.
-    replicated_table_arguments.erase(replicated_table_arguments.begin());
-    replicated_table_arguments.erase(replicated_table_arguments.begin());
-
-    /// Remove replicated from name
+    /// Remove "Replicated" from name
     new_engine_ast.name = new_engine_ast.name.substr(10);
+
+    if (new_engine_ast.arguments)
+    {
+        auto & replicated_table_arguments = new_engine_ast.arguments->children;
+
+        /// Delete first two arguments of Replicated...MergeTree() table.
+        replicated_table_arguments.erase(replicated_table_arguments.begin());
+        replicated_table_arguments.erase(replicated_table_arguments.begin());
+    }
 
     return new_storage_ast.clone();
 }
@@ -383,12 +394,8 @@ inline ASTPtr TaskTable::rewriteReplicatedCreateQueryToPlain()
 
 inline String DB::TaskShard::getDescription() const
 {
-    std::stringstream ss;
-    ss << "N" << numberInCluster()
-       << " (having a replica " << getHostNameExample()
-       << ", pull table " + getQuotedTable(task_table.table_pull)
-       << " of cluster " + task_table.cluster_pull_name << ")";
-    return ss.str();
+    return fmt::format("N{} (having a replica {}, pull table {} of cluster {}",
+                       numberInCluster(), getHostNameExample(), getQuotedTable(task_table.table_pull), task_table.cluster_pull_name);
 }
 
 inline String DB::TaskShard::getHostNameExample() const

@@ -1,21 +1,19 @@
 #pragma once
 
-#include <boost/operators.hpp>
+#include <functional>
 #include <type_traits>
-
-/** https://svn.boost.org/trac/boost/ticket/5182
-  */
+#include <utility>
 
 template <class T, class Tag>
 struct StrongTypedef
-    : boost::totally_ordered1< StrongTypedef<T, Tag>
-                               , boost::totally_ordered2< StrongTypedef<T, Tag>, T> >
 {
 private:
     using Self = StrongTypedef;
     T t;
 
 public:
+    using UnderlyingType = T;
+
     template <class Enable = typename std::is_copy_constructible<T>::type>
     explicit StrongTypedef(const T & t_) : t(t_) {}
     template <class Enable = typename std::is_move_constructible<T>::type>

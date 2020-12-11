@@ -8,13 +8,13 @@ CREATE DICTIONARY dict_db_01225.dict
   val UInt64 DEFAULT 10
 )
 PRIMARY KEY key
-SOURCE(CLICKHOUSE(HOST 'localhost' PORT 9000 USER 'default' TABLE 'dict_data' PASSWORD '' DB 'dict_db_01225'))
+SOURCE(CLICKHOUSE(HOST 'localhost' PORT tcpPort() USER 'default' TABLE 'dict_data' PASSWORD '' DB 'dict_db_01225'))
 LIFETIME(MIN 0 MAX 0)
 LAYOUT(FLAT());
 
 SYSTEM RELOAD DICTIONARY dict_db_01225.dict;
-DROP TABLE dict_db_01225.dict; -- { serverError 60; }
--- Regression:
---     Code: 1000. DB::Exception: Received from localhost:9000. DB::Exception: File not found: ./metadata/dict_db_01225/dict.sql.
+
+DROP TABLE dict_db_01225.dict; -- { serverError 520; }
 DROP DICTIONARY dict_db_01225.dict;
+
 DROP DATABASE dict_db_01225;

@@ -14,14 +14,12 @@
 #include <Common/ProfileEvents.h>
 #include <common/StringRef.h>
 
+#if !defined(ARCADIA_BUILD)
+#    include "config_functions.h"
+#endif
 
-#include "config_functions.h"
 #if USE_HYPERSCAN
-#    if __has_include(<hs/hs.h>)
-#        include <hs/hs.h>
-#    else
-#        include <hs.h>
-#    endif
+#    include <hs.h>
 #endif
 
 namespace ProfileEvents
@@ -56,7 +54,11 @@ namespace Regexps
         return {likePatternToRegexp(pattern), flags};
     }
 
-    template <bool like, bool no_capture>
+    /** Returns holder of an object from Pool.
+      * You must hold the ownership while using the object.
+      * In destructor, it returns the object back to the Pool for further reuse.
+      */
+    template <bool like, bool no_capture, bool case_insensitive = false>
     inline Pool::Pointer get(const std::string & pattern)
     {
         /// C++11 has thread-safe function-local statics on most modern compilers.
@@ -65,8 +67,12 @@ namespace Regexps
         return known_regexps.get(pattern, [&pattern]
         {
             int flags = OptimizedRegularExpression::RE_DOT_NL;
+
             if (no_capture)
                 flags |= OptimizedRegularExpression::RE_NO_CAPTURE;
+
+            if (case_insensitive)
+                flags |= Regexps::Regexp::RE_CASELESS;
 
             ProfileEvents::increment(ProfileEvents::RegexpCreated);
             return new Regexp{createRegexp<like>(pattern, flags)};
@@ -141,7 +147,7 @@ namespace MultiRegexps
             patterns.push_back(ref.data);
             /* Flags below are the pattern matching flags.
              * HS_FLAG_DOTALL is a compile flag where matching a . will not exclude newlines. This is a good
-             * performance practice accrording to Hyperscan API. https://intel.github.io/hyperscan/dev-reference/performance.html#dot-all-mode
+             * performance practice according to Hyperscan API. https://intel.github.io/hyperscan/dev-reference/performance.html#dot-all-mode
              * HS_FLAG_ALLOWEMPTY is a compile flag where empty strings are allowed to match.
              * HS_FLAG_UTF8 is a flag where UTF8 literals are matched.
              * HS_FLAG_SINGLEMATCH is a compile flag where each pattern match will be returned only once. it is a good performance practice

@@ -1,22 +1,22 @@
 ---
-machine_translated: true
-machine_translated_rev: 3e185d24c9fe772c7cf03d5475247fb829a21dfa
-toc_priority: 3
-toc_title: "Descripci\xF3n"
+machine_translated: false
+machine_translated_rev: 
+toc_priority: 0
+toc_title: "Descripción"
 ---
 
-# ¿qué es clickhouse? {#what-is-clickhouse}
+# ¿Qué es ClickHouse? {#what-is-clickhouse}
 
-ClickHouse es un sistema de gestión de bases de datos orientado a columnas (DBMS) para el procesamiento analítico en línea de consultas (OLAP).
+ClickHouse es un sistema de gestión de bases de datos (DBMS), orientado a columnas, para el procesamiento analítico de consultas en línea (OLAP).
 
-En un “normal” DBMS orientado a filas, los datos se almacenan en este orden:
+En un DBMS “normal”, orientado a filas, los datos se almacenan en este orden:
 
 | Fila | Argumento   | JavaEnable | Titular                   | GoodEvent | EventTime           |
 |------|-------------|------------|---------------------------|-----------|---------------------|
-| \#0  | 89354350662 | 1          | Relaciones con inversores | 1         | 2016-05-18 05:19:20 |
-| \#1  | 90329509958 | 0          | Contáctenos               | 1         | 2016-05-18 08:10:20 |
-| \#2  | 89953706054 | 1          | Mision                    | 1         | 2016-05-18 07:38:00 |
-| \#N  | …           | …          | …                         | …         | …                   |
+| #0  | 89354350662 | 1          | Relaciones con inversores | 1         | 2016-05-18 05:19:20 |
+| #1  | 90329509958 | 0          | Contáctenos               | 1         | 2016-05-18 08:10:20 |
+| #2  | 89953706054 | 1          | Mision                    | 1         | 2016-05-18 07:38:00 |
+| #N  | …           | …          | …                         | …         | …                   |
 
 En otras palabras, todos los valores relacionados con una fila se almacenan físicamente uno junto al otro.
 
@@ -24,7 +24,7 @@ Ejemplos de un DBMS orientado a filas son MySQL, Postgres y MS SQL Server.
 
 En un DBMS orientado a columnas, los datos se almacenan así:
 
-| Fila:       | \#0                       | \#1                 | \#2                 | \#N |
+| Fila:       | #0                       | #1                 | #2                 | #N |
 |-------------|---------------------------|---------------------|---------------------|-----|
 | Argumento:  | 89354350662               | 90329509958         | 89953706054         | …   |
 | JavaEnable: | 1                         | 0                   | 1                   | …   |
@@ -36,7 +36,7 @@ Estos ejemplos solo muestran el orden en el que se organizan los datos. Los valo
 
 Ejemplos de un DBMS orientado a columnas: Vertica, Paraccel (Actian Matrix y Amazon Redshift), Sybase IQ, Exasol, Infobright, InfiniDB, MonetDB (VectorWise y Actian Vector), LucidDB, SAP HANA, Google Dremel, Google PowerDrill, Druid y kdb+.
 
-Different orders for storing data are better suited to different scenarios. The data access scenario refers to what queries are made, how often, and in what proportion; how much data is read for each type of query – rows, columns, and bytes; the relationship between reading and updating data; the working size of the data and how locally it is used; whether transactions are used, and how isolated they are; requirements for data replication and logical integrity; requirements for latency and throughput for each type of query, and so on.
+Los diferentes modos de ordenar los datos al guardarlos se adecúan mejor a diferentes escenarios. El escenario de acceso a los datos se refiere a qué consultas se hacen, con qué frecuencia y en qué proporción; cuántos datos se leen para cada tipo de consulta - filas, columnas y bytes; la relación entre lectura y actualización de datos; el tamaño de trabajo de los datos y qué tan localmente son usados; si se usan transacciones y qué tan aisladas están;requerimientos de replicación de los datos y de integridad lógica, requerimientos de latencia y caudal (throughput) para cada tipo de consulta, y cosas por el estilo.
 
 Cuanto mayor sea la carga en el sistema, más importante es personalizar el sistema configurado para que coincida con los requisitos del escenario de uso, y más fino será esta personalización. No existe un sistema que sea igualmente adecuado para escenarios significativamente diferentes. Si un sistema es adaptable a un amplio conjunto de escenarios, bajo una carga alta, el sistema manejará todos los escenarios igualmente mal, o funcionará bien para solo uno o algunos de los escenarios posibles.
 
@@ -64,11 +64,11 @@ Las bases de datos orientadas a columnas son más adecuadas para los escenarios 
 
 **DBMS orientado a filas**
 
-![Row-oriented](images/row_oriented.gif#)
+![Row-oriented](images/row-oriented.gif#)
 
 **DBMS orientado a columnas**
 
-![Column-oriented](images/column_oriented.gif#)
+![Column-oriented](images/column-oriented.gif#)
 
 Ver la diferencia?
 
@@ -79,48 +79,6 @@ Ver la diferencia?
 3.  Debido a la reducción de E / S, más datos se ajustan a la memoria caché del sistema.
 
 Por ejemplo, la consulta “count the number of records for each advertising platform” requiere leer uno “advertising platform ID” columna, que ocupa 1 byte sin comprimir. Si la mayor parte del tráfico no proviene de plataformas publicitarias, puede esperar al menos una compresión de 10 veces de esta columna. Cuando se utiliza un algoritmo de compresión rápida, la descompresión de datos es posible a una velocidad de al menos varios gigabytes de datos sin comprimir por segundo. En otras palabras, esta consulta se puede procesar a una velocidad de aproximadamente varios miles de millones de filas por segundo en un único servidor. Esta velocidad se logra realmente en la práctica.
-
-<details markdown="1">
-
-<summary>Ejemplo</summary>
-
-``` bash
-$ clickhouse-client
-ClickHouse client version 0.0.52053.
-Connecting to localhost:9000.
-Connected to ClickHouse server version 0.0.52053.
-```
-
-``` sql
-SELECT CounterID, count() FROM hits GROUP BY CounterID ORDER BY count() DESC LIMIT 20
-```
-
-``` text
-┌─CounterID─┬──count()─┐
-│    114208 │ 56057344 │
-│    115080 │ 51619590 │
-│      3228 │ 44658301 │
-│     38230 │ 42045932 │
-│    145263 │ 42042158 │
-│     91244 │ 38297270 │
-│    154139 │ 26647572 │
-│    150748 │ 24112755 │
-│    242232 │ 21302571 │
-│    338158 │ 13507087 │
-│     62180 │ 12229491 │
-│     82264 │ 12187441 │
-│    232261 │ 12148031 │
-│    146272 │ 11438516 │
-│    168777 │ 11403636 │
-│   4120072 │ 11227824 │
-│  10938808 │ 10519739 │
-│     74088 │  9047015 │
-│    115079 │  8837972 │
-│    337234 │  8205961 │
-└───────────┴──────────┘
-```
-
-</details>
 
 ### CPU {#cpu}
 

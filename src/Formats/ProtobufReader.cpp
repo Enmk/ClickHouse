@@ -1,16 +1,14 @@
-#include "config_formats.h"
-#if USE_PROTOBUF
-
 #include "ProtobufReader.h"
 
-#include <AggregateFunctions/IAggregateFunction.h>
-#include <boost/numeric/conversion/cast.hpp>
-#include <DataTypes/DataTypesDecimal.h>
-#include <IO/ReadBufferFromString.h>
-#include <IO/ReadHelpers.h>
-#include <IO/WriteBufferFromVector.h>
-#include <IO/WriteHelpers.h>
-#include <optional>
+#if USE_PROTOBUF
+#    include <optional>
+#    include <AggregateFunctions/IAggregateFunction.h>
+#    include <DataTypes/DataTypesDecimal.h>
+#    include <IO/ReadBufferFromString.h>
+#    include <IO/ReadHelpers.h>
+#    include <IO/WriteBufferFromVector.h>
+#    include <IO/WriteHelpers.h>
+#    include <boost/numeric/conversion/cast.hpp>
 
 
 namespace DB
@@ -34,31 +32,35 @@ namespace
         BITS32 = 5,
     };
 
-    // The following condition must always be true:
-    // any_cursor_position < min(END_OF_VARINT, END_OF_GROUP)
-    // This inequation helps to check conditions in SimpleReader.
-    constexpr UInt64 END_OF_VARINT = static_cast<UInt64>(-1);
-    constexpr UInt64 END_OF_GROUP = static_cast<UInt64>(-2);
+    // The following conditions must always be true:
+    // any_cursor_position > END_OF_VARINT
+    // any_cursor_position > END_OF_GROUP
+    // Those inequations helps checking conditions in ProtobufReader::SimpleReader.
+    constexpr Int64 END_OF_VARINT = -1;
+    constexpr Int64 END_OF_GROUP = -2;
+    constexpr Int64 END_OF_FILE = -3;
 
     Int64 decodeZigZag(UInt64 n) { return static_cast<Int64>((n >> 1) ^ (~(n & 1) + 1)); }
 
-    [[noreturn]] void throwUnknownFormat()
-    {
-        throw Exception("Protobuf messages are corrupted or don't match the provided schema. Please note that Protobuf stream is length-delimited: every message is prefixed by its length in varint.", ErrorCodes::UNKNOWN_PROTOBUF_FORMAT);
-    }
 }
 
 
 // SimpleReader is an utility class to deserialize protobufs.
 // Knows nothing about protobuf schemas, just provides useful functions to deserialize data.
-ProtobufReader::SimpleReader::SimpleReader(ReadBuffer & in_)
+ProtobufReader::SimpleReader::SimpleReader(ReadBuffer & in_, const bool use_length_delimiters_)
     : in(in_)
     , cursor(0)
     , current_message_level(0)
     , current_message_end(0)
     , field_end(0)
     , last_string_pos(-1)
+    , use_length_delimiters(use_length_delimiters_)
 {
+}
+
+[[noreturn]] void ProtobufReader::SimpleReader::throwUnknownFormat() const
+{
+    throw Exception(std::string("Protobuf messages are corrupted or don't match the provided schema.") + (use_length_delimiters ? " Please note that Protobuf stream is length-delimited: every message is prefixed by its length in varint." : ""), ErrorCodes::UNKNOWN_PROTOBUF_FORMAT);
 }
 
 bool ProtobufReader::SimpleReader::startMessage()
@@ -67,8 +69,16 @@ bool ProtobufReader::SimpleReader::startMessage()
     assert(!current_message_level);
     if (unlikely(in.eof()))
         return false;
-    size_t size_of_message = readVarint();
-    current_message_end = cursor + size_of_message;
+
+    if (use_length_delimiters)
+    {
+        size_t size_of_message = readVarint();
+        current_message_end = cursor + size_of_message;
+    }
+    else
+    {
+        current_message_end = END_OF_FILE;
+    }
     ++current_message_level;
     field_end = cursor;
     return true;
@@ -79,7 +89,7 @@ void ProtobufReader::SimpleReader::endMessage(bool ignore_errors)
     if (!current_message_level)
         return;
 
-    UInt64 root_message_end = (current_message_level == 1) ? current_message_end : parent_message_ends.front();
+    Int64 root_message_end = (current_message_level == 1) ? current_message_end : parent_message_ends.front();
     if (cursor != root_message_end)
     {
         if (cursor < root_message_end)
@@ -97,6 +107,9 @@ void ProtobufReader::SimpleReader::endMessage(bool ignore_errors)
 void ProtobufReader::SimpleReader::startNestedMessage()
 {
     assert(current_message_level >= 1);
+    if ((cursor > field_end) && (field_end != END_OF_GROUP))
+        throwUnknownFormat();
+
     // Start reading a nested message which is located inside a length-delimited field
     // of another message.
     parent_message_ends.emplace_back(current_message_end);
@@ -149,7 +162,22 @@ bool ProtobufReader::SimpleReader::readFieldNumber(UInt32 & field_number)
     }
 
     if (cursor >= current_message_end)
-        return false;
+    {
+        if (current_message_end == END_OF_FILE)
+        {
+            if (unlikely(in.eof()))
+            {
+                current_message_end = cursor;
+                return false;
+            }
+        }
+        else if (current_message_end == END_OF_GROUP)
+        {
+            /// We'll check for the `GROUP_END` marker later.
+        }
+        else
+            return false;
+    }
 
     UInt64 varint = readVarint();
     if (unlikely(varint & (static_cast<UInt64>(0xFFFFFFFF) << 32)))
@@ -198,11 +226,17 @@ bool ProtobufReader::SimpleReader::readFieldNumber(UInt32 & field_number)
 
 bool ProtobufReader::SimpleReader::readUInt(UInt64 & value)
 {
+    if (field_end == END_OF_VARINT)
+    {
+        value = readVarint();
+        field_end = cursor;
+        return true;
+    }
+
     if (unlikely(cursor >= field_end))
         return false;
+
     value = readVarint();
-    if (field_end == END_OF_VARINT)
-        field_end = cursor;
     return true;
 }
 
@@ -229,6 +263,7 @@ bool ProtobufReader::SimpleReader::readFixed(T & value)
 {
     if (unlikely(cursor >= field_end))
         return false;
+
     readBinary(&value, sizeof(T));
     return true;
 }
@@ -272,25 +307,25 @@ UInt64 ProtobufReader::SimpleReader::continueReadingVarint(UInt64 first_byte)
     UInt64 result = (first_byte & ~static_cast<UInt64>(0x80));
     char c;
 
-#define PROTOBUF_READER_READ_VARINT_BYTE(byteNo) \
-    do \
-    { \
-        in.readStrict(c); \
-        ++cursor; \
-        if constexpr ((byteNo) < 10) \
+#    define PROTOBUF_READER_READ_VARINT_BYTE(byteNo) \
+        do \
         { \
-            result |= static_cast<UInt64>(static_cast<UInt8>(c)) << (7 * ((byteNo) - 1)); \
-            if (likely(!(c & 0x80))) \
-                return result; \
-        } \
-        else \
-        { \
-            if (likely(c == 1)) \
-                return result; \
-        } \
-        if constexpr ((byteNo) < 9) \
-            result &= ~(static_cast<UInt64>(0x80) << (7 * ((byteNo) - 1))); \
-    } while (false)
+            in.readStrict(c); \
+            ++cursor; \
+            if constexpr ((byteNo) < 10) \
+            { \
+                result |= static_cast<UInt64>(static_cast<UInt8>(c)) << (7 * ((byteNo)-1)); \
+                if (likely(!(c & 0x80))) \
+                    return result; \
+            } \
+            else \
+            { \
+                if (likely(c == 1)) \
+                    return result; \
+            } \
+            if constexpr ((byteNo) < 9) \
+                result &= ~(static_cast<UInt64>(0x80) << (7 * ((byteNo)-1))); \
+        } while (false)
 
     PROTOBUF_READER_READ_VARINT_BYTE(2);
     PROTOBUF_READER_READ_VARINT_BYTE(3);
@@ -302,7 +337,7 @@ UInt64 ProtobufReader::SimpleReader::continueReadingVarint(UInt64 first_byte)
     PROTOBUF_READER_READ_VARINT_BYTE(9);
     PROTOBUF_READER_READ_VARINT_BYTE(10);
 
-#undef PROTOBUF_READER_READ_VARINT_BYTE
+#    undef PROTOBUF_READER_READ_VARINT_BYTE
 
     throwUnknownFormat();
 }
@@ -311,22 +346,22 @@ void ProtobufReader::SimpleReader::ignoreVarint()
 {
     char c;
 
-#define PROTOBUF_READER_IGNORE_VARINT_BYTE(byteNo) \
-    do \
-    { \
-        in.readStrict(c); \
-        ++cursor; \
-        if constexpr ((byteNo) < 10) \
+#    define PROTOBUF_READER_IGNORE_VARINT_BYTE(byteNo) \
+        do \
         { \
-            if (likely(!(c & 0x80))) \
-                return; \
-        } \
-        else \
-        { \
-            if (likely(c == 1)) \
-                return; \
-        } \
-    } while (false)
+            in.readStrict(c); \
+            ++cursor; \
+            if constexpr ((byteNo) < 10) \
+            { \
+                if (likely(!(c & 0x80))) \
+                    return; \
+            } \
+            else \
+            { \
+                if (likely(c == 1)) \
+                    return; \
+            } \
+        } while (false)
 
     PROTOBUF_READER_IGNORE_VARINT_BYTE(1);
     PROTOBUF_READER_IGNORE_VARINT_BYTE(2);
@@ -338,7 +373,8 @@ void ProtobufReader::SimpleReader::ignoreVarint()
     PROTOBUF_READER_IGNORE_VARINT_BYTE(8);
     PROTOBUF_READER_IGNORE_VARINT_BYTE(9);
     PROTOBUF_READER_IGNORE_VARINT_BYTE(10);
-#undef PROTOBUF_READER_IGNORE_VARINT_BYTE
+
+#    undef PROTOBUF_READER_IGNORE_VARINT_BYTE
 
     throwUnknownFormat();
 }
@@ -445,6 +481,10 @@ public:
         cannotConvertType("UInt128");
     }
 
+    bool readInt128(Int128 &) override { cannotConvertType("Int128"); }
+    bool readInt256(Int256 &) override { cannotConvertType("Int256"); }
+    bool readUInt256(UInt256 &) override { cannotConvertType("UInt256"); }
+
     bool readFloat32(Float32 &) override
     {
         cannotConvertType("Float32");
@@ -502,6 +542,12 @@ public:
     {
         cannotConvertType("Decimal128");
     }
+
+    bool readDecimal256(Decimal256 &, UInt32, UInt32) override
+    {
+        cannotConvertType("Decimal256");
+    }
+
 
     bool readAggregateFunction(const AggregateFunctionPtr &, AggregateDataPtr, Arena &) override
     {
@@ -631,6 +677,7 @@ public:
     bool readDecimal32(Decimal32 & decimal, UInt32 precision, UInt32 scale) override { return readDecimal(decimal, precision, scale); }
     bool readDecimal64(Decimal64 & decimal, UInt32 precision, UInt32 scale) override { return readDecimal(decimal, precision, scale); }
     bool readDecimal128(Decimal128 & decimal, UInt32 precision, UInt32 scale) override { return readDecimal(decimal, precision, scale); }
+    bool readDecimal256(Decimal256 & decimal, UInt32 precision, UInt32 scale) override { return readDecimal(decimal, precision, scale); }
 
     bool readAggregateFunction(const AggregateFunctionPtr & function, AggregateDataPtr place, Arena & arena) override
     {
@@ -694,16 +741,17 @@ private:
     std::optional<std::unordered_map<StringRef, Int16>> enum_name_to_value_map;
 };
 
-#define PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_STRINGS(field_type_id) \
-    template <> \
-    std::unique_ptr<ProtobufReader::IConverter> ProtobufReader::createConverter<field_type_id>( \
-        const google::protobuf::FieldDescriptor * field) \
-    { \
-        return std::make_unique<ConverterFromString>(simple_reader, field); \
-    }
+#    define PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_STRINGS(field_type_id) \
+        template <> \
+        std::unique_ptr<ProtobufReader::IConverter> ProtobufReader::createConverter<field_type_id>( \
+            const google::protobuf::FieldDescriptor * field) \
+        { \
+            return std::make_unique<ConverterFromString>(simple_reader, field); \
+        }
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_STRINGS(google::protobuf::FieldDescriptor::TYPE_STRING)
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_STRINGS(google::protobuf::FieldDescriptor::TYPE_BYTES)
-#undef PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_STRINGS
+
+#    undef PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_STRINGS
 
 
 template <int field_type_id, typename FromType>
@@ -786,7 +834,7 @@ private:
     template<typename EnumType>
     bool readEnum(EnumType & value)
     {
-        if constexpr (!is_integral_v<FromType>)
+        if constexpr (!is_integer_v<FromType>)
             cannotConvertType("Enum"); // It's not correct to convert floating point to enum.
         FromType number;
         if (!readField(number))
@@ -850,13 +898,14 @@ private:
     std::optional<std::unordered_set<Int16>> set_of_enum_values;
 };
 
-#define PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(field_type_id, field_type) \
-    template <> \
-    std::unique_ptr<ProtobufReader::IConverter> ProtobufReader::createConverter<field_type_id>( \
-        const google::protobuf::FieldDescriptor * field) \
-    { \
-        return std::make_unique<ConverterFromNumber<field_type_id, field_type>>(simple_reader, field); /* NOLINT */ \
-    }
+#    define PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(field_type_id, field_type) \
+        template <> \
+        std::unique_ptr<ProtobufReader::IConverter> ProtobufReader::createConverter<field_type_id>( \
+            const google::protobuf::FieldDescriptor * field) \
+        { \
+            return std::make_unique<ConverterFromNumber<field_type_id, field_type>>(simple_reader, field); /* NOLINT */ \
+        }
+
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(google::protobuf::FieldDescriptor::TYPE_INT32, Int64);
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(google::protobuf::FieldDescriptor::TYPE_SINT32, Int64);
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(google::protobuf::FieldDescriptor::TYPE_UINT32, UInt64);
@@ -869,7 +918,8 @@ PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(google::protobuf::Fi
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(google::protobuf::FieldDescriptor::TYPE_SFIXED64, Int64);
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(google::protobuf::FieldDescriptor::TYPE_FLOAT, float);
 PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS(google::protobuf::FieldDescriptor::TYPE_DOUBLE, double);
-#undef PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS
+
+#    undef PROTOBUF_READER_CREATE_CONVERTER_SPECIALIZATION_FOR_NUMBERS
 
 
 class ProtobufReader::ConverterFromBool : public ConverterBaseImpl
@@ -1021,7 +1071,7 @@ private:
         enum_pbnumber_always_equals_value = true;
         for (const auto & name_value_pair : name_value_pairs)
         {
-            Int16 value = name_value_pair.second;
+            Int16 value = name_value_pair.second; // NOLINT
             const auto * enum_descriptor = field->enum_type()->FindValueByName(name_value_pair.first);
             if (enum_descriptor)
             {
@@ -1053,8 +1103,8 @@ std::unique_ptr<ProtobufReader::IConverter> ProtobufReader::createConverter<goog
 
 
 ProtobufReader::ProtobufReader(
-    ReadBuffer & in_, const google::protobuf::Descriptor * message_type, const std::vector<String> & column_names)
-    : simple_reader(in_)
+    ReadBuffer & in_, const google::protobuf::Descriptor * message_type, const std::vector<String> & column_names, const bool use_length_delimiters_)
+    : simple_reader(in_, use_length_delimiters_)
 {
     root_message = ProtobufColumnMatcher::matchColumns<ColumnMatcherTraits>(column_names, message_type);
     setTraitsDataAfterMatchingColumns(root_message.get());
@@ -1073,10 +1123,10 @@ void ProtobufReader::setTraitsDataAfterMatchingColumns(Message * message)
         }
         switch (field.field_descriptor->type())
         {
-#define PROTOBUF_READER_CONVERTER_CREATING_CASE(field_type_id) \
-            case field_type_id: \
-                field.data.converter = createConverter<field_type_id>(field.field_descriptor); \
-                break
+#    define PROTOBUF_READER_CONVERTER_CREATING_CASE(field_type_id) \
+        case field_type_id: \
+            field.data.converter = createConverter<field_type_id>(field.field_descriptor); \
+            break
             PROTOBUF_READER_CONVERTER_CREATING_CASE(google::protobuf::FieldDescriptor::TYPE_STRING);
             PROTOBUF_READER_CONVERTER_CREATING_CASE(google::protobuf::FieldDescriptor::TYPE_BYTES);
             PROTOBUF_READER_CONVERTER_CREATING_CASE(google::protobuf::FieldDescriptor::TYPE_INT32);
@@ -1093,8 +1143,9 @@ void ProtobufReader::setTraitsDataAfterMatchingColumns(Message * message)
             PROTOBUF_READER_CONVERTER_CREATING_CASE(google::protobuf::FieldDescriptor::TYPE_DOUBLE);
             PROTOBUF_READER_CONVERTER_CREATING_CASE(google::protobuf::FieldDescriptor::TYPE_BOOL);
             PROTOBUF_READER_CONVERTER_CREATING_CASE(google::protobuf::FieldDescriptor::TYPE_ENUM);
-#undef PROTOBUF_READER_CONVERTER_CREATING_CASE
-            default: __builtin_unreachable();
+#    undef PROTOBUF_READER_CONVERTER_CREATING_CASE
+            default:
+                __builtin_unreachable();
         }
         message->data.field_number_to_field_map.emplace(field.field_number, &field);
     }
@@ -1171,4 +1222,5 @@ bool ProtobufReader::readColumnIndex(size_t & column_index)
 }
 
 }
+
 #endif

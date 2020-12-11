@@ -1,13 +1,15 @@
 #pragma once
 
-#include "config_core.h"
+#if !defined(ARCADIA_BUILD)
+#    include "config_core.h"
+#endif
+
 #if USE_MYSQL
 
-#include <ext/shared_ptr_helper.h>
+#    include <ext/shared_ptr_helper.h>
 
-#include <Storages/IStorage.h>
-#include <Interpreters/Context.h>
-#include <mysqlxx/Pool.h>
+#    include <Storages/IStorage.h>
+#    include <mysqlxx/Pool.h>
 
 
 namespace DB
@@ -34,15 +36,16 @@ public:
 
     std::string getName() const override { return "MySQL"; }
 
-    Pipes read(
+    Pipe read(
         const Names & column_names,
-        const SelectQueryInfo & query_info,
+        const StorageMetadataPtr & /*metadata_snapshot*/,
+        SelectQueryInfo & query_info,
         const Context & context,
         QueryProcessingStage::Enum processed_stage,
         size_t max_block_size,
         unsigned num_streams) override;
 
-    BlockOutputStreamPtr write(const ASTPtr & query, const Context & context) override;
+    BlockOutputStreamPtr write(const ASTPtr & query, const StorageMetadataPtr & /*metadata_snapshot*/, const Context & context) override;
 
 private:
     friend class StorageMySQLBlockOutputStream;
@@ -53,7 +56,7 @@ private:
     std::string on_duplicate_clause;
 
     mysqlxx::Pool pool;
-    Context global_context;
+    const Context & global_context;
 };
 
 }

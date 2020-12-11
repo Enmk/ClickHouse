@@ -1,9 +1,11 @@
 #include <Functions/IFunctionImpl.h>
 #include <Functions/FunctionFactory.h>
 #include <DataTypes/DataTypeString.h>
-#include <Common/config_version.h>
 #include <Core/Field.h>
 
+#if !defined(ARCADIA_BUILD)
+#    include <Common/config_version.h>
+#endif
 
 namespace DB
 {
@@ -24,6 +26,10 @@ public:
         return name;
     }
 
+    bool isDeterministic() const override { return false; }
+    bool isDeterministicInScopeOfQuery() const override { return false; }
+    bool isSuitableForConstantFolding() const override { return false; }
+
     size_t getNumberOfArguments() const override
     {
         return 0;
@@ -34,9 +40,9 @@ public:
         return std::make_shared<DataTypeString>();
     }
 
-    void executeImpl(Block & block, const ColumnNumbers &, size_t result, size_t input_rows_count) override
+    ColumnPtr executeImpl(const ColumnsWithTypeAndName &, const DataTypePtr &, size_t input_rows_count) const override
     {
-        block.getByPosition(result).column = DataTypeString().createColumnConst(input_rows_count, VERSION_STRING);
+        return DataTypeString().createColumnConst(input_rows_count, VERSION_STRING);
     }
 };
 

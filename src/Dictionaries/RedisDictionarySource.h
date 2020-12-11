@@ -1,12 +1,9 @@
 #pragma once
 
-#include "config_core.h"
 #include <Core/Block.h>
 
-#if USE_POCO_REDIS
-
-#    include "DictionaryStructure.h"
-#    include "IDictionarySource.h"
+#include "DictionaryStructure.h"
+#include "IDictionarySource.h"
 
 namespace Poco
 {
@@ -44,6 +41,7 @@ namespace ErrorCodes
                 const std::string & host,
                 UInt16 port,
                 UInt8 db_index,
+                const std::string & password,
                 RedisStorageType storage_type,
                 const Block & sample_block);
 
@@ -72,11 +70,7 @@ namespace ErrorCodes
 
         BlockInputStreamPtr loadIds(const std::vector<UInt64> & ids) override;
 
-        BlockInputStreamPtr loadKeys(const Columns & /* key_columns */, const std::vector<size_t> & /* requested_rows */) override
-        {
-            // Redis does not support native indexing
-            throw Exception{"Method loadKeys is unsupported for RedisDictionarySource", ErrorCodes::NOT_IMPLEMENTED};
-        }
+        BlockInputStreamPtr loadKeys(const Columns & key_columns, const std::vector<size_t> & requested_rows) override;
 
         bool isModified() const override { return true; }
 
@@ -94,6 +88,7 @@ namespace ErrorCodes
         const std::string host;
         const UInt16 port;
         const UInt8 db_index;
+        const std::string password;
         const RedisStorageType storage_type;
         Block sample_block;
 
@@ -101,4 +96,3 @@ namespace ErrorCodes
     };
 
 }
-#endif

@@ -1,5 +1,6 @@
 #include <Client/MultiplexedConnections.h>
 #include <IO/ConnectionTimeouts.h>
+#include <IO/Operators.h>
 #include <Common/thread_local_rng.h>
 
 
@@ -94,7 +95,7 @@ void MultiplexedConnections::sendQuery(
     const String & query,
     const String & query_id,
     UInt64 stage,
-    const ClientInfo * client_info,
+    const ClientInfo & client_info,
     bool with_pending_data)
 {
     std::lock_guard lock(cancel_mutex);
@@ -126,14 +127,14 @@ void MultiplexedConnections::sendQuery(
         {
             modified_settings.parallel_replica_offset = i;
             replica_states[i].connection->sendQuery(timeouts, query, query_id,
-                                                    stage, &modified_settings, client_info, with_pending_data);
+                stage, &modified_settings, &client_info, with_pending_data);
         }
     }
     else
     {
         /// Use single replica.
-        replica_states[0].connection->sendQuery(timeouts, query, query_id, stage,
-                                                &modified_settings, client_info, with_pending_data);
+        replica_states[0].connection->sendQuery(timeouts, query, query_id,
+                stage, &modified_settings, &client_info, with_pending_data);
     }
 
     sent_query = true;
@@ -222,18 +223,18 @@ std::string MultiplexedConnections::dumpAddresses() const
 std::string MultiplexedConnections::dumpAddressesUnlocked() const
 {
     bool is_first = true;
-    std::ostringstream os;
+    WriteBufferFromOwnString buf;
     for (const ReplicaState & state : replica_states)
     {
         const Connection * connection = state.connection;
         if (connection)
         {
-            os << (is_first ? "" : "; ") << connection->getDescription();
+            buf << (is_first ? "" : "; ") << connection->getDescription();
             is_first = false;
         }
     }
 
-    return os.str();
+    return buf.str();
 }
 
 Packet MultiplexedConnections::receivePacketUnlocked()

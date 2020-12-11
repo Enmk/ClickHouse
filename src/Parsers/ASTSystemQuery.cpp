@@ -1,6 +1,7 @@
 #include <Parsers/IAST.h>
 #include <Parsers/ASTSystemQuery.h>
 #include <Common/quoteString.h>
+#include <IO/Operators.h>
 
 
 namespace DB
@@ -9,7 +10,7 @@ namespace DB
 
 namespace ErrorCodes
 {
-    extern const int BAD_TYPE_OF_FIELD;
+    extern const int LOGICAL_ERROR;
 }
 
 
@@ -39,6 +40,8 @@ const char * ASTSystemQuery::typeToString(Type type)
             return "RESTART REPLICAS";
         case Type::RESTART_REPLICA:
             return "RESTART REPLICA";
+        case Type::DROP_REPLICA:
+            return "DROP REPLICA";
         case Type::SYNC_REPLICA:
             return "SYNC REPLICA";
         case Type::FLUSH_DISTRIBUTED:
@@ -51,6 +54,8 @@ const char * ASTSystemQuery::typeToString(Type type)
             return "RELOAD EMBEDDED DICTIONARIES";
         case Type::RELOAD_CONFIG:
             return "RELOAD CONFIG";
+        case Type::RELOAD_SYMBOLS:
+            return "RELOAD SYMBOLS";
         case Type::STOP_MERGES:
             return "STOP MERGES";
         case Type::START_MERGES:
@@ -82,15 +87,15 @@ const char * ASTSystemQuery::typeToString(Type type)
         case Type::FLUSH_LOGS:
             return "FLUSH LOGS";
         default:
-            throw Exception("Unknown SYSTEM query command", ErrorCodes::BAD_TYPE_OF_FIELD);
+            throw Exception("Unknown SYSTEM query command", ErrorCodes::LOGICAL_ERROR);
     }
 }
 
 
 void ASTSystemQuery::formatImpl(const FormatSettings & settings, FormatState &, FormatStateStacked) const
 {
-    settings.ostr << (settings.hilite ? hilite_keyword : "") << "SYSTEM " << (settings.hilite ? hilite_none : "");
-    settings.ostr << typeToString(type);
+    settings.ostr << (settings.hilite ? hilite_keyword : "") << "SYSTEM ";
+    settings.ostr << typeToString(type) << (settings.hilite ? hilite_none : "");
 
     auto print_database_table = [&]
     {
@@ -116,6 +121,39 @@ void ASTSystemQuery::formatImpl(const FormatSettings & settings, FormatState &, 
                       << (settings.hilite ? hilite_none : "");
     };
 
+    auto print_drop_replica = [&]
+    {
+        settings.ostr << " " << quoteString(replica);
+        if (!table.empty())
+        {
+            settings.ostr << (settings.hilite ? hilite_keyword : "") << " FROM TABLE"
+                          << (settings.hilite ? hilite_none : "");
+            print_database_table();
+        }
+        else if (!replica_zk_path.empty())
+        {
+            settings.ostr << (settings.hilite ? hilite_keyword : "") << " FROM ZKPATH "
+                          << (settings.hilite ? hilite_none : "") << quoteString(replica_zk_path);
+        }
+        else if (!database.empty())
+        {
+            settings.ostr << (settings.hilite ? hilite_keyword : "") << " FROM DATABASE "
+                          << (settings.hilite ? hilite_none : "");
+            settings.ostr << (settings.hilite ? hilite_identifier : "") << backQuoteIfNeed(database)
+                          << (settings.hilite ? hilite_none : "");
+        }
+    };
+
+    auto print_on_volume = [&]
+    {
+        settings.ostr << " ON VOLUME "
+                      << (settings.hilite ? hilite_identifier : "") << backQuoteIfNeed(storage_policy)
+                      << (settings.hilite ? hilite_none : "")
+                      << "."
+                      << (settings.hilite ? hilite_identifier : "") << backQuoteIfNeed(volume)
+                      << (settings.hilite ? hilite_none : "");
+    };
+
     if (!cluster.empty())
         formatOnCluster(settings);
 
@@ -136,6 +174,8 @@ void ASTSystemQuery::formatImpl(const FormatSettings & settings, FormatState &, 
     {
         if (!table.empty())
             print_database_table();
+        else if (!volume.empty())
+            print_on_volume();
     }
     else if (type == Type::RESTART_REPLICA || type == Type::SYNC_REPLICA || type == Type::FLUSH_DISTRIBUTED)
     {
@@ -143,6 +183,8 @@ void ASTSystemQuery::formatImpl(const FormatSettings & settings, FormatState &, 
     }
     else if (type == Type::RELOAD_DICTIONARY)
         print_database_dictionary();
+    else if (type == Type::DROP_REPLICA)
+        print_drop_replica();
 }
 
 

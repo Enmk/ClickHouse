@@ -3,6 +3,7 @@
 #include <Parsers/ASTFunction.h>
 #include <Common/quoteString.h>
 #include <IO/WriteHelpers.h>
+#include <IO/Operators.h>
 
 
 namespace DB
@@ -26,8 +27,7 @@ void ASTInsertQuery::formatImpl(const FormatSettings & settings, FormatState & s
     }
     else
         settings.ostr << (settings.hilite ? hilite_none : "")
-                      << (!table_id.database_name.empty() ? backQuoteIfNeed(table_id.database_name) + "." : "") << backQuoteIfNeed(table_id.table_name)
-                      << (table_id.hasUUID() ? " UUID " : "") << (table_id.hasUUID() ? quoteString(toString(table_id.uuid)) : "");
+                      << (!table_id.database_name.empty() ? backQuoteIfNeed(table_id.database_name) + "." : "") << backQuoteIfNeed(table_id.table_name);
 
     if (columns)
     {
@@ -40,6 +40,11 @@ void ASTInsertQuery::formatImpl(const FormatSettings & settings, FormatState & s
     {
         settings.ostr << " ";
         select->formatImpl(settings, state, frame);
+    }
+    else if (watch)
+    {
+        settings.ostr << " ";
+        watch->formatImpl(settings, state, frame);
     }
     else
     {
@@ -55,7 +60,7 @@ void ASTInsertQuery::formatImpl(const FormatSettings & settings, FormatState & s
 
     if (settings_ast)
     {
-        settings.ostr << (settings.hilite ? hilite_keyword : "") << "SETTINGS " << (settings.hilite ? hilite_none : "");
+        settings.ostr << (settings.hilite ? hilite_keyword : "") << settings.nl_or_ws << "SETTINGS " << (settings.hilite ? hilite_none : "");
         settings_ast->formatImpl(settings, state, frame);
     }
 }

@@ -16,7 +16,7 @@ namespace ErrorCodes
 ReadInOrderOptimizer::ReadInOrderOptimizer(
     const ManyExpressionActions & elements_actions_,
     const SortDescription & required_sort_description_,
-    const SyntaxAnalyzerResultPtr & syntax_result)
+    const TreeRewriterResultPtr & syntax_result)
     : elements_actions(elements_actions_)
     , required_sort_description(required_sort_description_)
 {
@@ -30,26 +30,11 @@ ReadInOrderOptimizer::ReadInOrderOptimizer(
         forbidden_columns.insert(elem.first);
 }
 
-InputSortingInfoPtr ReadInOrderOptimizer::getInputOrder(const StoragePtr & storage) const
+InputOrderInfoPtr ReadInOrderOptimizer::getInputOrder(const StorageMetadataPtr & metadata_snapshot) const
 {
-    Names sorting_key_columns;
-    if (const auto * merge_tree = dynamic_cast<const MergeTreeData *>(storage.get()))
-    {
-        if (!merge_tree->hasSortingKey())
-            return {};
-        sorting_key_columns = merge_tree->getSortingKeyColumns();
-    }
-    else if (const auto * part = dynamic_cast<const StorageFromMergeTreeDataPart *>(storage.get()))
-    {
-        if (!part->hasSortingKey())
-            return {};
-        sorting_key_columns = part->getSortingKeyColumns();
-    }
-    else /// Inapplicable storage type
-    {
+    Names sorting_key_columns = metadata_snapshot->getSortingKeyColumns();
+    if (!metadata_snapshot->hasSortingKey())
         return {};
-    }
-
 
     SortDescription order_key_prefix_descr;
     int read_direction = required_sort_description.at(0).direction;
@@ -72,7 +57,7 @@ InputSortingInfoPtr ReadInOrderOptimizer::getInputOrder(const StoragePtr & stora
             bool found_function = false;
             for (const auto & action : elements_actions[i]->getActions())
             {
-                if (action.type != ExpressionAction::APPLY_FUNCTION)
+                if (action.node->type != ActionsDAG::ActionType::FUNCTION)
                     continue;
 
                 if (found_function)
@@ -83,13 +68,13 @@ InputSortingInfoPtr ReadInOrderOptimizer::getInputOrder(const StoragePtr & stora
                 else
                     found_function = true;
 
-                if (action.argument_names.size() != 1 || action.argument_names.at(0) != sorting_key_columns[i])
+                if (action.node->children.size() != 1 || action.node->children.at(0)->result_name != sorting_key_columns[i])
                 {
                     current_direction = 0;
                     break;
                 }
 
-                const auto & func = *action.function_base;
+                const auto & func = *action.node->function_base;
                 if (!func.hasInformationAboutMonotonicity())
                 {
                     current_direction = 0;
@@ -122,7 +107,7 @@ InputSortingInfoPtr ReadInOrderOptimizer::getInputOrder(const StoragePtr & stora
     if (order_key_prefix_descr.empty())
         return {};
 
-    return std::make_shared<InputSortingInfo>(std::move(order_key_prefix_descr), read_direction);
+    return std::make_shared<InputOrderInfo>(std::move(order_key_prefix_descr), read_direction);
 }
 
 }
