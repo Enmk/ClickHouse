@@ -378,7 +378,7 @@ private:
         if (current_time % 3 != 0)
             return false;
 
-        auto days = DateLUT::instance().toDayNum(current_time).toUnderType();
+        auto days = DateLUT::getTimeZone().toDayNum(current_time).toUnderType();
         for (auto d : chineseNewYearIndicators)
         {
             /// Let's celebrate until Lantern Festival
@@ -522,7 +522,7 @@ private:
         connect();
 
         /// Initialize DateLUT here to avoid counting time spent here as query execution time.
-        const auto local_tz = DateLUT::instance().getTimeZone();
+        const auto local_tz = DateLUT::getTimeZone().getTimeZone();
         if (!context.getSettingsRef().use_client_time_zone)
         {
             const auto & time_zone = connection->getServerTimezone(connection_parameters.timeouts);

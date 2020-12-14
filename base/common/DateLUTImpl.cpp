@@ -137,7 +137,7 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_, const Int64 time_offset
         ++date;
         ++i;
     }
-    while (/*start_of_day <= date_lut_max &&*/ i < DATE_LUT_SIZE && lut[i - 1].year - lut_start.year() <= DATE_LUT_YEARS); // +14 is a HACK to reduce number of misses when we lookup LUT by day index.
+    while (/*start_of_day <= date_lut_max &&*/ i < DATE_LUT_SIZE && lut[i - 1].year - lut_start.year() < DATE_LUT_YEARS); // +14 is a HACK to reduce number of misses when we lookup LUT by day index.
 
     date_lut_max = start_of_day;
 

@@ -6,11 +6,11 @@ int main(int, char **)
 {
     try
     {
-        const auto & date_lut = DateLUT::instance();
+        const auto & date_lut = DateLUT::getTimeZone();
         std::cout << "Detected default timezone: `" << date_lut.getTimeZone() << "'" << std::endl;
         time_t now = time(nullptr);
         std::cout << "Current time: " << date_lut.timeToString(now)
-                  << ", UTC: " << DateLUT::instance("UTC").timeToString(now) << std::endl;
+                  << ", UTC: " << DateLUT::getTimeZone("UTC").timeToString(now) << std::endl;
     }
     catch (const Poco::Exception & e)
     {

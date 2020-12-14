@@ -126,7 +126,7 @@ private:
     template <typename Transform>
     void dispatchForColumns(
         const IColumn & x, const IColumn & y,
-        const TimeZoneImpl & timezone_x, const TimeZoneImpl & timezone_y,
+        const TimeZone & timezone_x, const TimeZone & timezone_y,
         ColumnInt64::Container & result) const
     {
         if (const auto * x_vec_16 = checkAndGetColumn<ColumnUInt16>(&x))
@@ -144,7 +144,7 @@ private:
     template <typename Transform, typename T1>
     void dispatchForSecondColumn(
         const ColumnVector<T1> & x, const IColumn & y,
-        const TimeZoneImpl & timezone_x, const TimeZoneImpl & timezone_y,
+        const TimeZone & timezone_x, const TimeZone & timezone_y,
         ColumnInt64::Container & result) const
     {
         if (const auto * y_vec_16 = checkAndGetColumn<ColumnUInt16>(&y))
@@ -162,7 +162,7 @@ private:
     template <typename Transform, typename T1>
     void dispatchConstForSecondColumn(
         T1 x, const IColumn & y,
-        const TimeZoneImpl & timezone_x, const TimeZoneImpl & timezone_y,
+        const TimeZone & timezone_x, const TimeZone & timezone_y,
         ColumnInt64::Container & result) const
     {
         if (const auto * y_vec_16 = checkAndGetColumn<ColumnUInt16>(&y))
@@ -176,7 +176,7 @@ private:
     template <typename Transform, typename T1, typename T2>
     void vectorVector(
         const ColumnVector<T1> & x, const ColumnVector<T2> & y,
-        const TimeZoneImpl & timezone_x, const TimeZoneImpl & timezone_y,
+        const TimeZone & timezone_x, const TimeZone & timezone_y,
         ColumnInt64::Container & result) const
     {
         const auto & x_data = x.getData();
@@ -188,7 +188,7 @@ private:
     template <typename Transform, typename T1, typename T2>
     void vectorConstant(
         const ColumnVector<T1> & x, T2 y,
-        const TimeZoneImpl & timezone_x, const TimeZoneImpl & timezone_y,
+        const TimeZone & timezone_x, const TimeZone & timezone_y,
         ColumnInt64::Container & result) const
     {
         const auto & x_data = x.getData();
@@ -199,7 +199,7 @@ private:
     template <typename Transform, typename T1, typename T2>
     void constantVector(
         T1 x, const ColumnVector<T2> & y,
-        const TimeZoneImpl & timezone_x, const TimeZoneImpl & timezone_y,
+        const TimeZone & timezone_x, const TimeZone & timezone_y,
         ColumnInt64::Container & result) const
     {
         const auto & y_data = y.getData();
@@ -208,7 +208,7 @@ private:
     }
 
     template <typename Transform, typename T1, typename T2>
-    Int64 calculate(T1 x, T2 y, const TimeZoneImpl & timezone_x, const TimeZoneImpl & timezone_y) const
+    Int64 calculate(T1 x, T2 y, const TimeZone & timezone_x, const TimeZone & timezone_y) const
     {
         return Int64(Transform::execute(y, timezone_y))
              - Int64(Transform::execute(x, timezone_x));

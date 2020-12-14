@@ -5,7 +5,7 @@
 
 int main(int, char **)
 {
-    DayNum today = DayNum(DateLUT::instance().toDayNum(time(nullptr)).toUnderType());
+    DayNum today = DayNum(DateLUT::getTimeZone().toDayNum(time(nullptr)).toUnderType());
 
     for (DayNum date = today; DayNum(date + 10) > today; --date)
     {
@@ -13,7 +13,7 @@ int main(int, char **)
         std::string name = part_info.getPartNameV0(date, date);
         std::cerr << name << '\n';
 
-        time_t time = DateLUT::instance().YYYYMMDDToDate(DB::parse<UInt32>(name));
+        time_t time = DateLUT::getTimeZone().YYYYMMDDToDate(DB::parse<UInt32>(name));
         std::cerr << LocalDateTime(time) << '\n';
     }
 

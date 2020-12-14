@@ -111,14 +111,14 @@ private:
     class Action
     {
     public:
-        using Func = void (*)(char *, Time, const TimeZoneImpl &);
+        using Func = void (*)(char *, Time, const TimeZone &);
 
         Func func;
         size_t shift;
 
         explicit Action(Func func_, size_t shift_ = 0) : func(func_), shift(shift_) {}
 
-        void perform(char *& target, Time source, const TimeZoneImpl & time_zone)
+        void perform(char *& target, Time source, const TimeZone & time_zone)
         {
             func(target, source, time_zone);
             target += shift;
@@ -146,30 +146,30 @@ private:
         }
 
     public:
-        static void noop(char *, Time, const TimeZoneImpl &)
+        static void noop(char *, Time, const TimeZone &)
         {
         }
 
-        static void century(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void century(char * target, Time source, const TimeZone & time_zone)
         {
             auto year = ToYearImpl::execute(source, time_zone);
             auto century = year / 100;
             writeNumber2(target, century);
         }
 
-        static void dayOfMonth(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void dayOfMonth(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToDayOfMonthImpl::execute(source, time_zone));
         }
 
-        static void americanDate(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void americanDate(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToMonthImpl::execute(source, time_zone));
             writeNumber2(target + 3, ToDayOfMonthImpl::execute(source, time_zone));
             writeNumber2(target + 6, ToYearImpl::execute(source, time_zone) % 100);
         }
 
-        static void dayOfMonthSpacePadded(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void dayOfMonthSpacePadded(char * target, Time source, const TimeZone & time_zone)
         {
             auto day = ToDayOfMonthImpl::execute(source, time_zone);
             if (day < 10)
@@ -178,94 +178,94 @@ private:
                 writeNumber2(target, day);
         }
 
-        static void ISO8601Date(char * target, Time source, const TimeZoneImpl & time_zone) // NOLINT
+        static void ISO8601Date(char * target, Time source, const TimeZone & time_zone) // NOLINT
         {
             writeNumber4(target, ToYearImpl::execute(source, time_zone));
             writeNumber2(target + 5, ToMonthImpl::execute(source, time_zone));
             writeNumber2(target + 8, ToDayOfMonthImpl::execute(source, time_zone));
         }
 
-        static void dayOfYear(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void dayOfYear(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber3(target, ToDayOfYearImpl::execute(source, time_zone));
         }
 
-        static void month(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void month(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToMonthImpl::execute(source, time_zone));
         }
 
-        static void dayOfWeek(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void dayOfWeek(char * target, Time source, const TimeZone & time_zone)
         {
             *target += ToDayOfWeekImpl::execute(source, time_zone);
         }
 
-        static void dayOfWeek0To6(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void dayOfWeek0To6(char * target, Time source, const TimeZone & time_zone)
         {
             auto day = ToDayOfWeekImpl::execute(source, time_zone);
             *target += (day == 7 ? 0 : day);
         }
 
-        static void ISO8601Week(char * target, Time source, const TimeZoneImpl & time_zone) // NOLINT
+        static void ISO8601Week(char * target, Time source, const TimeZone & time_zone) // NOLINT
         {
             writeNumber2(target, ToISOWeekImpl::execute(source, time_zone));
         }
 
-        static void ISO8601Year2(char * target, Time source, const TimeZoneImpl & time_zone) // NOLINT
+        static void ISO8601Year2(char * target, Time source, const TimeZone & time_zone) // NOLINT
         {
             writeNumber2(target, ToISOYearImpl::execute(source, time_zone) % 100);
         }
 
-        static void ISO8601Year4(char * target, Time source, const TimeZoneImpl & time_zone) // NOLINT
+        static void ISO8601Year4(char * target, Time source, const TimeZone & time_zone) // NOLINT
         {
             writeNumber4(target, ToISOYearImpl::execute(source, time_zone));
         }
 
-        static void year2(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void year2(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToYearImpl::execute(source, time_zone) % 100);
         }
 
-        static void year4(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void year4(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber4(target, ToYearImpl::execute(source, time_zone));
         }
 
-        static void hour24(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void hour24(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToHourImpl::execute(source, time_zone));
         }
 
-        static void hour12(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void hour12(char * target, Time source, const TimeZone & time_zone)
         {
             auto x = ToHourImpl::execute(source, time_zone);
             writeNumber2(target, x == 0 ? 12 : (x > 12 ? x - 12 : x));
         }
 
-        static void minute(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void minute(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToMinuteImpl::execute(source, time_zone));
         }
 
-        static void AMPM(char * target, Time source, const TimeZoneImpl & time_zone) // NOLINT
+        static void AMPM(char * target, Time source, const TimeZone & time_zone) // NOLINT
         {
             auto hour = ToHourImpl::execute(source, time_zone);
             if (hour >= 12)
                 *target = 'P';
         }
 
-        static void hhmm24(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void hhmm24(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToHourImpl::execute(source, time_zone));
             writeNumber2(target + 3, ToMinuteImpl::execute(source, time_zone));
         }
 
-        static void second(char * target, Time source, const TimeZoneImpl & time_zone)
+        static void second(char * target, Time source, const TimeZone & time_zone)
         {
             writeNumber2(target, ToSecondImpl::execute(source, time_zone));
         }
 
-        static void ISO8601Time(char * target, Time source, const TimeZoneImpl & time_zone) // NOLINT
+        static void ISO8601Time(char * target, Time source, const TimeZone & time_zone) // NOLINT
         {
             writeNumber2(target, ToHourImpl::execute(source, time_zone));
             writeNumber2(target + 3, ToMinuteImpl::execute(source, time_zone));
@@ -417,7 +417,7 @@ public:
         String pattern_to_fill = parsePattern(pattern, instructions);
         size_t result_size = pattern_to_fill.size();
 
-        const TimeZoneImpl * time_zone_tmp = nullptr;
+        const TimeZone * time_zone_tmp = nullptr;
         if (castType(arguments[0].type.get(), [&]([[maybe_unused]] const auto & type) { return true; }))
         {
             time_zone_tmp = &extractTimeZoneFromFunctionArguments(arguments, 2, 0);
@@ -427,7 +427,7 @@ public:
         else
             time_zone_tmp = &DateLUT::getTimeZone();
 
-        const TimeZoneImpl & time_zone = *time_zone_tmp;
+        const TimeZone & time_zone = *time_zone_tmp;
         const auto & vec = times->getData();
 
         UInt32 scale [[maybe_unused]] = 0;

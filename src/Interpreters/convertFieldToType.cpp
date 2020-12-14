@@ -140,11 +140,11 @@ Field convertFieldToTypeImpl(const Field & src, const IDataType & type, const ID
     /// Conversion between Date and DateTime and vice versa.
     if (which_type.isDate() && which_from_type.isDateTime())
     {
-        return static_cast<const DataTypeDateTime &>(*from_type_hint).getTimeZone().getDefaultLUT().toDayNum(src.get<UInt64>()).toUnderType();
+        return static_cast<const DataTypeDateTime &>(*from_type_hint).getTimeZone().toDayNum(src.get<UInt64>()).toUnderType();
     }
     else if (which_type.isDateTime() && which_from_type.isDate())
     {
-        return static_cast<const DataTypeDateTime &>(type).getTimeZone().getDefaultLUT().fromDayNum(DayNum(src.get<UInt64>()));
+        return static_cast<const DataTypeDateTime &>(type).getTimeZone().fromDayNum(DayNum(src.get<UInt64>()));
     }
     else if (type.isValueRepresentedByNumber() && src.getType() != Field::Types::String)
     {

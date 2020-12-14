@@ -31,7 +31,7 @@ TTLBlockInputStream::TTLBlockInputStream(
     , force(force_)
     , old_ttl_infos(data_part->ttl_infos)
     , log(&Poco::Logger::get(storage.getLogName() + " (TTLBlockInputStream)"))
-    , date_lut(DateLUT::instance())
+    , date_lut(DateLUT::getTimeZone())
 {
     children.push_back(input_);
     header = children.at(0)->getHeader();

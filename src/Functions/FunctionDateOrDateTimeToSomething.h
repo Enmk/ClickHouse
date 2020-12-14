@@ -133,7 +133,7 @@ public:
         }
 
         /// This method is called only if the function has one argument. Therefore, we do not care about the non-local time zone.
-        const TimeZoneImpl & time_zone = DateLUT::getTimeZone();
+        const TimeZone & time_zone = DateLUT::getTimeZone();
 
         if (left.isNull() || right.isNull())
             return is_not_monotonic;

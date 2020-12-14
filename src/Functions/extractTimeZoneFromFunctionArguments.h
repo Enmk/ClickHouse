@@ -9,7 +9,7 @@
 //#include <type_traits>
 
 
-class TimeZoneImpl;
+class TimeZone;
 
 namespace DB
 {
@@ -21,7 +21,7 @@ class DataTypeDateTime64;
 std::string extractTimeZoneNameFromFunctionArguments(
     const ColumnsWithTypeAndName & arguments, size_t time_zone_arg_num, size_t datetime_arg_num);
 
-const TimeZoneImpl & extractTimeZoneFromFunctionArguments(
+const TimeZone & extractTimeZoneFromFunctionArguments(
     const ColumnsWithTypeAndName & arguments, size_t time_zone_arg_num, size_t datetime_arg_num);
 
 //template <typename DateTimeType>

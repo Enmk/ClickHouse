@@ -4,6 +4,7 @@ set (SRCS
     DateLUT.cpp
     DateLUTImpl.cpp
     demangle.cpp
+    ExtendedDateLUTImpl.cpp
     getFQDNOrHostName.cpp
     getMemoryAmount.cpp
     getThreadId.cpp

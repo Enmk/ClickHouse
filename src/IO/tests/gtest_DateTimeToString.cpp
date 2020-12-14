@@ -78,7 +78,7 @@ TEST(DateTimeToStringTest, RFC1123)
 {
     using namespace DB;
     WriteBufferFromOwnString out;
-    writeDateTimeTextRFC1123(1111111111, out, DateLUT::instance("UTC"));
+    writeDateTimeTextRFC1123(1111111111, out, DateLUT::getTimeZone("UTC"));
     ASSERT_EQ(out.str(), "Fri, 18 Mar 2005 01:58:31 GMT");
 }
 
@@ -99,7 +99,7 @@ public:
         }
         else if constexpr (std::is_same_v<ValueType, time_t>)
         {
-            writeDateTimeText(input, out, DateLUT::instance(timezone_name));
+            writeDateTimeText(input, out, DateLUT::getTimeZone(timezone_name));
         }
         else if constexpr (std::is_same_v<ValueType, DateTime64WithScale>)
         {

@@ -415,7 +415,7 @@ namespace MySQLReplication
                         UInt32 i24 = 0;
                         payload.readStrict(reinterpret_cast<char *>(&i24), 3);
 
-                        DayNum date_day_number = DateLUT::instance().makeDayNum(
+                        DayNum date_day_number = DateLUT::getTimeZone().makeDayNum(
                             static_cast<int>((i24 >> 9) & 0x7fff), static_cast<int>((i24 >> 5) & 0xf), static_cast<int>(i24 & 0x1f));
 
                         row.push_back(Field(date_day_number.toUnderType()));
@@ -429,7 +429,7 @@ namespace MySQLReplication
                         readTimeFractionalPart(payload, fsp, meta);
 
                         UInt32 year_month = readBits(val, 1, 17, 40);
-                        time_t date_time = DateLUT::instance().makeDateTime(
+                        time_t date_time = DateLUT::getTimeZone().extendedRange().makeDateTime(
                             year_month / 13, year_month % 13, readBits(val, 18, 5, 40)
                             , readBits(val, 23, 5, 40), readBits(val, 28, 6, 40), readBits(val, 34, 6, 40)
                         );
@@ -438,7 +438,7 @@ namespace MySQLReplication
                             row.push_back(Field{UInt32(date_time)});
                         else
                         {
-                            DB::DecimalUtils::DecimalComponents<DateTime64::NativeType> components{
+                            DB::DecimalUtils::DecimalComponents<DateTime64> components{
                                 static_cast<DateTime64::NativeType>(date_time), 0};
 
                             components.fractional = fsp;
@@ -457,7 +457,7 @@ namespace MySQLReplication
                             row.push_back(Field{sec});
                         else
                         {
-                            DB::DecimalUtils::DecimalComponents<DateTime64::NativeType> components{
+                            DB::DecimalUtils::DecimalComponents<DateTime64> components{
                                 static_cast<DateTime64::NativeType>(sec), 0};
 
                             components.fractional = fsp;

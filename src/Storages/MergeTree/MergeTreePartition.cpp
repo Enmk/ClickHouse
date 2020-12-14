@@ -62,7 +62,7 @@ String MergeTreePartition::getID(const Block & partition_key_sample) const
                 result += '-';
 
             if (typeid_cast<const DataTypeDate *>(partition_key_sample.getByPosition(i).type.get()))
-                result += toString(DateLUT::instance().toNumYYYYMMDD(DayNum(value[i].safeGet<UInt64>())));
+                result += toString(DateLUT::getTimeZone().toNumYYYYMMDD(DayNum(value[i].safeGet<UInt64>())));
             else
                 result += applyVisitor(to_string_visitor, value[i]);
 

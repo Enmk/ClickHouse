@@ -27,7 +27,7 @@ private:
 
     void init(time_t time)
     {
-        const auto & date_lut = DateLUT::instance();
+        const auto & date_lut = DateLUT::getTimeZone();
         const auto & values = date_lut.getValues(time);
 
         m_year = values.year;
@@ -64,7 +64,7 @@ public:
 
     LocalDate(DayNum day_num)
     {
-        const auto & values = DateLUT::instance().getValues(day_num);
+        const auto & values = DateLUT::getTimeZone().getValues(day_num);
         m_year  = values.year;
         m_month = values.month;
         m_day   = values.day_of_month;
@@ -100,12 +100,12 @@ public:
 
     operator time_t() const
     {
-        return DateLUT::instance().makeDate(m_year, m_month, m_day);
+        return DateLUT::getTimeZone().makeDate(m_year, m_month, m_day);
     }
 
     DayNum getDayNum() const
     {
-        const auto & lut = DateLUT::instance();
+        const auto & lut = DateLUT::getTimeZone();
         return lut.makeDayNum(m_year, m_month, m_day);
     }
 

@@ -887,7 +887,7 @@ void TCPHandler::sendHello()
     writeVarUInt(DBMS_VERSION_MINOR, *out);
     writeVarUInt(DBMS_TCP_PROTOCOL_VERSION, *out);
     if (client_tcp_protocol_version >= DBMS_MIN_REVISION_WITH_SERVER_TIMEZONE)
-        writeStringBinary(DateLUT::instance().getTimeZone(), *out);
+        writeStringBinary(DateLUT::getTimeZone().getTimeZone(), *out);
     if (client_tcp_protocol_version >= DBMS_MIN_REVISION_WITH_SERVER_DISPLAY_NAME)
         writeStringBinary(server_display_name, *out);
     if (client_tcp_protocol_version >= DBMS_MIN_REVISION_WITH_VERSION_PATCH)

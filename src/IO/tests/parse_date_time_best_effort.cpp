@@ -12,8 +12,8 @@ using namespace DB;
 int main(int, char **)
 try
 {
-    const DateLUTImpl & local_time_zone = DateLUT::instance();
-    const DateLUTImpl & utc_time_zone = DateLUT::instance("UTC");
+    const TimeZone & local_time_zone = DateLUT::getTimeZone();
+    const TimeZone & utc_time_zone = DateLUT::getTimeZone("UTC");
 
     ReadBufferFromFileDescriptor in(STDIN_FILENO);
     WriteBufferFromFileDescriptor out(STDOUT_FILENO);

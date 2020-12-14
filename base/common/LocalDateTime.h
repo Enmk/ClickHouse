@@ -31,7 +31,7 @@ private:
 
     void init(time_t time)
     {
-        if (unlikely(time > DATE_LUT_MAX_DAY_NUM / (3600 * 24) || time == 0))
+        if (unlikely(time >= DATE_LUT_MAX_DAY_NUM * (3600 * 24) || time == 0))
         {
             m_year = 0;
             m_month = 0;
@@ -43,7 +43,7 @@ private:
             return;
         }
 
-        const auto & date_lut = DateLUT::instance();
+        const auto & date_lut = DateLUT::getTimeZone();
         const auto & values = date_lut.getValues(time);
 
         m_year = values.year;
@@ -114,7 +114,7 @@ public:
     {
         return m_year == 0
             ? 0
-            : DateLUT::instance().makeDateTime(m_year, m_month, m_day, m_hour, m_minute, m_second);
+            : DateLUT::getTimeZone().makeDateTime(m_year, m_month, m_day, m_hour, m_minute, m_second);
     }
 
     unsigned short year() const { return m_year; }

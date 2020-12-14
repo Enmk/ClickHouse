@@ -33,7 +33,7 @@ static time_t orderedIdentifierToDate(unsigned value)
 
 void loop(time_t begin, time_t end, int step)
 {
-    const auto & date_lut = DateLUT::instance();
+    const auto & date_lut = DateLUT::getTimeZone();
 
     for (time_t t = begin; t < end; t += step)
         std::cout << toString(t)

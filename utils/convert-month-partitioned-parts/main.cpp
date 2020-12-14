@@ -46,8 +46,9 @@ void run(String part_path, String date_column, String dest_path)
     DayNum max_date;
     MergeTreePartInfo::parseMinMaxDatesFromPartName(old_part_name, min_date, max_date);
 
-    UInt32 yyyymm = DateLUT::instance().toNumYYYYMM(min_date);
-    if (yyyymm != DateLUT::instance().toNumYYYYMM(max_date))
+    const auto & tz = DateLUT::getTimeZone();
+    UInt32 yyyymm = tz.toNumYYYYMM(min_date);
+    if (yyyymm != tz.toNumYYYYMM(max_date))
         throw Exception("Part " + old_part_name + " spans different months",
             ErrorCodes::BAD_DATA_PART_NAME);
 

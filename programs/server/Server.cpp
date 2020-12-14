@@ -447,8 +447,8 @@ int Server::main(const std::vector<std::string> & /*args*/)
 
     /// Initialize DateLUT early, to not interfere with running time of first query.
     LOG_DEBUG(log, "Initializing DateLUT.");
-    DateLUT::instance();
-    LOG_TRACE(log, "Initialized DateLUT with time zone '{}'.", DateLUT::instance().getTimeZone());
+    DateLUT::getTimeZone();
+    LOG_TRACE(log, "Initialized DateLUT with time zone '{}'.", DateLUT::getTimeZone().getTimeZone());
 
     /// Storage with temporary data for processing of heavy queries.
     {

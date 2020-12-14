@@ -17,12 +17,12 @@
 namespace
 {
 using namespace DB;
-inline void readText(time_t & x, ReadBuffer & istr, const FormatSettings & settings, const TimeZoneImpl & time_zone, const TimeZoneImpl & utc_time_zone)
+inline void readText(time_t & x, ReadBuffer & istr, const FormatSettings & settings, const TimeZone & time_zone, const TimeZone & utc_time_zone)
 {
     switch (settings.date_time_input_format)
     {
         case FormatSettings::DateTimeInputFormat::Basic:
-            readDateTimeText(x, istr, time_zone.getDefaultLUT());
+            readDateTimeText(x, istr, time_zone);
             return;
         case FormatSettings::DateTimeInputFormat::BestEffort:
             parseDateTimeBestEffort(x, istr, time_zone, utc_time_zone);
@@ -65,7 +65,7 @@ void DataTypeDateTime::serializeText(const IColumn & column, size_t row_num, Wri
     switch (settings.date_time_output_format)
     {
         case FormatSettings::DateTimeOutputFormat::Simple:
-            writeDateTimeText(value, ostr, time_zone.getDefaultLUT());
+            writeDateTimeText(value, ostr, time_zone);
             return;
         case FormatSettings::DateTimeOutputFormat::UnixTimestamp:
             writeIntText(value, ostr);

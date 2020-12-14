@@ -18,7 +18,7 @@ struct DateTime64StringsTestParam
     const std::string_view string;
     DateTime64 dt64;
     UInt32 scale;
-    const TimeZoneImpl & timezone;
+    const TimeZone & timezone;
 };
 
 static std::ostream & operator << (std::ostream & ostr, const DateTime64StringsTestParam & param)

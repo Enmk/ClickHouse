@@ -19,7 +19,7 @@ namespace ext
         // Don't use DateLUT because it shows weird characters for
         // TimePoint::max(). I wish we could use C++20 format, but it's not
         // there yet.
-        // return DateLUT::instance().timeToString(std::chrono::system_clock::to_time_t(tp));
+        // return DateLUT::getTimeZone().timeToString(std::chrono::system_clock::to_time_t(tp));
 
         auto in_time_t = std::chrono::system_clock::to_time_t(tp);
         return to_string(in_time_t);

@@ -959,7 +959,7 @@ void executeQuery(
             });
 
             if (set_result_details)
-                set_result_details(context.getClientInfo().current_query_id, out->getContentType(), format_name, DateLUT::instance().getTimeZone());
+                set_result_details(context.getClientInfo().current_query_id, out->getContentType(), format_name, DateLUT::getTimeZone().getTimeZone());
 
             copyData(*streams.in, *out, [](){ return false; }, [&out](const Block &) { out->flush(); });
         }
@@ -1005,7 +1005,7 @@ void executeQuery(
                 });
 
                 if (set_result_details)
-                    set_result_details(context.getClientInfo().current_query_id, out->getContentType(), format_name, DateLUT::instance().getTimeZone());
+                    set_result_details(context.getClientInfo().current_query_id, out->getContentType(), format_name, DateLUT::getTimeZone().getTimeZone());
 
                 pipeline.setOutputFormat(std::move(out));
             }

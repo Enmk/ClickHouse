@@ -5,7 +5,8 @@
 #include <Core/Types.h>
 
 class DateLUTImpl;
-class TimeZoneImpl;
+class TimeZone;
+class TimeZone;
 
 namespace DB
 {
@@ -57,12 +58,13 @@ class ReadBuffer;
   * Mon/Tue/Wed/Thu/Fri/Sat/Sun - simply ignored.
   */
 
-void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone);
-void parseDateTimeBestEffortUS(time_t & res, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
-bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone);
-void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
-bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
-void parseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
-bool tryParseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZoneImpl & local_time_zone, const TimeZoneImpl & utc_time_zone);
+void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone);
+void parseDateTimeBestEffortUS(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone);
+bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone);
+//void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone &local_time_zone, const TimeZone &utc_time_zone);
+//bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone &local_time_zone, const TimeZone &utc_time_zone);
+void parseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone);
+void parseDateTime64BestEffortUS(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone);
+bool tryParseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone);
 
 }

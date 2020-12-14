@@ -749,26 +749,27 @@ inline void writeDateTimeText(const LocalDateTime & datetime, WriteBuffer & buf)
 
 /// In the format YYYY-MM-DD HH:MM:SS, according to the specified time zone.
 template <char date_delimeter = '-', char time_delimeter = ':', char between_date_time_delimiter = ' '>
-inline void writeDateTimeText(time_t datetime, WriteBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
+inline void writeDateTimeText(time_t datetime, WriteBuffer & buf, const TimeZone & time_zone = DateLUT::getTimeZone())
 {
-    const auto & values = date_lut.getValues(datetime);
+    const auto & values = time_zone.getValues(datetime);
     writeDateTimeText<date_delimeter, time_delimeter, between_date_time_delimiter>(
         LocalDateTime(values.year, values.month, values.day_of_month,
-            date_lut.toHour(datetime), date_lut.toMinute(datetime), date_lut.toSecond(datetime)), buf);
+            time_zone.toHour(datetime), time_zone.toMinute(datetime), time_zone.toSecond(datetime)), buf);
 }
 
 /// In the format YYYY-MM-DD HH:MM:SS.NNNNNNNNN, according to the specified time zone.
 template <char date_delimeter = '-', char time_delimeter = ':', char between_date_time_delimiter = ' ', char fractional_time_delimiter = '.'>
-inline void writeDateTimeText(DateTime64 datetime64, UInt32 scale, WriteBuffer & buf, const TimeZoneImpl & time_zone = DateLUT::getTimeZone())
+inline void writeDateTimeText(DateTime64 datetime64, UInt32 scale, WriteBuffer & buf, const TimeZone & time_zone = DateLUT::getTimeZone())
 {
     static constexpr UInt32 MaxScale = DecimalUtils::maxPrecision<DateTime64>();
     scale = scale > MaxScale ? MaxScale : scale;
 
     auto c = DecimalUtils::split(datetime64, scale);
-    const auto & values = time_zone.getValues(c.whole);
+    const auto & tz = time_zone.extendedRange();
+    const auto & values = tz.getValues(c.whole);
     writeDateTimeText<date_delimeter, time_delimeter, between_date_time_delimiter>(
         LocalDateTime(values.year, values.month, values.day_of_month,
-            time_zone.toHour(c.whole), time_zone.toMinute(c.whole), time_zone.toSecond(c.whole)), buf);
+            tz.toHour(c.whole), tz.toMinute(c.whole), tz.toSecond(c.whole)), buf);
 
     if (scale > 0)
     {
@@ -779,9 +780,9 @@ inline void writeDateTimeText(DateTime64 datetime64, UInt32 scale, WriteBuffer &
 
 /// In the RFC 1123 format: "Tue, 03 Dec 2019 00:11:50 GMT". You must provide GMT DateLUT.
 /// This is needed for HTTP requests.
-inline void writeDateTimeTextRFC1123(time_t datetime, WriteBuffer & buf, const DateLUTImpl & date_lut)
+inline void writeDateTimeTextRFC1123(time_t datetime, WriteBuffer & buf, const TimeZone & time_zone = DateLUT::getTimeZone())
 {
-    const auto & values = date_lut.getValues(datetime);
+    const auto & values = time_zone.getValues(datetime);
 
     static const char week_days[3 * 8 + 1] = "XXX" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun";
     static const char months[3 * 13 + 1] = "XXX" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec";
@@ -795,21 +796,21 @@ inline void writeDateTimeTextRFC1123(time_t datetime, WriteBuffer & buf, const D
     buf.write(&digits100[values.year / 100 * 2], 2);
     buf.write(&digits100[values.year % 100 * 2], 2);
     buf.write(' ');
-    buf.write(&digits100[date_lut.toHour(datetime) * 2], 2);
+    buf.write(&digits100[time_zone.toHour(datetime) * 2], 2);
     buf.write(':');
-    buf.write(&digits100[date_lut.toMinute(datetime) * 2], 2);
+    buf.write(&digits100[time_zone.toMinute(datetime) * 2], 2);
     buf.write(':');
-    buf.write(&digits100[date_lut.toSecond(datetime) * 2], 2);
+    buf.write(&digits100[time_zone.toSecond(datetime) * 2], 2);
     buf.write(" GMT", 4);
 }
 
-inline void writeDateTimeTextISO(time_t datetime, WriteBuffer & buf, const TimeZoneImpl & utc_time_zone)
+inline void writeDateTimeTextISO(time_t datetime, WriteBuffer & buf, const TimeZone & utc_time_zone)
 {
-    writeDateTimeText<'-', ':', 'T'>(datetime, buf, utc_time_zone.getDefaultLUT());
+    writeDateTimeText<'-', ':', 'T'>(datetime, buf, utc_time_zone);
     buf.write('Z');
 }
 
-inline void writeDateTimeTextISO(DateTime64 datetime64, UInt32 scale, WriteBuffer & buf, const TimeZoneImpl & utc_time_zone)
+inline void writeDateTimeTextISO(DateTime64 datetime64, UInt32 scale, WriteBuffer & buf, const TimeZone & utc_time_zone)
 {
     writeDateTimeText<'-', ':', 'T'>(datetime64, scale, buf, utc_time_zone);
     buf.write('Z');

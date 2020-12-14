@@ -140,20 +140,20 @@ std::string determineDefaultTimeZone()
 
 DateLUT::DateLUT()
 {
-    /// Initialize the pointer to the default TimeZoneImpl.
+    /// Initialize the pointer to the default TimeZone.
     std::string default_time_zone = determineDefaultTimeZone();
     default_timezone.store(&getImplementation(default_time_zone), std::memory_order_release);
 }
 
 DateLUT::~DateLUT() = default;
 
-const TimeZoneImpl & DateLUT::getImplementation(const std::string & time_zone) const
+const TimeZone & DateLUT::getImplementation(const std::string & time_zone) const
 {
     std::lock_guard<std::mutex> lock(mutex);
 
     auto it = timezones.emplace(time_zone, nullptr).first;
     if (!it->second)
-        it->second = std::make_unique<TimeZoneImpl>(time_zone);
+        it->second = std::make_unique<TimeZone>(time_zone);
 
     return *it->second;
 }

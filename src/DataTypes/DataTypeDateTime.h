@@ -3,7 +3,7 @@
 #include <Core/Types.h>
 #include <DataTypes/DataTypeNumberBase.h>
 
-class TimeZoneImpl;
+class TimeZone;
 
 namespace DB
 {
@@ -18,12 +18,12 @@ public:
     explicit TimezoneMixin(const String & time_zone_name = "");
     TimezoneMixin(const TimezoneMixin &) = default;
 
-    const TimeZoneImpl & getTimeZone() const { return time_zone; }
+    const TimeZone & getTimeZone() const { return time_zone; }
 
 protected:
     bool has_explicit_time_zone;
-    const TimeZoneImpl & time_zone;
-    const TimeZoneImpl & utc_time_zone;
+    const TimeZone & time_zone;
+    const TimeZone & utc_time_zone;
 };
 
 /** DateTime stores time as unix timestamp.

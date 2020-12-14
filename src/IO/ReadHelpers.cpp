@@ -825,7 +825,7 @@ template void readDateTextFallback<void>(LocalDate &, ReadBuffer &);
 template bool readDateTextFallback<bool>(LocalDate &, ReadBuffer &);
 
 
-template <typename ReturnType, typename TimezoneType /*= (DateLUTImpl | TimeZoneImpl)*/>
+template <typename ReturnType, typename TimezoneType /*= (DateLUTImpl | TimeZone)*/>
 ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const TimezoneType & time_zone)
 {
     static constexpr bool throw_exception = std::is_same_v<ReturnType, void>;
@@ -908,10 +908,10 @@ ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const T
     return ReturnType(true);
 }
 
-template void readDateTimeTextFallback<void>(time_t &, ReadBuffer &, const DateLUTImpl &);
-template bool readDateTimeTextFallback<bool>(time_t &, ReadBuffer &, const DateLUTImpl &);
-template void readDateTimeTextFallback<void>(time_t &, ReadBuffer &, const TimeZoneImpl &);
-template bool readDateTimeTextFallback<bool>(time_t &, ReadBuffer &, const TimeZoneImpl &);
+template void readDateTimeTextFallback<void>(time_t &, ReadBuffer &, const TimeZone &);
+template bool readDateTimeTextFallback<bool>(time_t &, ReadBuffer &, const TimeZone &);
+template void readDateTimeTextFallback<void>(time_t &, ReadBuffer &, const ExtendedDateLUTImpl &);
+template bool readDateTimeTextFallback<bool>(time_t &, ReadBuffer &, const ExtendedDateLUTImpl &);
 
 
 void skipJSONField(ReadBuffer & buf, const StringRef & name_of_field)
