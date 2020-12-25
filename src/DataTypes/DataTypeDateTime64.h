@@ -105,7 +105,7 @@ public:
         {
             auto components = DecimalUtils::splitWithScaleMultiplier(t, scale_multiplier);
             components = wrapped_transform.execute(components, std::forward<Args>(args)...);
-            return DecimalUtils::decimalFromComponents<DateTime64>(components, scale_multiplier);
+            return DecimalUtils::decimalFromComponentsWithMultiplier<DateTime64>(components.whole, components.fractional, scale_multiplier);
         }
         else
         {
