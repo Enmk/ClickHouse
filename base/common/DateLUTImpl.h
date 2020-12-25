@@ -291,8 +291,8 @@ public:
 
         /// If it is not 1970 year (findIndex found nothing appropriate),
         ///  than limit number of hours to avoid insane results like 1970-01-01 89:28:15
-//        if (unlikely(index == 0))
-//            return static_cast<unsigned>((t + offset_at_start_of_epoch) / 3600) % 24;
+        if (unlikely(index == 0))
+            return static_cast<unsigned>((t + offset_at_start_of_epoch) / 3600) % 24;
 
         time_t res = t - lut[index].date;
 
