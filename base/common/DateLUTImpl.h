@@ -67,8 +67,12 @@ public:
         UInt8 days_in_month;
 
         /// For days, when offset from UTC was changed due to daylight saving time or permanent change, following values could be non zero.
-        Int8 amount_of_offset_change; /// Usually -3600 or 3600, but look at Lord Howe Island, multiply by 900
-        UInt8 time_at_offset_change; /// In seconds from beginning of the day. multiply by 900 (15 minutes)
+        Int8 amount_of_offset_change; /// Usually -3600 or 3600, but look at Lord Howe Island, multiply by OffsetChangeFactor
+        UInt8 time_at_offset_change; /// In seconds from beginning of the day. multiply by OffsetChangeFactor
+
+        /// Since most of the modern timezones have a DST change aligned to 15 minutes, so to save as much space we are dividing
+        /// any offset change related value by this factor.
+        static const UInt16 OffsetChangeFactor = 900;
     };
 
     static_assert(sizeof(Values) == 16);
@@ -279,8 +283,8 @@ public:
 
         time_t res = t - lut[index].date;
 
-        if (res >= lut[index].time_at_offset_change * 900)
-            res += lut[index].amount_of_offset_change * 900;
+        if (res >= lut[index].time_at_offset_change * Values::OffsetChangeFactor)
+            res += lut[index].amount_of_offset_change * Values::OffsetChangeFactor;
 
         return res - offset_at_start_of_epoch; /// Starting at 1970-01-01 00:00:00 local time.
     }
@@ -297,8 +301,8 @@ public:
         time_t res = t - lut[index].date;
 
         /// Data is cleaned to avoid possibility of underflow.
-        if (res >= lut[index].time_at_offset_change * 900)
-            res += lut[index].amount_of_offset_change * 900;
+        if (res >= lut[index].time_at_offset_change * Values::OffsetChangeFactor)
+            res += lut[index].amount_of_offset_change * Values::OffsetChangeFactor;
 
         return res / 3600;
     }
@@ -728,8 +732,8 @@ public:
         size_t index = makeDayNum(year, month, day_of_month);
         UInt32 time_offset = hour * 3600 + minute * 60 + second;
 
-        if (time_offset >= lut[index].time_at_offset_change * 900)
-            time_offset -= lut[index].amount_of_offset_change * 900;
+        if (time_offset >= lut[index].time_at_offset_change * Values::OffsetChangeFactor)
+            time_offset -= lut[index].amount_of_offset_change * Values::OffsetChangeFactor;
 
         Int64 res = lut[index].date + time_offset;
 
@@ -810,8 +814,8 @@ public:
 
         index += delta;
 
-        if (time_offset >= lut[index].time_at_offset_change * 900)
-            time_offset -= lut[index].amount_of_offset_change * 900;
+        if (time_offset >= lut[index].time_at_offset_change * Values::OffsetChangeFactor)
+            time_offset -= lut[index].amount_of_offset_change * Values::OffsetChangeFactor;
 
         return lut[index].date + time_offset;
     }
@@ -842,8 +846,8 @@ public:
 
         time_t time_offset = toHour(t) * 3600 + toMinute(t) * 60 + toSecond(t);
 
-        if (time_offset >= lut[result_day].time_at_offset_change * 900)
-            time_offset -= lut[result_day].amount_of_offset_change * 900;
+        if (time_offset >= lut[result_day].time_at_offset_change * Values::OffsetChangeFactor)
+            time_offset -= lut[result_day].amount_of_offset_change * Values::OffsetChangeFactor;
 
         return lut[result_day].date + time_offset;
     }
@@ -889,8 +893,8 @@ public:
 
         time_t time_offset = toHour(t) * 3600 + toMinute(t) * 60 + toSecond(t);
 
-        if (time_offset >= lut[result_day].time_at_offset_change * 900)
-            time_offset -= lut[result_day].amount_of_offset_change * 900;
+        if (time_offset >= lut[result_day].time_at_offset_change * Values::OffsetChangeFactor)
+            time_offset -= lut[result_day].amount_of_offset_change * Values::OffsetChangeFactor;
 
         return lut[result_day].date + time_offset;
     }
