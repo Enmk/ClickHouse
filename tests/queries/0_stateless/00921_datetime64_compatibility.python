@@ -86,8 +86,7 @@ CAST(N as DateTime64(9, 'Europe/Minsk'))
 formatDateTime(N, '%C %d %D %e %F %H %I %j %m %M %p %R %S %T %u %V %w %y %Y %%')
 """.splitlines()
 
-# Expanded later to cartesian product of all arguments.
-# NOTE: {N} to be turned into N after str.format() for keys (format string), but not for list of values!
+# Expanded later to cartesian product of all arguments, using format string.
 extra_ops = [
     # With same type:
     (
