@@ -265,7 +265,7 @@ public:
     {
         const auto & time_column = arguments[0];
         const auto & interval_column = arguments[1];
-        const DateLUTImpl & time_zone = extractTimeZoneFromFunctionArguments(arguments, 2, 0);
+        const auto & time_zone = extractTimeZoneFromFunctionArguments(arguments, 2, 0);
         auto result_column = dispatchForColumns(time_column, interval_column, time_zone);
         return result_column;
     }

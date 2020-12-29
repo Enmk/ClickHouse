@@ -91,7 +91,6 @@ void DataTypeDateTime64::serializeTextEscaped(const IColumn & column, size_t row
     serializeText(column, row_num, ostr, settings);
 }
 
-
 static inline void readText(DateTime64 & x, UInt32 scale, ReadBuffer & istr, const FormatSettings & settings, const DateLUTImpl & time_zone, const DateLUTImpl & utc_time_zone)
 {
     switch (settings.date_time_input_format)

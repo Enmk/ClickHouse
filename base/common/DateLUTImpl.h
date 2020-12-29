@@ -310,8 +310,8 @@ public:
         if (offset_is_whole_number_of_hours_everytime)
             return (toSecondsSinceTheDayStart(t) / 60) % 60;
 
-        Int64 date = find(t).date; // TODO: validate for negative t values
-        return static_cast<unsigned>(Int64(t) - date) / 60 % 60;
+        UInt32 date = find(t).date;
+        return (UInt32(t) - date) / 60 % 60;
     }
 
     inline time_t toStartOfMinute(time_t t) const { return t / 60 * 60; }
@@ -324,8 +324,8 @@ public:
         if (offset_is_whole_number_of_hours_everytime)
             return t / 3600 * 3600;
 
-        Int64 date = find(t).date;
-        return date + static_cast<UInt32>(Int64(t) - date) / 3600 * 3600;
+        UInt32 date = find(t).date;
+        return date + (UInt32(t) - date) / 3600 * 3600;
     }
 
     /** Number of calendar day since the beginning of UNIX epoch (1970-01-01 is zero)
@@ -708,7 +708,7 @@ public:
         if (time_offset >= lut[index].time_at_offset_change * Values::OffsetChangeFactor)
             time_offset -= lut[index].amount_of_offset_change * Values::OffsetChangeFactor;
 
-        Int64 res = lut[index].date + time_offset;
+        UInt32 res = lut[index].date + time_offset;
 
         if (unlikely(res > DATE_LUT_MAX))
             return 0;
@@ -758,7 +758,7 @@ public:
     {
         const Values & values = find(t);
         return
-              static_cast<UInt64>(toSecond(t))
+              toSecond(t)
             + toMinute(t) * 100
             + toHour(t) * 10000
             + UInt64(values.day_of_month) * 1000000

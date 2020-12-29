@@ -3,6 +3,7 @@
 #include <Core/DecimalFunctions.h>
 #include <Common/Exception.h>
 #include <common/DateLUTImpl.h>
+//#include <common/TimeZone.h>
 #include <Columns/ColumnVector.h>
 #include <Columns/ColumnDecimal.h>
 #include <Functions/FunctionHelpers.h>
@@ -33,10 +34,10 @@ namespace ErrorCodes
   *  factor-transformation F is "round to the nearest month" (2015-02-03 -> 2015-02-01).
   */
 
-static inline UInt32 dateIsNotSupported(const char * name)
-{
-    throw Exception("Illegal type Date of argument for function " + std::string(name), ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
-}
+    static inline UInt32 dateIsNotSupported(const char * name)
+    {
+        throw Exception("Illegal type Date of argument for function " + std::string(name), ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
+    }
 
 /// This factor transformation will say that the function is monotone everywhere.
 struct ZeroTransform

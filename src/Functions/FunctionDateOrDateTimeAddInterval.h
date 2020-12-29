@@ -364,6 +364,7 @@ template <> struct ResultDataTypeMap<Int16>      { using ResultDataType = DataTy
 template <> struct ResultDataTypeMap<UInt32>     { using ResultDataType = DataTypeDateTime; };
 template <> struct ResultDataTypeMap<Int32>      { using ResultDataType = DataTypeDateTime; };
 template <> struct ResultDataTypeMap<DateTime64> { using ResultDataType = DataTypeDateTime64; };
+template <> struct ResultDataTypeMap<Int64>      { using ResultDataType = DataTypeDateTime64; };
 }
 
 template <typename Transform>

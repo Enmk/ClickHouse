@@ -61,11 +61,11 @@ public:
  * Suitable Transfotm-types are commonly used in Date/DateTime manipulation functions,
  * and should implement static (or const) function with following signatures:
  * 1:
- *     R execute(Int64 whole_value, ... , const DateLUTImpl &)
+ *     R execute(Int64 whole_value, ... )
  * 2:
- *     R execute(DateTime64 value, Int64 scale_multiplier, ... , const DateLUTImpl &)
+ *     R execute(DateTime64 value, Int64 scale_multiplier, ... )
  * 3:
- *     DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> components, ... , const DateLUTImpl &)
+ *     DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> components, ... )
  *
  * Where R could be arbitrary type.
 */

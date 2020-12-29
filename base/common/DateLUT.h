@@ -19,20 +19,19 @@ public:
     /// Return singleton DateLUTImpl instance for the default time zone.
     static ALWAYS_INLINE const DateLUTImpl & instance()
     {
-        const auto & storage = getInstance();
-        return *storage.default_impl.load(std::memory_order_acquire);
+        const auto & date_lut = getInstance();
+        return *date_lut.default_impl.load(std::memory_order_acquire);
     }
 
     /// Return singleton DateLUTImpl instance for a given time zone.
     static ALWAYS_INLINE const DateLUTImpl & instance(const std::string & time_zone)
     {
-        const auto & storage = getInstance();
+        const auto & date_lut = getInstance();
         if (time_zone.empty())
-            return *storage.default_impl.load(std::memory_order_acquire);
+            return *date_lut.default_impl.load(std::memory_order_acquire);
 
-        return storage.getImplementation(time_zone);
+        return date_lut.getImplementation(time_zone);
     }
-
     static void setDefaultTimezone(const std::string & time_zone)
     {
         auto & date_lut = getInstance();

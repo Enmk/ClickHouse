@@ -33,8 +33,9 @@ static inline UInt32 dateIsNotSupported(const char * name)
 /// This factor transformation will say that the function is monotone everywhere.
 struct ZeroTransform
 {
-   static inline UInt16 execute(UInt32, UInt8, const DateLUTImpl &) { return 0; }
-   static inline UInt16 execute(UInt16, UInt8, const DateLUTImpl &) { return 0; }
+    static inline UInt16 execute(UInt16, UInt8, const DateLUTImpl &) { return 0; }
+    static inline UInt16 execute(UInt32, UInt8, const DateLUTImpl &) { return 0; }
+    static inline UInt16 execute(Int64, UInt8, const DateLUTImpl &) { return 0; }
 };
 
 struct ToWeekImpl
