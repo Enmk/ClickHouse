@@ -88,12 +88,12 @@ struct DateTimeSubsecondPart
     UInt8 digits;
 };
 
-template <typename ReturnType, bool is_us_style, typename TimeZoneType /* = (DateLUTImpl | TimeZone)*/>
+template <typename ReturnType, bool is_us_style>
 ReturnType parseDateTimeBestEffortImpl(
     time_t & res,
     ReadBuffer & in,
-    const TimeZoneType & local_time_zone,
-    const TimeZoneType & utc_time_zone,
+    const DateLUTImpl & local_time_zone,
+    const DateLUTImpl & utc_time_zone,
     DateTimeSubsecondPart * fractional)
 {
     auto on_error = [](const std::string & message [[maybe_unused]], int code [[maybe_unused]])
@@ -596,19 +596,19 @@ ReturnType parseDateTimeBestEffortImpl(
 }
 
 template <typename ReturnType, bool is_us_style>
-ReturnType parseDateTime64BestEffortImpl(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
+ReturnType parseDateTime64BestEffortImpl(DateTime64 & res, UInt32 scale, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone)
 {
     time_t whole;
     DateTimeSubsecondPart subsecond = {0, 0}; // needs to be explicitly initialized sine it could be missing from input string
 
     if constexpr (std::is_same_v<ReturnType, bool>)
     {
-        if (!parseDateTimeBestEffortImpl<bool, is_us_style>(whole, in, local_time_zone.extendedRange(), utc_time_zone.extendedRange(), &subsecond))
+        if (!parseDateTimeBestEffortImpl<bool, is_us_style>(whole, in, local_time_zone, utc_time_zone, &subsecond))
             return false;
     }
     else
     {
-        parseDateTimeBestEffortImpl<ReturnType, is_us_style>(whole, in, local_time_zone.extendedRange(), utc_time_zone.extendedRange(), &subsecond);
+        parseDateTimeBestEffortImpl<ReturnType, is_us_style>(whole, in, local_time_zone, utc_time_zone, &subsecond);
     }
 
 
@@ -634,42 +634,32 @@ ReturnType parseDateTime64BestEffortImpl(DateTime64 & res, UInt32 scale, ReadBuf
 #endif
 #endif
 
-void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
+void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone)
 {
     parseDateTimeBestEffortImpl<void, false>(res, in, local_time_zone, utc_time_zone, nullptr);
 }
 
-void parseDateTimeBestEffortUS(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
+void parseDateTimeBestEffortUS(time_t & res, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone)
 {
     parseDateTimeBestEffortImpl<void, true>(res, in, local_time_zone, utc_time_zone, nullptr);
 }
 
-bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
+bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone)
 {
     return parseDateTimeBestEffortImpl<bool, false>(res, in, local_time_zone, utc_time_zone, nullptr);
 }
 
-//void parseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
-//{
-//    parseDateTimeBestEffort(res, in, local_time_zone.getDefaultLUT(), utc_time_zone.getDefaultLUT());
-//}
-
-//bool tryParseDateTimeBestEffort(time_t & res, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
-//{
-//    return tryParseDateTimeBestEffort(res, in, local_time_zone.getDefaultLUT(), utc_time_zone.getDefaultLUT());
-//}
-
-void parseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
+void parseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone)
 {
     return parseDateTime64BestEffortImpl<void, false>(res, scale, in, local_time_zone, utc_time_zone);
 }
 
-void parseDateTime64BestEffortUS(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
+void parseDateTime64BestEffortUS(DateTime64 & res, UInt32 scale, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone)
 {
     return parseDateTime64BestEffortImpl<void, true>(res, scale, in, local_time_zone, utc_time_zone);
 }
 
-bool tryParseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const TimeZone & local_time_zone, const TimeZone & utc_time_zone)
+bool tryParseDateTime64BestEffort(DateTime64 & res, UInt32 scale, ReadBuffer & in, const DateLUTImpl & local_time_zone, const DateLUTImpl & utc_time_zone)
 {
     return parseDateTime64BestEffortImpl<bool, false>(res, scale, in, local_time_zone, utc_time_zone);
 }

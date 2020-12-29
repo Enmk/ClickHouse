@@ -603,7 +603,7 @@ inline ReturnType readDateTextImpl(DayNum & date, ReadBuffer & buf)
     else if (!readDateTextImpl<ReturnType>(local_date, buf))
         return false;
 
-    date = DateLUT::getTimeZone().makeDayNum(local_date.year(), local_date.month(), local_date.day());
+    date = DateLUT::instance().makeDayNum(local_date.year(), local_date.month(), local_date.day());
     return ReturnType(true);
 }
 
@@ -706,14 +706,14 @@ inline T parseFromString(const std::string_view & str)
 UInt128 stringToUUID(const String & str);
 #pragma GCC diagnostic pop
 
-template <typename ReturnType = void, typename TimezoneType /*= (DateLUTImpl | ExtendedDateLUTImpl)*/>
-ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const TimezoneType & date_lut);
+template <typename ReturnType = void>
+ReturnType readDateTimeTextFallback(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut);
 
 /** In YYYY-MM-DD hh:mm:ss or YYYY-MM-DD format, according to specified time zone.
   * As an exception, also supported parsing of unix timestamp in form of decimal number.
   */
-template <typename ReturnType = void, typename TimezoneType /*= (DateLUTImpl | ExtendedDateLUTImpl)*/>
-inline ReturnType readDateTimeTextImpl(time_t & datetime, ReadBuffer & buf, const TimezoneType & date_lut)
+template <typename ReturnType = void>
+inline ReturnType readDateTimeTextImpl(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & date_lut)
 {
     /** Read 10 characters, that could represent unix timestamp.
       * Only unix timestamp of 5-10 characters is supported.
@@ -756,12 +756,11 @@ inline ReturnType readDateTimeTextImpl(time_t & datetime, ReadBuffer & buf, cons
         return readDateTimeTextFallback<ReturnType>(datetime, buf, date_lut);
 }
 
-// TODO(vnemkov): get rid of TimezoneType
-template <typename ReturnType, typename TimezoneType /*= (DateLUTImpl | ExtendedDateLUTImpl)*/>
-inline ReturnType readDateTimeTextImpl(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const TimezoneType & time_zone)
+template <typename ReturnType>
+inline ReturnType readDateTimeTextImpl(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const DateLUTImpl & date_lut)
 {
     time_t whole;
-    if (!readDateTimeTextImpl<bool>(whole, buf, time_zone))
+    if (!readDateTimeTextImpl<bool>(whole, buf, date_lut))
     {
         return ReturnType(false);
     }
@@ -798,24 +797,24 @@ inline ReturnType readDateTimeTextImpl(DateTime64 & datetime64, UInt32 scale, Re
     return ReturnType(true);
 }
 
-inline void readDateTimeText(time_t & datetime, ReadBuffer & buf, const TimeZone & time_zone = DateLUT::getTimeZone())
+inline void readDateTimeText(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & time_zone = DateLUT::instance())
 {
     readDateTimeTextImpl<void>(datetime, buf, time_zone);
 }
 
-inline void readDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const TimeZone & time_zone = DateLUT::getTimeZone())
+inline void readDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
 {
-    readDateTimeTextImpl<void>(datetime64, scale, buf, time_zone.extendedRange());
+    readDateTimeTextImpl<void>(datetime64, scale, buf, date_lut);
 }
 
-inline bool tryReadDateTimeText(time_t & datetime, ReadBuffer & buf, const TimeZone & time_zone = DateLUT::getTimeZone())
+inline bool tryReadDateTimeText(time_t & datetime, ReadBuffer & buf, const DateLUTImpl & time_zone = DateLUT::instance())
 {
     return readDateTimeTextImpl<bool>(datetime, buf, time_zone);
 }
 
-inline bool tryReadDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const TimeZone & time_zone = DateLUT::getTimeZone())
+inline bool tryReadDateTime64Text(DateTime64 & datetime64, UInt32 scale, ReadBuffer & buf, const DateLUTImpl & date_lut = DateLUT::instance())
 {
-    return readDateTimeTextImpl<bool>(datetime64, scale, buf, time_zone.extendedRange());
+    return readDateTimeTextImpl<bool>(datetime64, scale, buf, date_lut);
 }
 
 inline void readDateTimeText(LocalDateTime & datetime, ReadBuffer & buf)

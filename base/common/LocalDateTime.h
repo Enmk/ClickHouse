@@ -43,7 +43,7 @@ private:
             return;
         }
 
-        const auto & date_lut = DateLUT::getTimeZone();
+        const auto & date_lut = DateLUT::instance();
         const auto & values = date_lut.getValues(time);
 
         m_year = values.year;
@@ -114,7 +114,7 @@ public:
     {
         return m_year == 0
             ? 0
-            : DateLUT::getTimeZone().makeDateTime(m_year, m_month, m_day, m_hour, m_minute, m_second);
+            : DateLUT::instance().makeDateTime(m_year, m_month, m_day, m_hour, m_minute, m_second);
     }
 
     unsigned short year() const { return m_year; }

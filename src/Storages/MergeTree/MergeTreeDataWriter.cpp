@@ -99,7 +99,7 @@ void updateTTL(
     const IColumn * column = current.column.get();
     if (const ColumnUInt16 * column_date = typeid_cast<const ColumnUInt16 *>(column))
     {
-        const auto & date_lut = DateLUT::getTimeZone();
+        const auto & date_lut = DateLUT::instance();
         for (const auto & val : column_date->getData())
             ttl_info.update(date_lut.fromDayNum(DayNum(val)));
     }
@@ -112,7 +112,7 @@ void updateTTL(
     {
         if (typeid_cast<const ColumnUInt16 *>(&column_const->getDataColumn()))
         {
-            const auto & date_lut = DateLUT::getTimeZone();
+            const auto & date_lut = DateLUT::instance();
             ttl_info.update(date_lut.fromDayNum(DayNum(column_const->getValue<UInt16>())));
         }
         else if (typeid_cast<const ColumnUInt32 *>(&column_const->getDataColumn()))
@@ -215,12 +215,10 @@ MergeTreeData::MutableDataPartPtr MergeTreeDataWriter::writeTempPart(BlockWithPa
         DayNum min_date(minmax_idx.hyperrectangle[data.minmax_idx_date_column_pos].left.get<UInt64>());
         DayNum max_date(minmax_idx.hyperrectangle[data.minmax_idx_date_column_pos].right.get<UInt64>());
 
-        const auto & date_lut = DateLUT::getTimeZone();
+        const auto & date_lut = DateLUT::instance();
 
-        const auto min_month = date_lut.toNumYYYYMM(min_date);
-        const auto max_month = date_lut.toNumYYYYMM(max_date);
-//        const auto min_month = date_lut.toFirstDayNumOfMonth(DayNum(min_date.toUnderType())).toUnderType();
-//        const auto max_month = date_lut.toFirstDayNumOfMonth(DayNum(max_date.toUnderType())).toUnderType();
+        auto min_month = date_lut.toNumYYYYMM(min_date);
+        auto max_month = date_lut.toNumYYYYMM(max_date);
 
         if (min_month != max_month)
             throw Exception("Logical error: part spans more than one month.", ErrorCodes::LOGICAL_ERROR);

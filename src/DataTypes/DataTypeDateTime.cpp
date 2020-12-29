@@ -17,7 +17,7 @@
 namespace
 {
 using namespace DB;
-inline void readText(time_t & x, ReadBuffer & istr, const FormatSettings & settings, const TimeZone & time_zone, const TimeZone & utc_time_zone)
+inline void readText(time_t & x, ReadBuffer & istr, const FormatSettings & settings, const DateLUTImpl & time_zone, const DateLUTImpl & utc_time_zone)
 {
     switch (settings.date_time_input_format)
     {
@@ -36,8 +36,8 @@ namespace DB
 
 TimezoneMixin::TimezoneMixin(const String & time_zone_name)
     : has_explicit_time_zone(!time_zone_name.empty()),
-    time_zone(DateLUT::getTimeZone(time_zone_name)),
-    utc_time_zone(DateLUT::getTimeZone("UTC"))
+    time_zone(DateLUT::instance(time_zone_name)),
+    utc_time_zone(DateLUT::instance("UTC"))
 {}
 
 DataTypeDateTime::DataTypeDateTime(const String & time_zone_name)

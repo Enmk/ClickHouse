@@ -115,15 +115,13 @@ void MergeTreePartInfo::parseMinMaxDatesFromPartName(const String & part_name, D
         throw Exception("Unexpected part name: " + part_name, ErrorCodes::BAD_DATA_PART_NAME);
     }
 
-    const auto & date_lut = DateLUT::getTimeZone();
+    const auto & date_lut = DateLUT::instance();
 
     min_date = date_lut.YYYYMMDDToDayNum(min_yyyymmdd);
     max_date = date_lut.YYYYMMDDToDayNum(max_yyyymmdd);
 
-    const auto min_month = date_lut.toNumYYYYMM(min_date);
-    const auto max_month = date_lut.toNumYYYYMM(max_date);
-//    const auto min_month = date_lut.toFirstDayNumOfMonth(min_date);
-//    const auto max_month = date_lut.toFirstDayNumOfMonth(max_date);
+    auto min_month = date_lut.toNumYYYYMM(min_date);
+    auto max_month = date_lut.toNumYYYYMM(max_date);
 
     if (min_month != max_month)
         throw Exception("Part name " + part_name + " contains different months", ErrorCodes::BAD_DATA_PART_NAME);
@@ -162,7 +160,7 @@ String MergeTreePartInfo::getPartName() const
 
 String MergeTreePartInfo::getPartNameV0(DayNum left_date, DayNum right_date) const
 {
-    const auto & date_lut = DateLUT::getTimeZone();
+    const auto & date_lut = DateLUT::instance();
 
     /// Directory name for the part has form: `YYYYMMDD_YYYYMMDD_N_N_L`.
 

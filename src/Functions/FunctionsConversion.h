@@ -196,17 +196,18 @@ struct ToDateTimeImpl
 {
     static constexpr auto name = "toDateTime";
 
-    static inline UInt32 execute(UInt16 d, const TimeZone & time_zone)
+    static inline UInt32 execute(UInt16 d, const DateLUTImpl & time_zone)
     {
         return time_zone.fromDayNum(DayNum(d));
     }
 
-    static inline UInt32 execute(UInt32 dt, const TimeZone & /*time_zone*/)
+    static inline UInt32 execute(UInt32 dt, const DateLUTImpl & /*time_zone*/)
     {
         return dt;
     }
 
-    static inline Int64 execute(Int64 dt64, const TimeZone & /*time_zone*/)
+    // TODO: return UInt32 ???
+    static inline Int64 execute(Int64 dt64, const DateLUTImpl & /*time_zone*/)
     {
         return dt64;
     }
@@ -222,9 +223,8 @@ struct ToDateTransform32Or64
 {
     static constexpr auto name = "toDate";
 
-    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const TimeZone & time_zone)
+    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const DateLUTImpl & time_zone)
     {
-        // since converting to Date, no need in values outside of default LUT range.
         return (from < 0xFFFF)
             ? from
             : time_zone.toDayNum(std::min(time_t(from), time_t(0xFFFFFFFF)));
@@ -236,7 +236,7 @@ struct ToDateTransform32Or64Signed
 {
     static constexpr auto name = "toDate";
 
-    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const TimeZone & time_zone)
+    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const DateLUTImpl & time_zone)
     {
         // TODO: decide narrow or extended range based on FromType
         /// The function should be monotonic (better for query optimizations), so we saturate instead of overflow.
@@ -253,7 +253,7 @@ struct ToDateTransform8Or16Signed
 {
     static constexpr auto name = "toDate";
 
-    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const TimeZone &)
+    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const DateLUTImpl &)
     {
         if (from < 0)
             return 0;
@@ -293,7 +293,7 @@ struct ToDateTimeTransform64
 {
     static constexpr auto name = "toDateTime";
 
-    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const TimeZone &)
+    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const DateLUTImpl &)
     {
         return std::min(time_t(from), time_t(0xFFFFFFFF));
     }
@@ -304,7 +304,7 @@ struct ToDateTimeTransformSigned
 {
     static constexpr auto name = "toDateTime";
 
-    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const TimeZone &)
+    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const DateLUTImpl &)
     {
         if (from < 0)
             return 0;
@@ -317,7 +317,7 @@ struct ToDateTimeTransform64Signed
 {
     static constexpr auto name = "toDateTime";
 
-    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const TimeZone &)
+    static inline NO_SANITIZE_UNDEFINED ToType execute(const FromType & from, const DateLUTImpl &)
     {
         if (from < 0)
             return 0;
@@ -357,13 +357,13 @@ struct ToDateTime64Transform
         : scale_multiplier(DecimalUtils::scaleMultiplier<DateTime64::NativeType>(scale))
     {}
 
-    inline DateTime64::NativeType execute(UInt16 d, const TimeZone & time_zone) const
+    inline DateTime64::NativeType execute(UInt16 d, const DateLUTImpl & time_zone) const
     {
         const auto dt = ToDateTimeImpl::execute(d, time_zone);
         return execute(dt, time_zone);
     }
 
-    inline DateTime64::NativeType execute(UInt32 dt, const TimeZone & /*time_zone*/) const
+    inline DateTime64::NativeType execute(UInt32 dt, const DateLUTImpl & /*time_zone*/) const
     {
         return DecimalUtils::decimalFromComponentsWithMultiplier<DateTime64>(dt, 0, scale_multiplier);
     }
@@ -373,26 +373,6 @@ template <typename Name> struct ConvertImpl<DataTypeDate, DataTypeDateTime64, Na
     : DateTimeTransformImpl<DataTypeDate, DataTypeDateTime64, ToDateTime64Transform> {};
 template <typename Name> struct ConvertImpl<DataTypeDateTime, DataTypeDateTime64, Name>
     : DateTimeTransformImpl<DataTypeDateTime, DataTypeDateTime64, ToDateTime64Transform> {};
-
-///** Conversion of DateTime64 to Date or DateTime: discards fractional part.
-// */
-//template <typename Transform>
-//struct FromDateTime64Transform
-//{
-//    static constexpr auto name = Transform::name;
-
-//    const DateTime64::NativeType scale_multiplier = 1;
-
-//    FromDateTime64Transform(UInt32 scale)
-//        : scale_multiplier(DecimalUtils::scaleMultiplier<DateTime64::NativeType>(scale))
-//    {}
-
-//    inline auto execute(DateTime64::NativeType dt, const TimeZone & time_zone) const
-//    {
-//        const auto c = DecimalUtils::splitWithScaleMultiplier(DateTime64(dt), scale_multiplier);
-//        return Transform::execute(static_cast<UInt32>(c.whole), time_zone);
-//    }
-//};
 
 template <typename Name> struct ConvertImpl<DataTypeDateTime64, DataTypeDate, Name>
     : DateTimeTransformImpl<DataTypeDateTime64, DataTypeDate, TransformDateTime64<ToDateImpl>> {};
@@ -405,7 +385,7 @@ template <typename Name> struct ConvertImpl<DataTypeDateTime64, DataTypeDateTime
 template <typename DataType>
 struct FormatImpl
 {
-    static void execute(const typename DataType::FieldType x, WriteBuffer & wb, const DataType *, const TimeZone *)
+    static void execute(const typename DataType::FieldType x, WriteBuffer & wb, const DataType *, const DateLUTImpl *)
     {
         writeText(x, wb);
     }
@@ -414,7 +394,7 @@ struct FormatImpl
 template <>
 struct FormatImpl<DataTypeDate>
 {
-    static void execute(const DataTypeDate::FieldType x, WriteBuffer & wb, const DataTypeDate *, const TimeZone *)
+    static void execute(const DataTypeDate::FieldType x, WriteBuffer & wb, const DataTypeDate *, const DateLUTImpl *)
     {
         writeDateText(DayNum(x), wb);
     }
@@ -423,7 +403,7 @@ struct FormatImpl<DataTypeDate>
 template <>
 struct FormatImpl<DataTypeDateTime>
 {
-    static void execute(const DataTypeDateTime::FieldType x, WriteBuffer & wb, const DataTypeDateTime *, const TimeZone * time_zone)
+    static void execute(const DataTypeDateTime::FieldType x, WriteBuffer & wb, const DataTypeDateTime *, const DateLUTImpl * time_zone)
     {
         writeDateTimeText(x, wb, *time_zone);
     }
@@ -432,7 +412,7 @@ struct FormatImpl<DataTypeDateTime>
 template <>
 struct FormatImpl<DataTypeDateTime64>
 {
-    static void execute(const DataTypeDateTime64::FieldType x, WriteBuffer & wb, const DataTypeDateTime64 * type, const TimeZone * time_zone)
+    static void execute(const DataTypeDateTime64::FieldType x, WriteBuffer & wb, const DataTypeDateTime64 * type, const DateLUTImpl * time_zone)
     {
         writeDateTimeText(DateTime64(x), type->getScale(), wb, *time_zone);
     }
@@ -442,7 +422,7 @@ struct FormatImpl<DataTypeDateTime64>
 template <typename FieldType>
 struct FormatImpl<DataTypeEnum<FieldType>>
 {
-    static void execute(const FieldType x, WriteBuffer & wb, const DataTypeEnum<FieldType> * type, const TimeZone *)
+    static void execute(const FieldType x, WriteBuffer & wb, const DataTypeEnum<FieldType> * type, const DateLUTImpl *)
     {
         writeString(type->getNameForValue(x), wb);
     }
@@ -451,7 +431,7 @@ struct FormatImpl<DataTypeEnum<FieldType>>
 template <typename FieldType>
 struct FormatImpl<DataTypeDecimal<FieldType>>
 {
-    static void execute(const FieldType x, WriteBuffer & wb, const DataTypeDecimal<FieldType> * type, const TimeZone *)
+    static void execute(const FieldType x, WriteBuffer & wb, const DataTypeDecimal<FieldType> * type, const DateLUTImpl *)
     {
         writeText(x, type->getScale(), wb);
     }
@@ -480,8 +460,7 @@ struct ConvertImpl<FromDataType, std::enable_if_t<!std::is_same_v<FromDataType, 
         const auto & col_with_type_and_name = arguments[0];
         const auto & type = static_cast<const FromDataType &>(*col_with_type_and_name.type);
 
-        const TimeZone * time_zone = nullptr;
-
+        const DateLUTImpl * time_zone = nullptr;
         /// For argument of DateTime type, second argument with time zone could be specified.
         if constexpr (std::is_same_v<FromDataType, DataTypeDateTime> || std::is_same_v<FromDataType, DataTypeDateTime64>)
             time_zone = &extractTimeZoneFromFunctionArguments(arguments, 1, 0);
@@ -564,31 +543,29 @@ struct ConvertImplGenericToString
 /** Conversion of strings to numbers, dates, datetimes: through parsing.
   */
 template <typename DataType>
-void parseImpl(typename DataType::FieldType & x, ReadBuffer & rb, const TimeZone *)
+void parseImpl(typename DataType::FieldType & x, ReadBuffer & rb, const DateLUTImpl *)
 {
     readText(x, rb);
 }
 
 template <>
-inline void parseImpl<DataTypeDate>(DataTypeDate::FieldType & x, ReadBuffer & rb, const TimeZone *)
+inline void parseImpl<DataTypeDate>(DataTypeDate::FieldType & x, ReadBuffer & rb, const DateLUTImpl *)
 {
     DayNum tmp(0);
     readDateText(tmp, rb);
     x = tmp;
 }
 
-// NOTE: no need of extra overload of DateTime64, since readDateTimeText64 has different signature and that case is explicitly handled in the calling code.
 template <>
-inline void parseImpl<DataTypeDateTime>(DataTypeDateTime::FieldType & x, ReadBuffer & rb, const TimeZone * time_zone)
+inline void parseImpl<DataTypeDateTime>(DataTypeDateTime::FieldType & x, ReadBuffer & rb, const DateLUTImpl * time_zone)
 {
     time_t tmp = 0;
     readDateTimeText(tmp, rb, *time_zone);
     x = tmp;
 }
 
-
 template <>
-inline void parseImpl<DataTypeUUID>(DataTypeUUID::FieldType & x, ReadBuffer & rb, const TimeZone *)
+inline void parseImpl<DataTypeUUID>(DataTypeUUID::FieldType & x, ReadBuffer & rb, const DateLUTImpl *)
 {
     UUID tmp;
     readUUIDText(tmp, rb);
@@ -597,7 +574,7 @@ inline void parseImpl<DataTypeUUID>(DataTypeUUID::FieldType & x, ReadBuffer & rb
 
 
 template <typename DataType>
-bool tryParseImpl(typename DataType::FieldType & x, ReadBuffer & rb, const TimeZone *)
+bool tryParseImpl(typename DataType::FieldType & x, ReadBuffer & rb, const DateLUTImpl *)
 {
     if constexpr (std::is_floating_point_v<typename DataType::FieldType>)
         return tryReadFloatText(x, rb);
@@ -606,7 +583,7 @@ bool tryParseImpl(typename DataType::FieldType & x, ReadBuffer & rb, const TimeZ
 }
 
 template <>
-inline bool tryParseImpl<DataTypeDate>(DataTypeDate::FieldType & x, ReadBuffer & rb, const TimeZone *)
+inline bool tryParseImpl<DataTypeDate>(DataTypeDate::FieldType & x, ReadBuffer & rb, const DateLUTImpl *)
 {
     DayNum tmp(0);
     if (!tryReadDateText(tmp, rb))
@@ -616,7 +593,7 @@ inline bool tryParseImpl<DataTypeDate>(DataTypeDate::FieldType & x, ReadBuffer &
 }
 
 template <>
-inline bool tryParseImpl<DataTypeDateTime>(DataTypeDateTime::FieldType & x, ReadBuffer & rb, const TimeZone * time_zone)
+inline bool tryParseImpl<DataTypeDateTime>(DataTypeDateTime::FieldType & x, ReadBuffer & rb, const DateLUTImpl * time_zone)
 {
     time_t tmp = 0;
     if (!tryReadDateTimeText(tmp, rb, *time_zone))
@@ -626,7 +603,7 @@ inline bool tryParseImpl<DataTypeDateTime>(DataTypeDateTime::FieldType & x, Read
 }
 
 template <>
-inline bool tryParseImpl<DataTypeUUID>(DataTypeUUID::FieldType & x, ReadBuffer & rb, const TimeZone *)
+inline bool tryParseImpl<DataTypeUUID>(DataTypeUUID::FieldType & x, ReadBuffer & rb, const DateLUTImpl *)
 {
     UUID tmp;
     if (!tryReadUUIDText(tmp, rb))
@@ -709,8 +686,8 @@ struct ConvertThroughParsing
     {
         using ColVecTo = typename ToDataType::ColumnType;
 
-        const TimeZone * local_time_zone [[maybe_unused]] = nullptr;
-        const TimeZone * utc_time_zone [[maybe_unused]] = nullptr;
+        const DateLUTImpl * local_time_zone [[maybe_unused]] = nullptr;
+        const DateLUTImpl * utc_time_zone [[maybe_unused]] = nullptr;
 
         /// For conversion to DateTime type, second argument with time zone could be specified.
         if constexpr (std::is_same_v<ToDataType, DataTypeDateTime> || to_datetime64)
@@ -725,7 +702,7 @@ struct ConvertThroughParsing
             }
 
             if constexpr (parsing_mode == ConvertFromStringParsingMode::BestEffort || parsing_mode == ConvertFromStringParsingMode::BestEffortUS)
-                utc_time_zone = &DateLUT::getTimeZone("UTC");
+                utc_time_zone = &DateLUT::instance("UTC");
         }
 
         const IColumn * col_from = arguments[0].column.get();

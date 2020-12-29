@@ -107,7 +107,6 @@ public:
         else if (which.isDateTime64())
         {
             const auto scale = static_cast<const DataTypeDateTime64 *>(from_type)->getScale();
-
             const TransformDateTime64<Transform> transformer(scale);
             return DateTimeTransformImpl<DataTypeDateTime64, ToDataType, decltype(transformer)>::execute(arguments, result_type, input_rows_count, transformer);
         }
@@ -133,8 +132,7 @@ public:
         }
 
         /// This method is called only if the function has one argument. Therefore, we do not care about the non-local time zone.
-        const TimeZone & time_zone = DateLUT::getTimeZone();
-
+        const DateLUTImpl & date_lut = DateLUT::instance();
         if (left.isNull() || right.isNull())
             return is_not_monotonic;
 
@@ -142,14 +140,14 @@ public:
 
         if (checkAndGetDataType<DataTypeDate>(&type))
         {
-            return Transform::FactorTransform::execute(UInt16(left.get<UInt64>()), time_zone)
-                == Transform::FactorTransform::execute(UInt16(right.get<UInt64>()), time_zone)
+            return Transform::FactorTransform::execute(UInt16(left.get<UInt64>()), date_lut)
+                == Transform::FactorTransform::execute(UInt16(right.get<UInt64>()), date_lut)
                 ? is_monotonic : is_not_monotonic;
         }
         else
         {
-            return Transform::FactorTransform::execute(UInt32(left.get<UInt64>()), time_zone)
-                == Transform::FactorTransform::execute(UInt32(right.get<UInt64>()), time_zone)
+            return Transform::FactorTransform::execute(UInt32(left.get<UInt64>()), date_lut)
+                == Transform::FactorTransform::execute(UInt32(right.get<UInt64>()), date_lut)
                 ? is_monotonic : is_not_monotonic;
         }
     }

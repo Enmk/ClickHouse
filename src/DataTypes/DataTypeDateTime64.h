@@ -3,7 +3,6 @@
 #include <Core/Types.h>
 #include <DataTypes/DataTypeDateTime.h>
 #include <DataTypes/DataTypeDecimalBase.h>
-#include <common/TimeZone.h>
 
 class DateLUTImpl;
 
@@ -62,11 +61,11 @@ public:
  * Suitable Transfotm-types are commonly used in Date/DateTime manipulation functions,
  * and should implement static (or const) function with following signatures:
  * 1:
- *     R execute(Int64 whole_value, ... , const TimeZone &)
+ *     R execute(Int64 whole_value, ... , const DateLUTImpl &)
  * 2:
- *     R execute(DateTime64 value, Int64 scale_multiplier, ... , const TimeZone &)
+ *     R execute(DateTime64 value, Int64 scale_multiplier, ... , const DateLUTImpl &)
  * 3:
- *     DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> components, ... , const TimeZone &)
+ *     DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> components, ... , const DateLUTImpl &)
  *
  * Where R could be arbitrary type.
 */
