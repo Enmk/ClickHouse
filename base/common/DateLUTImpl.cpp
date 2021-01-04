@@ -97,6 +97,7 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
 
         // TODO: this partically ignores fractional pre-epoch offsets, which may cause incorrect toRelativeHourNum() results for some timezones, namelly Europe\Minsk
         // when pre-May 2 1924 it had an offset of UTC+1:50, and after it was UTC+2h.
+        // https://www.timeanddate.com/time/zone/belarus/minsk?syear=1900
         if (start_of_day > 0 && start_of_day % 3600)
             offset_is_whole_number_of_hours_everytime = false;
 

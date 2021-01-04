@@ -460,66 +460,72 @@ TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
     EXPECT_EQ(lut.dateToString(time), "1970-01-01" /*std::string*/);
 }
 
-TEST(DateLUTTest, TimeValuesAtRightBoderOfRange)
+TEST(DateLUTTest, TimeValuesAtRightBoderOfRangeOfOLDLut)
 {
+    // Value is at the right border of the OLD (small) LUT, and provides meaningfull values where OLD LUT would provide garbage.
     const DateLUTImpl lut("UTC");
 
-    const time_t time = 4294339200; // 2106-01-31T00:00:00 (Sunday)
-    SCOPED_TRACE(::testing::Message("!!! The time_t value is :") << time);
+    const time_t time = 4294343873; // 2106-01-31T01:17:53 (Sunday)
 
     EXPECT_EQ(lut.getTimeZone(), "UTC");
 
-    EXPECT_EQ(lut.toDate(time), 4294857600);
-    EXPECT_EQ(lut.toMonth(time), 2);
+    EXPECT_EQ(lut.toDate(time), 4294339200);
+    EXPECT_EQ(lut.toMonth(time), 1);
     EXPECT_EQ(lut.toQuarter(time), 1);
     EXPECT_EQ(lut.toYear(time), 2106);
-    EXPECT_EQ(lut.toDayOfMonth(time), 6);
+    EXPECT_EQ(lut.toDayOfMonth(time), 31);
 
-    EXPECT_EQ(lut.toFirstDayOfWeek(time), 4294425600 /*time_t*/);
-    EXPECT_EQ(lut.toFirstDayNumOfWeek(time), DayNum(49704));
-    EXPECT_EQ(lut.toFirstDayOfMonth(time), 4294425600 /*time_t*/);
-    EXPECT_EQ(lut.toFirstDayNumOfMonth(time), DayNum(49704));
+    EXPECT_EQ(lut.toFirstDayOfWeek(time), 4293820800 /*time_t*/);
+    EXPECT_EQ(lut.toFirstDayNumOfWeek(time), DayNum(49697));
+    EXPECT_EQ(lut.toFirstDayOfMonth(time), 4291747200 /*time_t*/); // 2016-01-01
+    EXPECT_EQ(lut.toFirstDayNumOfMonth(time), DayNum(49673));
     EXPECT_EQ(lut.toFirstDayNumOfQuarter(time), DayNum(49673) /*DayNum*/);
     EXPECT_EQ(lut.toFirstDayOfQuarter(time), 4291747200 /*time_t*/);
-    EXPECT_EQ(lut.toFirstDayOfYear(time), 0 /*time_t*/);                        // !!! wraps around?
-    EXPECT_EQ(lut.toFirstDayNumOfYear(time), DayNum(0) /*DayNum*/);             // !!! wraps around?
-    EXPECT_EQ(lut.toFirstDayOfNextMonth(time), 4294944000 /*time_t*/);
-    EXPECT_EQ(lut.toFirstDayOfPrevMonth(time), 4291747200 /*time_t*/);
-    EXPECT_EQ(lut.daysInMonth(time), 28 /*UInt8*/);
-    EXPECT_EQ(lut.toDateAndShift(time, 10), 4294944000 /*time_t*/);
-    EXPECT_EQ(lut.toTime(time), 23295 /*time_t*/);
-    EXPECT_EQ(lut.toHour(time), 6 /*unsigned*/);
-    EXPECT_EQ(lut.toSecond(time), 15 /*unsigned*/);
-    EXPECT_EQ(lut.toMinute(time), 28 /*unsigned*/);
-    EXPECT_EQ(lut.toStartOfMinute(time), 4294880880 /*time_t*/);
-    EXPECT_EQ(lut.toStartOfFiveMinute(time), 4294880700 /*time_t*/);
-    EXPECT_EQ(lut.toStartOfFifteenMinutes(time), 4294880100 /*time_t*/);
-    EXPECT_EQ(lut.toStartOfTenMinutes(time), 4294880400 /*time_t*/);
-    EXPECT_EQ(lut.toStartOfHour(time), 4294879200 /*time_t*/);
-    EXPECT_EQ(lut.toDayNum(time), DayNum(49709) /*DayNum*/);
-    EXPECT_EQ(lut.toDayOfYear(time), 49710 /*unsigned*/);
-    EXPECT_EQ(lut.toRelativeWeekNum(time), 7101 /*unsigned*/);
+    EXPECT_EQ(lut.toFirstDayOfYear(time), 4291747200 /*time_t*/);
+    EXPECT_EQ(lut.toFirstDayNumOfYear(time), DayNum(49673) /*DayNum*/);
+    EXPECT_EQ(lut.toFirstDayOfNextMonth(time), 4294425600 /*time_t*/); // 2106-02-01
+    EXPECT_EQ(lut.toFirstDayOfPrevMonth(time), 4289068800 /*time_t*/); // 2105-12-01
+    EXPECT_EQ(lut.daysInMonth(time), 31 /*UInt8*/);
+    EXPECT_EQ(lut.toDateAndShift(time, 10), 4295203200 /*time_t*/); // 2106-02-10
+    EXPECT_EQ(lut.toTime(time), 4673 /*time_t*/);
+    EXPECT_EQ(lut.toHour(time), 1 /*unsigned*/);
+    EXPECT_EQ(lut.toMinute(time), 17 /*unsigned*/);
+    EXPECT_EQ(lut.toSecond(time), 53 /*unsigned*/);
+    EXPECT_EQ(lut.toStartOfMinute(time), 4294343820 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfFiveMinute(time), 4294343700 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfFifteenMinutes(time), 4294343700 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfTenMinutes(time), 4294343400 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfHour(time), 4294342800 /*time_t*/);
+    EXPECT_EQ(lut.toDayNum(time), DayNum(49703) /*DayNum*/);
+    EXPECT_EQ(lut.toDayOfYear(time), 31 /*unsigned*/);
+    EXPECT_EQ(lut.toRelativeWeekNum(time), 7100 /*unsigned*/);
     EXPECT_EQ(lut.toISOYear(time), 2106 /*unsigned*/);
-    EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), DayNum(65533) /*DayNum*/);
-    EXPECT_EQ(lut.toFirstDayOfISOYear(time), 4294944000 /*time_t*/);
+
+    EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), DayNum(49676) /*DayNum*/); // 2106-01-04
+    EXPECT_EQ(lut.toFirstDayOfISOYear(time), 4292006400 /*time_t*/);
+    // TODO: enable after refactoring of DateLUT (replace DayNum with ExtendedDayNum).
     EXPECT_EQ(lut.toISOWeek(time), 7102 /*unsigned*/);
-    EXPECT_EQ(lut.toRelativeMonthNum(time), 25274 /*unsigned*/);
+    EXPECT_EQ(lut.toRelativeMonthNum(time), 25273 /*unsigned*/);
     EXPECT_EQ(lut.toRelativeQuarterNum(time), 8424 /*unsigned*/);
-    EXPECT_EQ(lut.toRelativeHourNum(time), 1193022 /*time_t*/);
-    EXPECT_EQ(lut.toRelativeMinuteNum(time), 71581348 /*time_t*/);
-    EXPECT_EQ(lut.toStartOfHourInterval(time, 5), 4294872000 /*time_t*/);
-    EXPECT_EQ(lut.toStartOfMinuteInterval(time, 6), 4294880640 /*time_t*/);
-    EXPECT_EQ(lut.toStartOfSecondInterval(time, 7), 4294880891 /*time_t*/);
-    EXPECT_EQ(lut.toNumYYYYMM(time), 210602 /*UInt32*/);
-    EXPECT_EQ(lut.toNumYYYYMMDD(time), 21060206 /*UInt32*/);
-    EXPECT_EQ(lut.toNumYYYYMMDDhhmmss(time), 21060206062815 /*UInt64*/);
-    EXPECT_EQ(lut.addDays(time, 100), 4294967295 /*time_t*/);
-    EXPECT_EQ(lut.addWeeks(time, 100), 4294967295 /*time_t*/);
-    EXPECT_EQ(lut.addMonths(time, 100), 23295 /*time_t*/);                      // !!! wraps around
-    EXPECT_EQ(lut.addQuarters(time, 100), 23295 /*time_t*/);                    // !!! wraps around
-    EXPECT_EQ(lut.addYears(time, 10), 23295 /*time_t*/);                        // !!! wraps around
-    EXPECT_EQ(lut.timeToString(time), "2106-02-06 06:28:15" /*std::string*/);
-    EXPECT_EQ(lut.dateToString(time), "2106-02-06" /*std::string*/);
+    EXPECT_EQ(lut.toRelativeHourNum(time), 1192873 /*time_t*/);
+    EXPECT_EQ(lut.toRelativeMinuteNum(time), 71572397 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfHourInterval(time, 5), 4294332000 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfMinuteInterval(time, 6), 4294343520 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfSecondInterval(time, 7), 4294343872 /*time_t*/);
+
+    EXPECT_EQ(lut.toNumYYYYMM(time), 210601 /*UInt32*/);
+    EXPECT_EQ(lut.toNumYYYYMMDD(time), 21060131 /*UInt32*/);
+    EXPECT_EQ(lut.toNumYYYYMMDDhhmmss(time), 21060131011753 /*UInt64*/);
+
+    EXPECT_EQ(lut.addDays(time, 100), 4302983873 /*time_t*/);
+    EXPECT_EQ(lut.addWeeks(time, 10), 4300391873 /*time_t*/);
+
+    EXPECT_EQ(lut.addMonths(time, 10), 4315339073 /*time_t*/);                 // 2106-10-01 01:17:53
+    EXPECT_EQ(lut.addQuarters(time, 10), 23295 /*time_t*/);                    // !!! wraps around
+    EXPECT_EQ(lut.addYears(time, 10), 4616011073 /*time_t*/);                  // 2116-04-11 01:17:53
+
+    EXPECT_EQ(lut.timeToString(time), "2106-01-31 01:17:53" /*std::string*/);
+    EXPECT_EQ(lut.dateToString(time), "2106-01-31" /*std::string*/);
 }
 
 class DateLUTRangeTest : public ::testing::TestWithParam<std::tuple<time_t /*begin*/, time_t /*end*/, int /*step*/>>

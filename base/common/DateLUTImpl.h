@@ -509,7 +509,7 @@ public:
     template <typename V>
     inline unsigned toISOWeek(V v) const
     {
-        return 1 + DayNum(toFirstDayNumOfWeek(v) - toFirstDayNumOfISOYear(v)) / 7;
+        return 1 + (toFirstDayNumOfWeek(v) - toFirstDayNumOfISOYear(v)) / 7;
     }
 
     /*
