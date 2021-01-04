@@ -347,6 +347,7 @@ TEST(DateLUTTest, TimeValuesInMiddleOfRange)
     const time_t time = 1568650811; // 2019-09-16 19:20:11 (Monday)
 
     EXPECT_EQ(lut.getTimeZone(), "Europe/Minsk");
+    EXPECT_EQ(lut.getOffsetAtStartOfEpoch(), 3600*3); // UTC-3
 
     EXPECT_EQ(lut.toDate(time), 1568581200);
     EXPECT_EQ(lut.toMonth(time), 9);
@@ -364,41 +365,41 @@ TEST(DateLUTTest, TimeValuesInMiddleOfRange)
     EXPECT_EQ(lut.toFirstDayNumOfYear(time), DayNum(17897) /*DayNum*/);
     EXPECT_EQ(lut.toFirstDayOfNextMonth(time), 1569877200 /*time_t*/);
     EXPECT_EQ(lut.toFirstDayOfPrevMonth(time), 1564606800 /*time_t*/);
-//    EXPECT_EQ(lut.daysInMonth(time), 30 /*UInt8*/);
-//    EXPECT_EQ(lut.toDateAndShift(time, 10), 1569445200 /*time_t*/);
-//    EXPECT_EQ(lut.toTime(time), 58811 /*time_t*/);
-//    EXPECT_EQ(lut.toHour(time), 19 /*unsigned*/);
-//    EXPECT_EQ(lut.toSecond(time), 11 /*unsigned*/);
-//    EXPECT_EQ(lut.toMinute(time), 20 /*unsigned*/);
-//    EXPECT_EQ(lut.toStartOfMinute(time), 1568650800 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfFiveMinute(time), 1568650800 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfFifteenMinutes(time), 1568650500 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfTenMinutes(time), 1568650800 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfHour(time), 1568649600 /*time_t*/);
-//    EXPECT_EQ(lut.toDayNum(time), DayNum(18155) /*DayNum*/);
-//    EXPECT_EQ(lut.toDayOfYear(time), 259 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeWeekNum(time), 2594 /*unsigned*/);
-//    EXPECT_EQ(lut.toISOYear(time), 2019 /*unsigned*/);
-//    EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), DayNum(17896) /*DayNum*/);
-//    EXPECT_EQ(lut.toFirstDayOfISOYear(time), 1546203600 /*time_t*/);
-//    EXPECT_EQ(lut.toISOWeek(time), 38 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeMonthNum(time), 24237 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeQuarterNum(time), 8078 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeHourNum(time), 435736 /*time_t*/);
-//    EXPECT_EQ(lut.toRelativeMinuteNum(time), 26144180 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfHourInterval(time, 5), 1568646000 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfMinuteInterval(time, 6), 1568650680 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfSecondInterval(time, 7), 1568650811 /*time_t*/);
-//    EXPECT_EQ(lut.toNumYYYYMM(time), 201909 /*UInt32*/);
-//    EXPECT_EQ(lut.toNumYYYYMMDD(time), 20190916 /*UInt32*/);
-//    EXPECT_EQ(lut.toNumYYYYMMDDhhmmss(time), 20190916192011 /*UInt64*/);
-//    EXPECT_EQ(lut.addDays(time, 100), 1577290811 /*time_t*/);
-//    EXPECT_EQ(lut.addWeeks(time, 100), 1629130811 /*time_t*/);
-//    EXPECT_EQ(lut.addMonths(time, 100), 1831652411 /*time_t*/);
-//    EXPECT_EQ(lut.addQuarters(time, 100), 2357655611 /*time_t*/);
-//    EXPECT_EQ(lut.addYears(time, 10), 1884270011 /*time_t*/);
-//    EXPECT_EQ(lut.timeToString(time), "2019-09-16 19:20:11" /*std::string*/);
-//    EXPECT_EQ(lut.dateToString(time), "2019-09-16" /*std::string*/);
+    EXPECT_EQ(lut.daysInMonth(time), 30 /*UInt8*/);
+    EXPECT_EQ(lut.toDateAndShift(time, 10), 1569445200 /*time_t*/);
+    EXPECT_EQ(lut.toTime(time), 58811 /*time_t*/);
+    EXPECT_EQ(lut.toHour(time), 19 /*unsigned*/);
+    EXPECT_EQ(lut.toSecond(time), 11 /*unsigned*/);
+    EXPECT_EQ(lut.toMinute(time), 20 /*unsigned*/);
+    EXPECT_EQ(lut.toStartOfMinute(time), 1568650800 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfFiveMinute(time), 1568650800 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfFifteenMinutes(time), 1568650500 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfTenMinutes(time), 1568650800 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfHour(time), 1568649600 /*time_t*/);
+    EXPECT_EQ(lut.toDayNum(time), DayNum(18155) /*DayNum*/);
+    EXPECT_EQ(lut.toDayOfYear(time), 259 /*unsigned*/);
+    EXPECT_EQ(lut.toRelativeWeekNum(time), 2594 /*unsigned*/);
+    EXPECT_EQ(lut.toISOYear(time), 2019 /*unsigned*/);
+    EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), DayNum(17896) /*DayNum*/);
+    EXPECT_EQ(lut.toFirstDayOfISOYear(time), 1546203600 /*time_t*/);
+    EXPECT_EQ(lut.toISOWeek(time), 38 /*unsigned*/);
+    EXPECT_EQ(lut.toRelativeMonthNum(time), 24237 /*unsigned*/);
+    EXPECT_EQ(lut.toRelativeQuarterNum(time), 8078 /*unsigned*/);
+    EXPECT_EQ(lut.toRelativeHourNum(time), 435736 /*time_t*/);
+    EXPECT_EQ(lut.toRelativeMinuteNum(time), 26144180 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfHourInterval(time, 5), 1568646000 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfMinuteInterval(time, 6), 1568650680 /*time_t*/);
+    EXPECT_EQ(lut.toStartOfSecondInterval(time, 7), 1568650811 /*time_t*/);
+    EXPECT_EQ(lut.toNumYYYYMM(time), 201909 /*UInt32*/);
+    EXPECT_EQ(lut.toNumYYYYMMDD(time), 20190916 /*UInt32*/);
+    EXPECT_EQ(lut.toNumYYYYMMDDhhmmss(time), 20190916192011 /*UInt64*/);
+    EXPECT_EQ(lut.addDays(time, 100), 1577290811 /*time_t*/);
+    EXPECT_EQ(lut.addWeeks(time, 100), 1629130811 /*time_t*/);
+    EXPECT_EQ(lut.addMonths(time, 100), 1831652411 /*time_t*/);
+    EXPECT_EQ(lut.addQuarters(time, 100), 2357655611 /*time_t*/);
+    EXPECT_EQ(lut.addYears(time, 10), 1884270011 /*time_t*/);
+    EXPECT_EQ(lut.timeToString(time), "2019-09-16 19:20:11" /*std::string*/);
+    EXPECT_EQ(lut.dateToString(time), "2019-09-16" /*std::string*/);
 }
 
 

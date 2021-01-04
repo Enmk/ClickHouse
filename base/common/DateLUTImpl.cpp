@@ -60,8 +60,7 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
     daynum_offset_epoch = epoch - lut_start;
     assert(daynum_offset_epoch == 25567);
 
-    cctz::time_zone::absolute_lookup start_of_epoch_lookup = cctz_time_zone.lookup(std::chrono::system_clock::from_time_t(start_of_day));
-    offset_at_start_of_epoch = start_of_epoch_lookup.offset;
+    offset_at_start_of_epoch = cctz_time_zone.lookup(cctz_time_zone.lookup(epoch).pre).offset;
     offset_is_whole_number_of_hours_everytime = true;
 
     cctz::civil_day date = lut_start;
@@ -96,7 +95,9 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         values.time_at_offset_change = 0;
         values.amount_of_offset_change = 0;
 
-        if (start_of_day % 3600)
+        // TODO: this partically ignores fractional pre-epoch offsets, which may cause incorrect toRelativeHourNum() results for some timezones, namelly Europe\Minsk
+        // when pre-May 2 1924 it had an offset of UTC+1:50, and after it was UTC+2h.
+        if (start_of_day > 0 && start_of_day % 3600)
             offset_is_whole_number_of_hours_everytime = false;
 
         /// If UTC offset was changed in previous day.

@@ -46,7 +46,60 @@ public:
 
     // Normalized and bound-checked index of element in lut,
     // has to be a separate type to support overloading
+    // TODO: make sure that any arithmetic on LUTIndex actually results in valid LUTIndex.
     STRONG_TYPEDEF(UInt32, LUTIndex)
+    template <typename T>
+    friend inline LUTIndex operator+(const LUTIndex & index, const T v)
+    {
+        return LUTIndex{(index.toUnderType() + v) & date_lut_mask};
+    }
+    template <typename T>
+    friend inline LUTIndex operator+(const T v, const LUTIndex & index)
+    {
+        return LUTIndex{(v + index.toUnderType()) & date_lut_mask};
+    }
+    friend inline LUTIndex operator+(const LUTIndex & index, const LUTIndex & v)
+    {
+        return LUTIndex{(index.toUnderType() + v.toUnderType()) & date_lut_mask};
+    }
+
+    template <typename T>
+    friend inline LUTIndex operator-(const LUTIndex & index, const T v)
+    {
+        return LUTIndex{(index.toUnderType() - v) & date_lut_mask};
+    }
+    template <typename T>
+    friend inline LUTIndex operator-(const T v, const LUTIndex & index)
+    {
+        return LUTIndex{(v - index.toUnderType()) & date_lut_mask};
+    }
+    friend inline LUTIndex operator-(const LUTIndex & index, const LUTIndex & v)
+    {
+        return LUTIndex{(index.toUnderType() - v.toUnderType()) & date_lut_mask};
+    }
+
+    template <typename T>
+    friend inline LUTIndex operator*(const LUTIndex & index, const T v)
+    {
+        return LUTIndex{(index.toUnderType() * v) & date_lut_mask};
+    }
+    template <typename T>
+    friend inline LUTIndex operator*(const T v, const LUTIndex & index)
+    {
+        return LUTIndex{(v * index.toUnderType()) & date_lut_mask};
+    }
+
+    template <typename T>
+    friend inline LUTIndex operator/(const LUTIndex & index, const T v)
+    {
+        return LUTIndex{(index.toUnderType() / v) & date_lut_mask};
+    }
+    template <typename T>
+    friend inline LUTIndex operator/(const T v, const LUTIndex & index)
+    {
+        return LUTIndex{(v / index.toUnderType()) & date_lut_mask};
+    }
+
 public:
     /// The order of fields matters for alignment and sizeof.
     struct Values
@@ -154,6 +207,11 @@ private:
 public:
     const std::string & getTimeZone() const { return time_zone; }
 
+    // Mehtods only for unit-testing, it makes very little sense to use it from user code.
+    auto getOffsetAtStartOfEpoch() const { return offset_at_start_of_epoch; }
+    auto getOffsetIsWholNumberOfHoursEveryWhere() const { return offset_is_whole_number_of_hours_everytime; }
+    auto getTimeOffsetEpoch() const { return time_offset_epoch; }
+
     /// All functions below are thread-safe; arguments are not checked.
 
     template <typename V>
@@ -180,7 +238,7 @@ public:
     inline DayNum toFirstDayNumOfWeek(V v) const
     {
         const auto i = toLUTIndex(v);
-        return toDayNum(LUTIndex{i - (lut[i].day_of_week - 1)});
+        return toDayNum(i - (lut[i].day_of_week - 1));
     }
 
     /// Round down to start of month.
@@ -195,7 +253,7 @@ public:
     inline DayNum toFirstDayNumOfMonth(V v) const
     {
         const auto i = toLUTIndex(v);
-        return toDayNum(LUTIndex{i - (lut[i].day_of_month - 1)});
+        return toDayNum(i - (lut[i].day_of_month - 1));
     }
 
 //    inline DayNum toFirstDayNumOfMonth(time_t t) const
@@ -224,7 +282,7 @@ public:
             --month_inside_quarter;
         }
 
-        return LUTIndex{index + 1};
+        return index + 1;
     }
 
     template <typename V>
@@ -242,7 +300,7 @@ public:
     template <typename V>
     inline LUTIndex toFirstDayNumOfYearIndex(V v) const
     {
-        return LUTIndex{years_lut[lut[toLUTIndex(v)].year - DATE_LUT_MIN_YEAR]};
+        return years_lut[lut[toLUTIndex(v)].year - DATE_LUT_MIN_YEAR];
     }
 
     template <typename V>
@@ -283,7 +341,7 @@ public:
       */
     inline time_t toDateAndShift(time_t t, Int32 days) const
     {
-        return lut[toLUTIndex(findIndex(t) + days)].date;
+        return lut[findIndex(t) + days].date;
     }
 
     inline time_t toTime(time_t t) const
@@ -395,7 +453,7 @@ public:
     {
         // TODO: different overload for ExtendedDayNum
         const auto i = toLUTIndex(v);
-        return i + 1 - toFirstDayNumOfYear(i);
+        return i + 1 - toFirstDayNumOfYearIndex(i);
     }
 
     /// Number of week from some fixed moment in the past. Week begins at monday.
@@ -406,7 +464,7 @@ public:
     {
         const auto i = toLUTIndex(v);
         /// We add 8 to avoid underflow at beginning of unix epoch.
-        return (i + 8 - toDayOfWeek(i)) / 7;
+        return toDayNum(i + 8 - toDayOfWeek(i)) / 7;
     }
 
     /// Get year that contains most of the current week. Week begins at monday.
@@ -668,7 +726,7 @@ public:
             return toFirstDayNumOfYear(v);
 
         const auto i = toLUTIndex(v);
-        return toDayNum(LUTIndex{years_lut[(lut[i].year - DATE_LUT_MIN_YEAR) / years * years]});
+        return toDayNum(years_lut[(lut[i].year - DATE_LUT_MIN_YEAR) / years * years]);
     }
 
     inline DayNum toStartOfQuarterInterval(DayNum d, UInt64 quarters) const
