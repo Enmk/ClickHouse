@@ -480,7 +480,7 @@ public:
     /// Example: ISO year 2019 begins at 2018-12-31. And ISO year 2017 begins at 2017-01-02.
     /// https://en.wikipedia.org/wiki/ISO_week_date
     template <typename V>
-    inline DayNum toFirstDayNumOfISOYear(V v) const
+    inline LUTIndex toFirstDayNumOfISOYearIndex(V v) const
     {
         const auto i = toLUTIndex(v);
         auto iso_year = toISOYear(i);
@@ -488,14 +488,20 @@ public:
         const auto first_day_of_year = years_lut[iso_year - DATE_LUT_MIN_YEAR];
         auto first_day_of_week_of_year = lut[first_day_of_year].day_of_week;
 
-        return toDayNum(LUTIndex{first_day_of_week_of_year <= 4
+        return LUTIndex{first_day_of_week_of_year <= 4
             ? first_day_of_year + 1 - first_day_of_week_of_year
-            : first_day_of_year + 8 - first_day_of_week_of_year});
+            : first_day_of_year + 8 - first_day_of_week_of_year};
+    }
+
+    template <typename V>
+    inline DayNum toFirstDayNumOfISOYear(V v) const
+    {
+        return toDayNum(toFirstDayNumOfISOYearIndex(v));
     }
 
     inline time_t toFirstDayOfISOYear(time_t t) const
     {
-        return fromDayNum(toFirstDayNumOfISOYear(t));
+        return lut[toFirstDayNumOfISOYearIndex(t)].date;
     }
 
     /// ISO 8601 week number. Week begins at monday.

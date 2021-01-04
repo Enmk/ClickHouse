@@ -10,9 +10,6 @@
     #pragma clang diagnostic ignored "-Wused-but-marked-unused"
 #endif
 
-// how many seconds (roughly) are covered by LUT.
-#define DATE_LUT_SIZE_IN_SECONDS DATE_LUT_MAX_DAY_NUM * 3600ULL * 24ULL
-
 //bool operator==(const DayNum & dn, const GlobalDayNum gdn)
 //{
 //    return dn.toUnderType() == gdn.toUnderType();
@@ -106,8 +103,8 @@ inline auto toString(Args && ...args)
 
 }
 
-class TimeZone_VS_DateLUT_Test : public ::testing::TestWithParam<std::tuple<const char* /*timzone name*/, time_t>>
-{};
+//class TimeZone_VS_DateLUT_Test : public ::testing::TestWithParam<std::tuple<const char* /*timzone name*/, time_t>>
+//{};
 
 //TEST_P(TimeZone_VS_DateLUT_Test, SameAsDateLUTImpl)
 //{
@@ -406,7 +403,7 @@ TEST(DateLUTTest, TimeValuesInMiddleOfRange)
 TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
 {
     const DateLUTImpl lut("UTC");
-    const time_t time = 0;
+    const time_t time = 0; // 1970-01-01 00:00:00 (Thursday)
 
     EXPECT_EQ(lut.getTimeZone(), "UTC");
 
@@ -416,7 +413,7 @@ TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
     EXPECT_EQ(lut.toYear(time), 1970);
     EXPECT_EQ(lut.toDayOfMonth(time), 1);
 
-    EXPECT_EQ(lut.toFirstDayOfWeek(time), 4294944000 /*time_t*/);
+    EXPECT_EQ(lut.toFirstDayOfWeek(time), -259200 /*time_t*/); // 1969-12-29 00:00:00
     EXPECT_EQ(lut.toFirstDayNumOfWeek(time), DayNum(65533) /*DayNum*/);
     EXPECT_EQ(lut.toFirstDayOfMonth(time), 0 /*time_t*/);
     EXPECT_EQ(lut.toFirstDayNumOfMonth(time), DayNum(0) /*DayNum*/);
@@ -425,7 +422,7 @@ TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
     EXPECT_EQ(lut.toFirstDayOfYear(time), 0 /*time_t*/);
     EXPECT_EQ(lut.toFirstDayNumOfYear(time), DayNum(0) /*DayNum*/);
     EXPECT_EQ(lut.toFirstDayOfNextMonth(time), 2678400 /*time_t*/);
-    EXPECT_EQ(lut.toFirstDayOfPrevMonth(time), 4294944000 /*time_t*/);
+    EXPECT_EQ(lut.toFirstDayOfPrevMonth(time), -2678400 /*time_t*/); // 1969-12-01 00:00:00
     EXPECT_EQ(lut.daysInMonth(time), 31 /*UInt8*/);
     EXPECT_EQ(lut.toDateAndShift(time, 10), 864000 /*time_t*/);
     EXPECT_EQ(lut.toTime(time), 0 /*time_t*/);
@@ -442,7 +439,7 @@ TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
     EXPECT_EQ(lut.toRelativeWeekNum(time), 0 /*unsigned*/);
     EXPECT_EQ(lut.toISOYear(time), 1970 /*unsigned*/);
     EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), DayNum(65533) /*DayNum*/); // ?
-    EXPECT_EQ(lut.toFirstDayOfISOYear(time), 4294944000 /*time_t*/); // ?
+    EXPECT_EQ(lut.toFirstDayOfISOYear(time), -259200 /*time_t*/); // 1969-12-29 00:00:00
     EXPECT_EQ(lut.toISOWeek(time), 1 /*unsigned*/);
     EXPECT_EQ(lut.toRelativeMonthNum(time), 23641 /*unsigned*/); // ?
     EXPECT_EQ(lut.toRelativeQuarterNum(time), 7880 /*unsigned*/); // ?
@@ -463,10 +460,12 @@ TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
     EXPECT_EQ(lut.dateToString(time), "1970-01-01" /*std::string*/);
 }
 
-TEST(DateLUTTest, DISABLED_TimeValuesAtRightBoderOfRange)
+TEST(DateLUTTest, TimeValuesAtRightBoderOfRange)
 {
     const DateLUTImpl lut("UTC");
-    const time_t time = DATE_LUT_SIZE_IN_SECONDS - 3600 * 24 * 7;
+
+    const time_t time = 4294339200; // 2106-01-31T00:00:00 (Sunday)
+    SCOPED_TRACE(::testing::Message("!!! The time_t value is :") << time);
 
     EXPECT_EQ(lut.getTimeZone(), "UTC");
 
