@@ -54,13 +54,17 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
     const cctz::civil_day epoch{1970, 1, 1};
     const cctz::civil_day lut_start{1900, 1, 1};
     time_t start_of_day = std::chrono::system_clock::to_time_t(cctz_time_zone.lookup(lut_start).pre);
-    time_offset_epoch = cctz::civil_second(epoch) - cctz::civil_second(lut_start);
+    time_offset_epoch = cctz::convert(cctz::civil_second(lut_start), cctz_time_zone).time_since_epoch().count();
+    // Within 2 days from pre-calculated offset for UTC: 2162968200 seconds from 1900-01-01 to EPOCH.
+    assert(2162968200 - 2 * 84600 > time_offset_epoch && time_offset_epoch < 2162968200 + 2 * 84600);
+    daynum_offset_epoch = epoch - lut_start;
+    assert(daynum_offset_epoch == 25567);
 
     cctz::time_zone::absolute_lookup start_of_epoch_lookup = cctz_time_zone.lookup(std::chrono::system_clock::from_time_t(start_of_day));
     offset_at_start_of_epoch = start_of_epoch_lookup.offset;
     offset_is_whole_number_of_hours_everytime = true;
 
-    cctz::civil_day date{1970, 1, 1};
+    cctz::civil_day date = lut_start;
 
     UInt32 i = 0;
     do
@@ -76,7 +80,7 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         values.day_of_week = getDayOfWeek(date);
         values.date = start_of_day;
 
-        assert(values.year >= DATE_LUT_MIN_YEAR && values.year <= DATE_LUT_MAX_YEAR);
+        assert(values.year >= DATE_LUT_MIN_YEAR && values.year <= DATE_LUT_MAX_YEAR + 1);
         assert(values.month >= 1 && values.month <= 12);
         assert(values.day_of_month >= 1 && values.day_of_month <= 31);
         assert(values.day_of_week >= 1 && values.day_of_week <= 7);
@@ -132,7 +136,7 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         ++date;
         ++i;
     }
-    while (/*start_of_day <= date_lut_max &&*/ i < DATE_LUT_SIZE && lut[i - 1].year - lut_start.year() <= DATE_LUT_YEARS); // +14 is a HACK to reduce number of misses when we lookup LUT by day index.
+    while (i < DATE_LUT_SIZE && lut[i - 1].year <= DATE_LUT_MAX_YEAR);
 
 //    date_lut_max = start_of_day;
 
