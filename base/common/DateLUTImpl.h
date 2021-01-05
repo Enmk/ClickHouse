@@ -214,17 +214,18 @@ public:
 
     /// All functions below are thread-safe; arguments are not checked.
 
+    // TODO: return ExtendedDayNum everywhere, don't use DayNum as a result or intermediate result at all.
     template <typename V>
     inline ExtendedDayNum toDayNum(V v) const
     {
-        return ExtendedDayNum{toLUTIndex(v) - daynum_offset_epoch};
+        return ExtendedDayNum{static_cast<ExtendedDayNum::UnderlyingType>(toLUTIndex(v).toUnderType()) - daynum_offset_epoch};
     }
 
-    template <typename V>
-    inline ExtendedDayNum toExtendedDayNum(V v) const
-    {
-        return ExtendedDayNum{toLUTIndex(v) - daynum_offset_epoch};
-    }
+//    template <typename V>
+//    inline ExtendedDayNum toExtendedDayNum(V v) const
+//    {
+//        return ExtendedDayNum{toLUTIndex(v) - daynum_offset_epoch};
+//    }
 
     /// Round down to start of monday.
     template <typename V>

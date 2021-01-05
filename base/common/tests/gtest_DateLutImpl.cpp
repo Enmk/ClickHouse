@@ -414,7 +414,7 @@ TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
     EXPECT_EQ(lut.toDayOfMonth(time), 1);
 
     EXPECT_EQ(lut.toFirstDayOfWeek(time), -259200 /*time_t*/); // 1969-12-29 00:00:00
-    EXPECT_EQ(lut.toFirstDayNumOfWeek(time), DayNum(65533) /*DayNum*/);
+    EXPECT_EQ(lut.toFirstDayNumOfWeek(time), ExtendedDayNum(-3) /*DayNum*/);
     EXPECT_EQ(lut.toFirstDayOfMonth(time), 0 /*time_t*/);
     EXPECT_EQ(lut.toFirstDayNumOfMonth(time), DayNum(0) /*DayNum*/);
     EXPECT_EQ(lut.toFirstDayNumOfQuarter(time), DayNum(0) /*DayNum*/);
@@ -438,7 +438,7 @@ TEST(DateLUTTest, TimeValuesAtLeftBoderOfRange)
     EXPECT_EQ(lut.toDayOfYear(time), 1 /*unsigned*/);
     EXPECT_EQ(lut.toRelativeWeekNum(time), 0 /*unsigned*/);
     EXPECT_EQ(lut.toISOYear(time), 1970 /*unsigned*/);
-    EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), DayNum(65533) /*DayNum*/); // ?
+    EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), ExtendedDayNum(-3) /*DayNum*/);
     EXPECT_EQ(lut.toFirstDayOfISOYear(time), -259200 /*time_t*/); // 1969-12-29 00:00:00
     EXPECT_EQ(lut.toISOWeek(time), 1 /*unsigned*/);
     EXPECT_EQ(lut.toRelativeMonthNum(time), 23641 /*unsigned*/); // ?
