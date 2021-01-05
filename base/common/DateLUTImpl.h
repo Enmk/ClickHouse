@@ -134,7 +134,7 @@ private:
     static const UInt32 date_lut_mask = 0x1ffff;
     static_assert(date_lut_mask == DATE_LUT_SIZE - 1);
 
-    UInt32 daynum_offset_epoch = 25567; // offset to epoch in days (DayNum) of the first day in LUT.
+    UInt32 daynum_offset_epoch = 25567; // offset to epoch in days (ExtendedDayNum) of the first day in LUT.
 
     /// Lookup table is indexed by LUTIndex.
     /// Day nums are the same in all time zones. 1970-01-01 is 0 and so on.
@@ -146,7 +146,7 @@ private:
     LUTIndex years_lut[DATE_LUT_YEARS];
 
     /// Year number after DATE_LUT_MIN_YEAR * month number starting at zero -> day num for first day of month
-    DayNum years_months_lut[DATE_LUT_YEARS * 12];
+    ExtendedDayNum years_months_lut[DATE_LUT_YEARS * 12];
 
     /// UTC offset at beginning of the Unix epoch. The same as unix timestamp of 1970-01-01 00:00:00 local time.
     time_t offset_at_start_of_epoch;
@@ -215,9 +215,9 @@ public:
     /// All functions below are thread-safe; arguments are not checked.
 
     template <typename V>
-    inline DayNum toDayNum(V v) const
+    inline ExtendedDayNum toDayNum(V v) const
     {
-        return DayNum{toLUTIndex(v) - daynum_offset_epoch};
+        return ExtendedDayNum{toLUTIndex(v) - daynum_offset_epoch};
     }
 
     template <typename V>
@@ -235,7 +235,7 @@ public:
     }
 
     template <typename V>
-    inline DayNum toFirstDayNumOfWeek(V v) const
+    inline ExtendedDayNum toFirstDayNumOfWeek(V v) const
     {
         const auto i = toLUTIndex(v);
         return toDayNum(i - (lut[i].day_of_week - 1));
@@ -250,7 +250,7 @@ public:
     }
 
     template <typename V>
-    inline DayNum toFirstDayNumOfMonth(V v) const
+    inline ExtendedDayNum toFirstDayNumOfMonth(V v) const
     {
         const auto i = toLUTIndex(v);
         return toDayNum(i - (lut[i].day_of_month - 1));
@@ -263,7 +263,7 @@ public:
 
     /// Round down to start of quarter.
     template <typename V>
-    inline DayNum toFirstDayNumOfQuarter(V v) const
+    inline ExtendedDayNum toFirstDayNumOfQuarter(V v) const
     {
         return toDayNum(toFirstDayOfQuarterIndex(v));
     }
@@ -304,7 +304,7 @@ public:
     }
 
     template <typename V>
-    inline DayNum toFirstDayNumOfYear(V v) const
+    inline ExtendedDayNum toFirstDayNumOfYear(V v) const
     {
         return toDayNum(toFirstDayNumOfYearIndex(v));
     }
@@ -435,6 +435,7 @@ public:
 //    inline DayNum toDayNum(time_t t) const { return DayNum{findIndex(t) - daynum_offset_epoch}; }
 //    inline ExtendedDayNum toExtendedDayNum(time_t t) const { return ExtendedDayNum{findIndex(t) - daynum_offset_epoch}; }
     inline time_t fromDayNum(DayNum d) const { return lut[toLUTIndex(d)].date; }
+    inline time_t fromDayNum(ExtendedDayNum d) const { return lut[toLUTIndex(d)].date; }
 
     template <typename V>
     inline time_t toDate(V v) const { return lut[toLUTIndex(v)].date; }
@@ -494,7 +495,7 @@ public:
     }
 
     template <typename V>
-    inline DayNum toFirstDayNumOfISOYear(V v) const
+    inline ExtendedDayNum toFirstDayNumOfISOYear(V v) const
     {
         return toDayNum(toFirstDayNumOfISOYearIndex(v));
     }
@@ -569,7 +570,7 @@ public:
 
         // 0 for monday, 1 for tuesday ...
         // get weekday from first day in year.
-        UInt16 weekday = calc_weekday(DayNum(first_daynr), !monday_first_mode);
+        UInt16 weekday = calc_weekday(first_daynr, !monday_first_mode);
 
         if (toMonth(i) == 1 && toDayOfMonth(i) <= static_cast<UInt32>(7 - weekday))
         {
@@ -627,9 +628,9 @@ public:
         {
             // Rounds down a date to the nearest Sunday.
             if (toDayOfWeek(first_day) != 7)
-                first_day = DayNum(first_day - toDayOfWeek(first_day));
+                first_day = ExtendedDayNum(first_day - toDayOfWeek(first_day));
             if (toDayOfWeek(i) != 7)
-                this_day = DayNum(i - toDayOfWeek(i));
+                this_day = ExtendedDayNum(i - toDayOfWeek(i));
         }
         yw.second = (this_day - first_day) / 7 + 1;
         return yw;
@@ -638,7 +639,7 @@ public:
     /**
      * get first day of week with week_mode, return Sunday or Monday
      */
-    inline DayNum toFirstDayNumOfWeek(DayNum d, UInt8 week_mode) const
+    inline ExtendedDayNum toFirstDayNumOfWeek(ExtendedDayNum d, UInt8 week_mode) const
     {
         bool monday_first_mode = week_mode & static_cast<UInt8>(WeekModeFlag::MONDAY_FIRST);
         if (monday_first_mode)
@@ -647,7 +648,7 @@ public:
         }
         else
         {
-            return (toDayOfWeek(d) != 7) ? DayNum(d - toDayOfWeek(d)) : d;
+            return (toDayOfWeek(d) != 7) ? ExtendedDayNum(d - toDayOfWeek(d)) : d;
         }
     }
 
@@ -726,7 +727,7 @@ public:
     }
 
     template <typename V>
-    inline DayNum toStartOfYearInterval(V v, UInt64 years) const
+    inline ExtendedDayNum toStartOfYearInterval(V v, UInt64 years) const
     {
         if (years == 1)
             return toFirstDayNumOfYear(v);
@@ -735,14 +736,14 @@ public:
         return toDayNum(years_lut[(lut[i].year - DATE_LUT_MIN_YEAR) / years * years]);
     }
 
-    inline DayNum toStartOfQuarterInterval(DayNum d, UInt64 quarters) const
+    inline ExtendedDayNum toStartOfQuarterInterval(ExtendedDayNum d, UInt64 quarters) const
     {
         if (quarters == 1)
             return toFirstDayNumOfQuarter(d);
         return toStartOfMonthInterval(d, quarters * 3);
     }
 
-    inline DayNum toStartOfMonthInterval(DayNum d, UInt64 months) const
+    inline ExtendedDayNum toStartOfMonthInterval(ExtendedDayNum d, UInt64 months) const
     {
         if (months == 1)
             return toFirstDayNumOfMonth(d);
@@ -751,20 +752,20 @@ public:
         return years_months_lut[month_total_index / months * months];
     }
 
-    inline DayNum toStartOfWeekInterval(DayNum d, UInt64 weeks) const
+    inline ExtendedDayNum toStartOfWeekInterval(ExtendedDayNum d, UInt64 weeks) const
     {
         if (weeks == 1)
             return toFirstDayNumOfWeek(d);
         UInt64 days = weeks * 7;
         // January 1st 1970 was Thursday so we need this 4-days offset to make weeks start on Monday.
-        return DayNum(4 + (d - 4) / days * days);
+        return ExtendedDayNum(4 + (d - 4) / days * days);
     }
 
-    inline time_t toStartOfDayInterval(DayNum d, UInt64 days) const
+    inline time_t toStartOfDayInterval(ExtendedDayNum d, UInt64 days) const
     {
         if (days == 1)
             return toDate(d);
-        return lut[toLUTIndex(DayNum(d / days * days))].date;
+        return lut[toLUTIndex(ExtendedDayNum(d / days * days))].date;
     }
 
     inline time_t toStartOfHourInterval(time_t t, UInt64 hours) const
@@ -802,10 +803,10 @@ public:
     }
 
     /// Create DayNum from year, month, day of month.
-    inline DayNum makeDayNum(Int16 year, UInt8 month, UInt8 day_of_month) const
+    inline ExtendedDayNum makeDayNum(Int16 year, UInt8 month, UInt8 day_of_month) const
     {
         if (unlikely(year < DATE_LUT_MIN_YEAR || year > DATE_LUT_MAX_YEAR || month < 1 || month > 12 || day_of_month < 1 || day_of_month > 31))
-            return DayNum(0);
+            return ExtendedDayNum(0);
 
         return toDayNum(makeLUTIndex(year, month, day_of_month));
     }
@@ -855,7 +856,7 @@ public:
         return makeDate(num / 10000, num / 100 % 100, num % 100);
     }
 
-    inline DayNum YYYYMMDDToDayNum(UInt32 num) const
+    inline ExtendedDayNum YYYYMMDDToDayNum(UInt32 num) const
     {
         return makeDayNum(num / 10000, num / 100 % 100, num % 100);
     }
@@ -957,7 +958,7 @@ public:
         return lut[result_day].date + time_offset;
     }
 
-    inline DayNum addMonths(DayNum d, Int64 delta) const
+    inline ExtendedDayNum addMonths(ExtendedDayNum d, Int64 delta) const
     {
         return toDayNum(addMonthsIndex(d, delta));
     }
@@ -967,7 +968,7 @@ public:
         return addMonths(t, delta * 3);
     }
 
-    inline DayNum addQuarters(DayNum d, Int64 delta) const
+    inline ExtendedDayNum addQuarters(ExtendedDayNum d, Int64 delta) const
     {
         return addMonths(d, delta * 3);
     }
@@ -1001,7 +1002,7 @@ public:
         return lut[result_day].date + time_offset;
     }
 
-    inline DayNum addYears(DayNum d, Int64 delta) const
+    inline ExtendedDayNum addYears(ExtendedDayNum d, Int64 delta) const
     {
         return toDayNum(addYearsIndex(d, delta));
     }
@@ -1054,7 +1055,7 @@ public:
         return s;
     }
 
-    inline std::string dateToString(DayNum d) const
+    inline std::string dateToString(ExtendedDayNum d) const
     {
         const Values & values = getValues(d);
 

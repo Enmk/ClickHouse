@@ -106,7 +106,7 @@ public:
     DayNum getDayNum() const
     {
         const auto & lut = DateLUT::instance();
-        return lut.makeDayNum(m_year, m_month, m_day);
+        return DayNum(lut.makeDayNum(m_year, m_month, m_day).toUnderType());
     }
 
     operator DayNum() const
