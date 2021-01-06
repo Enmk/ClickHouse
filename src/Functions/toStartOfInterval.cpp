@@ -35,7 +35,7 @@ namespace
 
         static UInt16 execute(UInt16 d, UInt64 years, const DateLUTImpl & time_zone)
         {
-            return time_zone.toStartOfYearInterval(DayNum(d), years);
+            return time_zone.toStartOfYearInterval(ExtendedDayNum(d), years);
         }
 
         static UInt16 execute(UInt32 t, UInt64 years, const DateLUTImpl & time_zone)
@@ -56,7 +56,7 @@ namespace
 
         static UInt16 execute(UInt16 d, UInt64 quarters, const DateLUTImpl & time_zone)
         {
-            return time_zone.toStartOfQuarterInterval(DayNum(d), quarters);
+            return time_zone.toStartOfQuarterInterval(ExtendedDayNum(d), quarters);
         }
 
         static UInt16 execute(UInt32 t, UInt64 quarters, const DateLUTImpl & time_zone)
@@ -77,7 +77,7 @@ namespace
 
         static UInt16 execute(UInt16 d, UInt64 months, const DateLUTImpl & time_zone)
         {
-            return time_zone.toStartOfMonthInterval(DayNum(d), months);
+            return time_zone.toStartOfMonthInterval(ExtendedDayNum(d), months);
         }
 
         static UInt16 execute(UInt32 t, UInt64 months, const DateLUTImpl & time_zone)
@@ -98,7 +98,7 @@ namespace
 
         static UInt16 execute(UInt16 d, UInt64 weeks, const DateLUTImpl & time_zone)
         {
-            return time_zone.toStartOfWeekInterval(DayNum(d), weeks);
+            return time_zone.toStartOfWeekInterval(ExtendedDayNum(d), weeks);
         }
 
         static UInt16 execute(UInt32 t, UInt64 weeks, const DateLUTImpl & time_zone)
@@ -119,7 +119,7 @@ namespace
 
         static UInt32 execute(UInt16 d, UInt64 days, const DateLUTImpl & time_zone)
         {
-            return time_zone.toStartOfDayInterval(DayNum(d), days);
+            return time_zone.toStartOfDayInterval(ExtendedDayNum(d), days);
         }
 
         static UInt32 execute(UInt32 t, UInt64 days, const DateLUTImpl & time_zone)

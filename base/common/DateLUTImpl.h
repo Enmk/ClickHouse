@@ -214,18 +214,16 @@ public:
 
     /// All functions below are thread-safe; arguments are not checked.
 
-    // TODO: return ExtendedDayNum everywhere, don't use DayNum as a result or intermediate result at all.
+    inline ExtendedDayNum toDayNum(ExtendedDayNum d) const
+    {
+        return d;
+    }
+
     template <typename V>
     inline ExtendedDayNum toDayNum(V v) const
     {
         return ExtendedDayNum{static_cast<ExtendedDayNum::UnderlyingType>(toLUTIndex(v).toUnderType()) - daynum_offset_epoch};
     }
-
-//    template <typename V>
-//    inline ExtendedDayNum toExtendedDayNum(V v) const
-//    {
-//        return ExtendedDayNum{toLUTIndex(v) - daynum_offset_epoch};
-//    }
 
     /// Round down to start of monday.
     template <typename V>
@@ -640,16 +638,17 @@ public:
     /**
      * get first day of week with week_mode, return Sunday or Monday
      */
-    inline ExtendedDayNum toFirstDayNumOfWeek(ExtendedDayNum d, UInt8 week_mode) const
+    template <typename V>
+    inline ExtendedDayNum toFirstDayNumOfWeek(V v, UInt8 week_mode) const
     {
         bool monday_first_mode = week_mode & static_cast<UInt8>(WeekModeFlag::MONDAY_FIRST);
         if (monday_first_mode)
         {
-            return toFirstDayNumOfWeek(d);
+            return toFirstDayNumOfWeek(v);
         }
         else
         {
-            return (toDayOfWeek(d) != 7) ? ExtendedDayNum(d - toDayOfWeek(d)) : d;
+            return (toDayOfWeek(v) != 7) ? ExtendedDayNum(v - toDayOfWeek(v)) : toDayNum(v);
         }
     }
 
