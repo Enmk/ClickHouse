@@ -56,7 +56,7 @@ struct AddSecondsImpl// : public AddOnDateTime64DefaultImpl<AddSecondsImpl>
 
     static inline UInt32 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
     {
-        return time_zone.fromDayNum(DayNum(d)) + delta;
+        return time_zone.fromDayNum(ExtendedDayNum(d)) + delta;
     }
 };
 
@@ -76,7 +76,7 @@ struct AddMinutesImpl
 
     static inline UInt32 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
     {
-        return time_zone.fromDayNum(DayNum(d)) + delta * 60;
+        return time_zone.fromDayNum(ExtendedDayNum(d)) + delta * 60;
     }
 };
 
@@ -95,7 +95,7 @@ struct AddHoursImpl
 
     static inline UInt32 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
     {
-        return time_zone.fromDayNum(DayNum(d)) + delta * 3600;
+        return time_zone.fromDayNum(ExtendedDayNum(d)) + delta * 3600;
     }
 };
 
@@ -155,7 +155,7 @@ struct AddMonthsImpl
 
     static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
     {
-        return time_zone.addMonths(DayNum(d), delta);
+        return time_zone.addMonths(ExtendedDayNum(d), delta);
     }
 };
 
@@ -175,7 +175,7 @@ struct AddQuartersImpl
 
     static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
     {
-        return time_zone.addQuarters(DayNum(d), delta);
+        return time_zone.addQuarters(ExtendedDayNum(d), delta);
     }
 };
 
@@ -195,7 +195,7 @@ struct AddYearsImpl
 
     static inline UInt16 execute(UInt16 d, Int64 delta, const DateLUTImpl & time_zone)
     {
-        return time_zone.addYears(DayNum(d), delta);
+        return time_zone.addYears(ExtendedDayNum(d), delta);
     }
 };
 

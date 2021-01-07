@@ -93,13 +93,13 @@ struct ToStartOfWeekImpl
 
     static inline UInt16 execute(Int64 t, UInt8 week_mode, const DateLUTImpl & time_zone)
     {
-//        return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t), week_mode);
-        return time_zone.toFirstDayNumOfWeek(t, week_mode);
+        return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t), week_mode);
+//        return time_zone.toFirstDayNumOfWeek(t, week_mode);
     }
     static inline UInt16 execute(UInt32 t, UInt8 week_mode, const DateLUTImpl & time_zone)
     {
-//        return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t), week_mode);
-        return time_zone.toFirstDayNumOfWeek(t, week_mode);
+        return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t), week_mode);
+//        return time_zone.toFirstDayNumOfWeek(t, week_mode);
     }
     static inline UInt16 execute(UInt16 d, UInt8 week_mode, const DateLUTImpl & time_zone)
     {

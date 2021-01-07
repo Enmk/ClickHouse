@@ -252,9 +252,9 @@ struct ToStartOfFiveMinuteImpl
 {
     static constexpr auto name = "toStartOfFiveMinute";
 
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
     {
-        return {time_zone.toStartOfFiveMinute(t.whole), 0};
+        return time_zone.toStartOfFiveMinute(t.whole);
     }
     static inline UInt32 execute(UInt32 t, const DateLUTImpl & time_zone)
     {
@@ -272,9 +272,9 @@ struct ToStartOfTenMinutesImpl
 {
     static constexpr auto name = "toStartOfTenMinutes";
 
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
     {
-        return {time_zone.toStartOfTenMinutes(t.whole), 0};
+        return time_zone.toStartOfTenMinutes(t.whole);
     }
     static inline UInt32 execute(UInt32 t, const DateLUTImpl & time_zone)
     {
@@ -292,9 +292,9 @@ struct ToStartOfFifteenMinutesImpl
 {
     static constexpr auto name = "toStartOfFifteenMinutes";
 
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
     {
-        return {time_zone.toStartOfFifteenMinutes(t.whole), 0};
+        return time_zone.toStartOfFifteenMinutes(t.whole);
     }
     static inline UInt32 execute(UInt32 t, const DateLUTImpl & time_zone)
     {
@@ -313,9 +313,10 @@ struct TimeSlotImpl
 {
     static constexpr auto name = "timeSlot";
 
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl &)
+    //static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl &)
+    static inline UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl &)
     {
-        return {t.whole / 1800 * 1800, 0};
+        return t.whole / 1800 * 1800;
     }
 
     static inline UInt32 execute(UInt32 t, const DateLUTImpl &)
@@ -335,9 +336,9 @@ struct ToStartOfHourImpl
 {
     static constexpr auto name = "toStartOfHour";
 
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
     {
-        return {time_zone.toStartOfHour(t.whole), 0};
+        return time_zone.toStartOfHour(t.whole);
     }
 
     static inline UInt32 execute(UInt32 t, const DateLUTImpl & time_zone)
