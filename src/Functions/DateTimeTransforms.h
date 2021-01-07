@@ -173,12 +173,12 @@ struct ToStartOfYearImpl
 
 struct ToTimeImpl
 {
+    /// When transforming to time, the date will be equated to 1970-01-01.
     static constexpr auto name = "toTime";
 
-    /// When transforming to time, the date will be equated to 1970-01-02.
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
+    static UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
     {
-        return {time_zone.toTime(t.whole) + 86400, t.fractional};
+        return time_zone.toTime(t.whole) + 86400;
     }
     static inline UInt32 execute(UInt32 t, const DateLUTImpl & time_zone)
     {
@@ -197,9 +197,9 @@ struct ToStartOfMinuteImpl
 {
     static constexpr auto name = "toStartOfMinute";
 
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
+    static inline UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
     {
-        return {time_zone.toStartOfMinute(t.whole), 0};
+        return time_zone.toStartOfMinute(t.whole);
     }
     static inline UInt32 execute(UInt32 t, const DateLUTImpl & time_zone)
     {
