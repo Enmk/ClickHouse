@@ -512,6 +512,8 @@ public:
         {
             if constexpr (std::is_same_v<T, UInt32>)
                 instructions.emplace_back(func, shift);
+            else if constexpr (std::is_same_v<T, Int64>)
+                instructions.emplace_back(func, shift);
             else
                 add_shift(shift);
         };
