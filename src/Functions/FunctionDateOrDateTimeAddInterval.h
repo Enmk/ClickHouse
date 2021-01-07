@@ -11,6 +11,7 @@
 #include <Functions/FunctionHelpers.h>
 #include <Functions/castTypeToEither.h>
 #include <Functions/extractTimeZoneFromFunctionArguments.h>
+#include <Functions/TransformDateTime64.h>
 
 #include <IO/WriteHelpers.h>
 
@@ -59,12 +60,8 @@ struct AddSecondsImpl// : public AddOnDateTime64DefaultImpl<AddSecondsImpl>
     }
 };
 
-struct AddMinutesImpl// : public AddOnDateTime64DefaultImpl<AddMinutesImpl>
+struct AddMinutesImpl
 {
-//    using Base = AddOnDateTime64DefaultImpl<AddMinutesImpl>;
-//    using Base::Base;
-//    using Base::execute;
-
     static constexpr auto name = "addMinutes";
 
     static inline DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> t, Int64 delta, const DateLUTImpl &)
@@ -83,12 +80,8 @@ struct AddMinutesImpl// : public AddOnDateTime64DefaultImpl<AddMinutesImpl>
     }
 };
 
-struct AddHoursImpl// : public AddOnDateTime64DefaultImpl<AddHoursImpl>
+struct AddHoursImpl
 {
-//    using Base = AddOnDateTime64DefaultImpl<AddHoursImpl>;
-//    using Base::Base;
-//    using Base::execute;
-
     static constexpr auto name = "addHours";
 
     static inline DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> t, Int64 delta, const DateLUTImpl &)
@@ -106,12 +99,8 @@ struct AddHoursImpl// : public AddOnDateTime64DefaultImpl<AddHoursImpl>
     }
 };
 
-struct AddDaysImpl// : public AddOnDateTime64DefaultImpl<AddDaysImpl>
+struct AddDaysImpl
 {
-//    using Base = AddOnDateTime64DefaultImpl<AddDaysImpl>;
-//    using Base::Base;
-//    using Base::execute;
-
     static constexpr auto name = "addDays";
 
     static inline DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> t, Int64 delta, const DateLUTImpl & time_zone)
@@ -130,12 +119,8 @@ struct AddDaysImpl// : public AddOnDateTime64DefaultImpl<AddDaysImpl>
     }
 };
 
-struct AddWeeksImpl// : public AddOnDateTime64DefaultImpl<AddWeeksImpl>
+struct AddWeeksImpl
 {
-//    using Base = AddOnDateTime64DefaultImpl<AddWeeksImpl>;
-//    using Base::Base;
-//    using Base::execute;
-
     static constexpr auto name = "addWeeks";
 
     static inline DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> t, Int64 delta, const DateLUTImpl & time_zone)
@@ -154,12 +139,8 @@ struct AddWeeksImpl// : public AddOnDateTime64DefaultImpl<AddWeeksImpl>
     }
 };
 
-struct AddMonthsImpl// : public AddOnDateTime64DefaultImpl<AddMonthsImpl>
+struct AddMonthsImpl
 {
-//    using Base = AddOnDateTime64DefaultImpl<AddMonthsImpl>;
-//    using Base::Base;
-//    using Base::execute;
-
     static constexpr auto name = "addMonths";
 
     static inline DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> t, Int64 delta, const DateLUTImpl & time_zone)
@@ -178,12 +159,8 @@ struct AddMonthsImpl// : public AddOnDateTime64DefaultImpl<AddMonthsImpl>
     }
 };
 
-struct AddQuartersImpl// : public AddOnDateTime64DefaultImpl<AddQuartersImpl>
+struct AddQuartersImpl
 {
-//    using Base = AddOnDateTime64DefaultImpl<AddQuartersImpl>;
-//    using Base::Base;
-//    using Base::execute;
-
     static constexpr auto name = "addQuarters";
 
     static inline DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> t, Int64 delta, const DateLUTImpl & time_zone)
@@ -202,12 +179,8 @@ struct AddQuartersImpl// : public AddOnDateTime64DefaultImpl<AddQuartersImpl>
     }
 };
 
-struct AddYearsImpl// : public AddOnDateTime64DefaultImpl<AddYearsImpl>
+struct AddYearsImpl
 {
-//    using Base = AddOnDateTime64DefaultImpl<AddYearsImpl>;
-//    using Base::Base;
-//    using Base::execute;
-
     static constexpr auto name = "addYears";
 
     static inline DecimalUtils::DecimalComponents<DateTime64> execute(DecimalUtils::DecimalComponents<DateTime64> t, Int64 delta, const DateLUTImpl & time_zone)

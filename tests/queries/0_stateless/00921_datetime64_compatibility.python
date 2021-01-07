@@ -178,7 +178,7 @@ def escape_string(s):
 
 
 def execute_functions_for_types(functions, types):
-    # TODO: use string.Template here to allow lines that do not contain type, like: SELECT CAST(toDateTime64(1234567890), 'DateTime64')
+    # NOTE: use string.Template here to allow lines with missing keys, like type, e.g. SELECT CAST(toDateTime64(1234567890), 'DateTime64')
     for func in functions:
         print(("""SELECT 'SELECT {func}';""".format(func=escape_string(func))))
         for dt in types:

@@ -192,11 +192,11 @@ private:
         return i;
     }
 
-    template <typename T>
-    inline LUTIndex toLUTIndex(time_t t) const
-    {
-        return LUTIndex{static_cast<LUTIndex::UnderlyingType>(t) & date_lut_mask};
-    }
+//    template <typename T>
+//    inline LUTIndex toLUTIndex(T t) const
+//    {
+//        return LUTIndex{static_cast<LUTIndex::UnderlyingType>(t) & date_lut_mask};
+//    }
 
     template <typename V>
     inline const Values & find(V v) const

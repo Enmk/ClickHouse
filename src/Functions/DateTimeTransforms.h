@@ -71,9 +71,10 @@ struct ToStartOfDayImpl
 {
     static constexpr auto name = "toStartOfDay";
 
-    static inline DecimalUtils::DecimalComponents<DateTime64> execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
+    //TODO: right now it is hardcoded to produce DateTime only, needs fixing later. See date_and_time_type_details::ResultDataTypeMap for deduction of result type example.
+    static inline UInt32 execute(const DecimalUtils::DecimalComponents<DateTime64> & t, const DateLUTImpl & time_zone)
     {
-        return {time_zone.toDate(t.whole), 0};
+        return time_zone.toDate(static_cast<time_t>(t.whole));
     }
     static inline UInt32 execute(UInt32 t, const DateLUTImpl & time_zone)
     {
@@ -93,11 +94,13 @@ struct ToMondayImpl
 
     static inline UInt16 execute(Int64 t, const DateLUTImpl & time_zone)
     {
-        return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t));
+        //return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t));
+        return time_zone.toFirstDayNumOfWeek(t);
     }
     static inline UInt16 execute(UInt32 t, const DateLUTImpl & time_zone)
     {
-        return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t));
+        //return time_zone.toFirstDayNumOfWeek(time_zone.toDayNum(t));
+        return time_zone.toFirstDayNumOfWeek(t);
     }
     static inline UInt16 execute(UInt16 d, const DateLUTImpl & time_zone)
     {

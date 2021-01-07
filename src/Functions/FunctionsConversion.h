@@ -40,6 +40,7 @@
 #include <Functions/FunctionsMiscellaneous.h>
 #include <Functions/FunctionHelpers.h>
 #include <Functions/DateTimeTransforms.h>
+#include <Functions/TransformDateTime64.h>
 #include <DataTypes/DataTypeLowCardinality.h>
 #include <Columns/ColumnLowCardinality.h>
 #include <Functions/toFixedString.h>

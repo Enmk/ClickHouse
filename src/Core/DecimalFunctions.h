@@ -106,6 +106,15 @@ inline DecimalType decimalFromComponentsWithMultiplier(
     return DecimalType(value);
 }
 
+template <typename DecimalType>
+inline DecimalType decimalFromComponentsWithMultiplier(
+        const DecimalComponents<DecimalType> & components,
+        typename DecimalType::NativeType scale_multiplier)
+{
+    return decimalFromComponentsWithMultiplier<DecimalType>(components.whole, components.fractional, scale_multiplier);
+}
+
+
 /** Make a decimal value from whole and fractional components with given scale.
  *
  * @see `decimalFromComponentsWithMultiplier` for details.

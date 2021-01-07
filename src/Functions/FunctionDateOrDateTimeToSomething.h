@@ -5,6 +5,7 @@
 #include <DataTypes/DataTypeDateTime64.h>
 #include <Functions/extractTimeZoneFromFunctionArguments.h>
 #include <Functions/DateTimeTransforms.h>
+#include <Functions/TransformDateTime64.h>
 #include <IO/WriteHelpers.h>
 
 
