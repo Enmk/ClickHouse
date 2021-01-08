@@ -146,7 +146,7 @@ private:
     LUTIndex years_lut[DATE_LUT_YEARS];
 
     /// Year number after DATE_LUT_MIN_YEAR * month number starting at zero -> day num for first day of month
-    ExtendedDayNum years_months_lut[DATE_LUT_YEARS * 12];
+    LUTIndex years_months_lut[DATE_LUT_YEARS * 12];
 
     /// UTC offset at beginning of the Unix epoch. The same as unix timestamp of 1970-01-01 00:00:00 local time.
     time_t offset_at_start_of_epoch;
@@ -749,7 +749,7 @@ public:
             return toFirstDayNumOfMonth(d);
         const auto & date = lut[toLUTIndex(d)];
         UInt32 month_total_index = (date.year - DATE_LUT_MIN_YEAR) * 12 + date.month - 1;
-        return years_months_lut[month_total_index / months * months];
+        return toDayNum(years_months_lut[month_total_index / months * months]);
     }
 
     inline ExtendedDayNum toStartOfWeekInterval(ExtendedDayNum d, UInt64 weeks) const
