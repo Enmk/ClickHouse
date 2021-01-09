@@ -596,298 +596,34 @@ INSTANTIATE_TEST_SUITE_P(Year1970,
     })
 );
 
-//class TimeZoneTest : public ::testing::Test
-//{};
+class DateLUTInvariantTest : public ::testing::TestWithParam<std::string /*timezone*/>
+{};
 
-//TEST_F(TimeZoneTest, getLUTIndex)
-//{
-//    ASSERT_EQ(YYYYMMDDToTimeT(1970'01'01), 0);
-//    ASSERT_EQ(YYYYMMDDToTimeT(1969'12'31), -3600 * 24);
-//    ASSERT_EQ(YYYYMMDDToTimeT(1970'01'02), 3600 * 24);
+TEST_P(DateLUTInvariantTest, getTimeZone)
+{
+    const auto & lut = DateLUT::instance(GetParam());
 
-//    const TimeZoneImpl tz("UTC");
+    EXPECT_EQ(GetParam(), lut.getTimeZone());
+}
 
-//    // time_t
-//    EXPECT_EQ(tz.getLUTIndex(0), 0);
-//    EXPECT_EQ(tz.getLUTIndex(1), 0);
-//    EXPECT_EQ(tz.getLUTIndex(DATE_LUT_SIZE_IN_SECONDS - 1), 0);
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(1970'01'01)), 0);
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(2105'01'01)), 0);
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(2105'12'31)), 0);
+TEST_P(DateLUTInvariantTest, ZeroTime)
+{
+    const auto & lut = DateLUT::instance(GetParam());
 
-//    EXPECT_EQ(tz.getLUTIndex(-1), -1);
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(1960'01'01)), -1);
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(1969'01'01)), -1);
-
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(1800'01'01)), -2);
-
-//    EXPECT_EQ(tz.getLUTIndex(DATE_LUT_SIZE_IN_SECONDS), 1);
-//    EXPECT_EQ(tz.getLUTIndex(DATE_LUT_SIZE_IN_SECONDS + 1), 1);
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(2200'01'01)), 1);
-//    EXPECT_EQ(tz.getLUTIndex(YYYYMMDDToTimeT(2400'01'01)), 3);
-
-//    // By DayNum
-//    const auto SECONDS_IN_DAY = 3600 * 24;
-//    EXPECT_EQ(tz.getLUTIndex(GlobalDayNum(-1)), -1);
-//    EXPECT_EQ(tz.getLUTIndex(GlobalDayNum(0)), 0);
-//    EXPECT_EQ(tz.getLUTIndex(GlobalDayNum(1)), 0);
-//    EXPECT_EQ(tz.getLUTIndex(GlobalDayNum((DATE_LUT_SIZE_IN_SECONDS + SECONDS_IN_DAY) / SECONDS_IN_DAY)), 1);
-//    EXPECT_EQ(tz.getLUTIndex(GlobalDayNum(YYYYMMDDToTimeT(2200'01'01) / SECONDS_IN_DAY)), 1);
-//    EXPECT_EQ(tz.getLUTIndex(GlobalDayNum(YYYYMMDDToTimeT(2400'01'01) / SECONDS_IN_DAY)), 3);
-//    EXPECT_EQ(tz.getLUTIndex(GlobalDayNum(YYYYMMDDToTimeT(2411'01'01) / SECONDS_IN_DAY)), 3);
-
-//    // YYYY MM DD
-//    EXPECT_EQ(tz.getLUTIndex(1833, 11, 25), -1);
-//    EXPECT_EQ(tz.getLUTIndex(1969, 12, 31), -1);
-//    EXPECT_EQ(tz.getLUTIndex(1969, 01, 01), -1);
-
-//    EXPECT_EQ(tz.getLUTIndex(1970, 01, 01), 0);
-//    EXPECT_EQ(tz.getLUTIndex(1970, 01, 02), 0);
-//    EXPECT_EQ(tz.getLUTIndex(2105, 12, 31), 0);
-
-//    EXPECT_EQ(tz.getLUTIndex(2200, 01, 01), 1);
-//    EXPECT_EQ(tz.getLUTIndex(2400, 01, 01), 3);
-//}
+    EXPECT_EQ(0, lut.toDayNum(time_t{0}));
+    EXPECT_EQ(0, lut.toDayNum(DayNum{0}));
+    EXPECT_EQ(0, lut.toDayNum(ExtendedDayNum{0}));
+}
 
 
-//TEST_F(TimeZoneTest, TimeValuesInMiddleOfRange)
-//{
-//    const TimeZoneImpl lut("Europe/Minsk");
-//    const time_t time = 1568650811; // 2019-09-16 19:20:11 (Monday)
-
-//    EXPECT_EQ(lut.getTimeZone(), "Europe/Minsk");
-
-//    EXPECT_EQ(lut.toDate(time), 1568581200);
-//    EXPECT_EQ(lut.toDate(GlobalDayNum(18155)), 1568581200);
-//    EXPECT_EQ(lut.toMonth(time), 9);
-//    EXPECT_EQ(lut.toQuarter(time), 3);
-//    EXPECT_EQ(lut.toYear(time), 2019);
-//    EXPECT_EQ(lut.toDayOfMonth(time), 16);
-
-//    EXPECT_EQ(lut.toFirstDayOfWeek(time), 1568581200 /*time_t*/);
-//    EXPECT_EQ(lut.toFirstDayNumOfWeek(time), DayNum(18155) /*DayNum*/);
-//    EXPECT_EQ(lut.toFirstDayOfMonth(time), 1567285200 /*time_t*/);
-//    EXPECT_EQ(lut.toFirstDayNumOfMonth(time), DayNum(18140) /*DayNum*/);
-//    EXPECT_EQ(lut.toFirstDayNumOfQuarter(time), DayNum(18078) /*DayNum*/);
-//    EXPECT_EQ(lut.toFirstDayOfQuarter(time), 1561928400 /*time_t*/);
-//    EXPECT_EQ(lut.toFirstDayOfYear(time), 1546290000 /*time_t*/);
-//    EXPECT_EQ(lut.toFirstDayNumOfYear(time), DayNum(17897) /*DayNum*/);
-//    EXPECT_EQ(lut.toFirstDayOfNextMonth(time), 1569877200 /*time_t*/);
-//    EXPECT_EQ(lut.toFirstDayOfPrevMonth(time), 1564606800 /*time_t*/);
-//    EXPECT_EQ(lut.daysInMonth(time), 30 /*UInt8*/);
-//    EXPECT_EQ(lut.toDateAndShift(time, 10), 1569445200 /*time_t*/);
-//    EXPECT_EQ(lut.toTime(time), 58811 /*time_t*/);
-//    EXPECT_EQ(lut.toHour(time), 19 /*unsigned*/);
-//    EXPECT_EQ(lut.toSecond(time), 11 /*unsigned*/);
-//    EXPECT_EQ(lut.toMinute(time), 20 /*unsigned*/);
-//    EXPECT_EQ(lut.toStartOfMinute(time), 1568650800 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfFiveMinute(time), 1568650800 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfFifteenMinutes(time), 1568650500 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfTenMinutes(time), 1568650800 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfHour(time), 1568649600 /*time_t*/);
-//    EXPECT_EQ(lut.toDayNum(time), DayNum(18155) /*DayNum*/);
-//    EXPECT_EQ(lut.toDayOfYear(time), 259 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeWeekNum(time), 2594 /*unsigned*/);
-//    EXPECT_EQ(lut.toISOYear(time), 2019 /*unsigned*/);
-//    EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), DayNum(17896) /*DayNum*/);
-//    EXPECT_EQ(lut.toFirstDayOfISOYear(time), 1546203600 /*time_t*/);
-//    EXPECT_EQ(lut.toISOWeek(time), 38 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeMonthNum(time), 24237 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeQuarterNum(time), 8078 /*unsigned*/);
-//    EXPECT_EQ(lut.toRelativeHourNum(time), 435736 /*time_t*/);
-//    EXPECT_EQ(lut.toRelativeMinuteNum(time), 26144180 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfHourInterval(time, 5), 1568646000 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfMinuteInterval(time, 6), 1568650680 /*time_t*/);
-//    EXPECT_EQ(lut.toStartOfSecondInterval(time, 7), 1568650811 /*time_t*/);
-//    EXPECT_EQ(lut.toNumYYYYMM(time), 201909 /*UInt32*/);
-//    EXPECT_EQ(lut.toNumYYYYMMDD(time), 20190916 /*UInt32*/);
-//    EXPECT_EQ(lut.toNumYYYYMMDDhhmmss(time), 20190916192011 /*UInt64*/);
-//    EXPECT_EQ(lut.addDays(time, 100), 1577290811 /*time_t*/);
-//    EXPECT_EQ(lut.addWeeks(time, 100), 1629130811 /*time_t*/);
-//    EXPECT_EQ(lut.addMonths(time, 100), 1831652411 /*time_t*/);
-//    EXPECT_EQ(lut.addQuarters(time, 100), 2357655611 /*time_t*/);
-//    EXPECT_EQ(lut.addYears(time, 10), 1884270011 /*time_t*/);
-//    EXPECT_EQ(lut.timeToString(time), "2019-09-16 19:20:11" /*std::string*/);
-//    EXPECT_EQ(lut.dateToString(time), "2019-09-16" /*std::string*/);
-//}
-
-
-//class TimeZoneRangeTest : public ::testing::TestWithParam<std::tuple<time_t /*begin*/, time_t /*end*/, int /*step*/>>
-//{};
-
-//TEST_P(TimeZoneRangeTest, UTC)
-//{
-//    // TODO: convert to C++20 timezone-aware time values and make a timezone a test parameter too.
-//    const auto & tz = TimeZoneImpl("UTC");
-//    const auto & [begin, end, step] = GetParam();
-
-//    // Precautions agains invalid test params that may cause test to run infinite time.
-//    ASSERT_NE(0, step);
-//    ASSERT_EQ(std::signbit(end - begin), std::signbit(step));
-
-//    auto prev_lut_index = tz.getLUTIndex(begin);
-//    int i = 0;
-//    const ssize_t total_steps = (end - begin) / step;
-//    for (time_t expected_time_t = begin; begin < end ? expected_time_t < end : expected_time_t > end; expected_time_t += step, ++i)
-//    {
-//        const auto lut_index = tz.getLUTIndex(expected_time_t);
-////        const auto & lut = tz.getLUTByIndex(lut_index);
-////        SCOPED_TRACE(toString("LUT index:", lut_index, " lut:", lut.getDateLutMin(), ", ", lut.getDayNumLutMin()));
-
-//        tm tm;
-//        ASSERT_NE(gmtime_r(&expected_time_t, &tm), nullptr);
-
-//        char expected_time_string[100] = {'\0'};
-//        snprintf(expected_time_string, sizeof(expected_time_string),
-//                 "%04d-%02d-%02d %02d:%02d:%02d",
-//                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-
-////        SCOPED_TRACE(toString("#", i, " time value: ", expected_time_t));
-
-//        const auto report_interval = 1'567'000LL;
-//        if (lut_index != prev_lut_index
-//            || (total_steps / report_interval > 1
-//                && (i % report_interval == 0 || i >= total_steps || i == 0)))
-//        {
-//            std::cerr << "!!!!! " << i << " of " << total_steps << " (" << (1.0 * i) / total_steps * 100 << "%)"
-//                      << " : " << expected_time_string
-//                      << " LUT INDEX: " << tz.getLUTIndex(expected_time_t) << std::endl;
-//        }
-
-////        SCOPED_TRACE(toString("time: ", expected_time_string));
-
-//        EXPECT_EQ(tm.tm_year + 1900, tz.toYear(expected_time_t));
-//        EXPECT_EQ(tm.tm_mon + 1, tz.toMonth(expected_time_t));
-//        EXPECT_EQ(tm.tm_mday, tz.toDayOfMonth(expected_time_t));
-//        EXPECT_EQ(tm.tm_wday, tz.toDayOfWeek(expected_time_t) % 7); // tm.tm_wday Sunday is 0, while for DateLUTImpl it is 7
-//        EXPECT_EQ(tm.tm_yday + 1, tz.toDayOfYear(expected_time_t));
-//        EXPECT_EQ(tm.tm_hour, tz.toHour(expected_time_t));
-//        EXPECT_EQ(tm.tm_min, tz.toMinute(expected_time_t));
-//        EXPECT_EQ(tm.tm_sec, tz.toSecond(expected_time_t));
-
-//        EXPECT_EQ(expected_time_t, tz.makeDateTime(
-//            tm.tm_year + 1900,
-//            tm.tm_mon + 1,
-//            tm.tm_mday,
-//            tm.tm_hour,
-//            tm.tm_min,
-//            tm.tm_sec))
-//                << "With args\t" << tm.tm_year + 1900 << ", "
-//                << tm.tm_mon + 1 << ", "
-//                << tm.tm_mday << ", "
-//                << tm.tm_hour << ", "
-//                << tm.tm_min << ", "
-//                << tm.tm_sec;
-
-//        EXPECT_EQ(expected_time_string, tz.timeToString(expected_time_t));
-
-//        if (::testing::Test::HasFailure())
-//        {
-//            // it makes sense to let test execute all checks above to simplify debugging,
-//            // but once we've found a bad apple, no need to dig deeper.
-//            std::cerr << "Breaking early due to failures..." << std::endl;
-//            break;
-//        }
-
-//        prev_lut_index = lut_index;
-//    }
-//}
-
-
-//// LUT index 0
-//INSTANTIATE_TEST_SUITE_P(Year2010,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        // Values from tests/date_lut3.cpp
-//        {YYYYMMDDToTimeT(2010'10'31), YYYYMMDDToTimeT(2010'11'01), 15 * 60},
-//        {YYYYMMDDToTimeT(2010'03'28), YYYYMMDDToTimeT(2010'03'30), 15 * 60},
-
-//        // beginning of the year
-//        {YYYYMMDDToTimeT(2010'01'01), YYYYMMDDToTimeT(2010'03'01), 15 * 60},
-//        // end of the year
-//        {YYYYMMDDToTimeT(2010'11'01), YYYYMMDDToTimeT(2010'12'31), 15 * 60},
-//    })
-//);
-
-//// LUT index 0
-//INSTANTIATE_TEST_SUITE_P(Year1970,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        {YYYYMMDDToTimeT(1971'01'01), YYYYMMDDToTimeT(1971'03'01), 15 * 60},
-//        // 11 was chosen as a number which can't divide product of 2-combinarions of (7, 24, 60),
-//        // to reduce likelehood of hitting same hour/minute/second values for different days.
-//        // + 12 is just to make sure that last day is covered fully.
-//        {0, 0 + 11 * 3600 * 24 + 12, 11},
-
-//        // beginning of the year
-//        {YYYYMMDDToTimeT(1970'01'01), YYYYMMDDToTimeT(1970'03'01), 15 * 60},
-//        // end of the year
-//        {YYYYMMDDToTimeT(1970'11'01), YYYYMMDDToTimeT(1970'12'31), 15 * 60},
-//    })
-//);
-
-
-//// LUT index -1
-//INSTANTIATE_TEST_SUITE_P(Year1960,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        {YYYYMMDDToTimeT(1960'01'01), YYYYMMDDToTimeT(1960'03'01), 15 * 60},
-//        {YYYYMMDDToTimeT(1960'11'01), YYYYMMDDToTimeT(1960'12'31), 15 * 60},
-//    })
-//);
-
-
-//// LUT index -1
-//INSTANTIATE_TEST_SUITE_P(Year1969,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        // beginning of the year
-//        {YYYYMMDDToTimeT(1969'01'01), YYYYMMDDToTimeT(1969'03'01), 15 * 60},
-//        // end of the year
-//        {YYYYMMDDToTimeT(1969'11'01), YYYYMMDDToTimeT(1969'12'31), 15 * 60},
-//    })
-//);
-
-//// LUT index -1
-//INSTANTIATE_TEST_SUITE_P(Year1900,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        {YYYYMMDDToTimeT(1900'01'01), YYYYMMDDToTimeT(1900'03'01), 15 * 60},
-//        {YYYYMMDDToTimeT(1900'11'01), YYYYMMDDToTimeT(1900'12'31), 15 * 60},
-//    })
-//);
-
-//// LUT index -2
-//INSTANTIATE_TEST_SUITE_P(Year1800,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        {YYYYMMDDToTimeT(18000101), YYYYMMDDToTimeT(18000201), 15 * 60},
-//        {YYYYMMDDToTimeT(18001101), YYYYMMDDToTimeT(18001231), 15 * 60},
-//    })
-//);
-
-//// Border between LUT with indices -2 and -1
-//INSTANTIATE_TEST_SUITE_P(Year1833,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        {YYYYMMDDToTimeT(1833'01'01), YYYYMMDDToTimeT(1833'02'01), 15 * 60},
-//        {YYYYMMDDToTimeT(1833'11'01), YYYYMMDDToTimeT(1833'12'31), 15 * 60},
-//    })
-//);
-
-//// LUT index 1
-//INSTANTIATE_TEST_SUITE_P(Year2200,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        {YYYYMMDDToTimeT(22000101), YYYYMMDDToTimeT(22000201), 15 * 60},
-//        {YYYYMMDDToTimeT(22001101), YYYYMMDDToTimeT(22001231), 15 * 60},
-//    })
-//);
-
-//// LUT index -2 to +2
-//INSTANTIATE_TEST_SUITE_P(Years1800_2300,
-//    TimeZoneRangeTest,
-//    ::testing::ValuesIn(std::initializer_list<typename DateLUTRangeTest::ParamType>{
-//        {YYYYMMDDToTimeT(1800'01'01), YYYYMMDDToTimeT(2300'12'31), 86400 + 113},
-//    })
-//);
+// Group of tests for timezones that have or had some time ago an offset which is not multiple of 15 minutes.
+INSTANTIATE_TEST_SUITE_P(ExoticTimezones,
+    DateLUTInvariantTest,
+    ::testing::ValuesIn(std::initializer_list<std::string>{
+            "Africa/El_Aaiun",
+            "Pacific/Apia",
+            "Pacific/Enderbury",
+            "Pacific/Fakaofo",
+            "Pacific/Kiritimati",
+    })
+);

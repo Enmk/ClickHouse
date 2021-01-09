@@ -11,8 +11,8 @@
 #define DATE_LUT_MAX_DAY_NUM (0xFFFFFFFFU / 86400)
 /// Table size is bigger than DATE_LUT_MAX_DAY_NUM to fill all indices within UInt16 range: this allows to remove extra check.
 #define DATE_LUT_SIZE 0x20000
-#define DATE_LUT_MIN_YEAR 1900
-#define DATE_LUT_MAX_YEAR 2258 /// Last supported year (complete)
+#define DATE_LUT_MIN_YEAR 1925 /// 1925 since wast majority of timezones changed to 15-minute aligned offsets somewhere in 1924 or earlier.
+#define DATE_LUT_MAX_YEAR 2283 /// Last supported year (complete)
 #define DATE_LUT_YEARS (1 + DATE_LUT_MAX_YEAR - DATE_LUT_MIN_YEAR) /// Number of years in lookup table
 
 #if defined(__PPC__)
@@ -134,7 +134,7 @@ private:
     static const UInt32 date_lut_mask = 0x1ffff;
     static_assert(date_lut_mask == DATE_LUT_SIZE - 1);
 
-    UInt32 daynum_offset_epoch = 25567; // offset to epoch in days (ExtendedDayNum) of the first day in LUT.
+    UInt32 daynum_offset_epoch = 16436; // offset to epoch in days (ExtendedDayNum) of the first day in LUT.
 
     /// Lookup table is indexed by LUTIndex.
     /// Day nums are the same in all time zones. 1970-01-01 is 0 and so on.
@@ -150,6 +150,7 @@ private:
 
     /// UTC offset at beginning of the Unix epoch. The same as unix timestamp of 1970-01-01 00:00:00 local time.
     time_t offset_at_start_of_epoch;
+    time_t offset_at_start_of_lut;
     bool offset_is_whole_number_of_hours_everytime;
     time_t time_offset_epoch;
 
@@ -159,10 +160,10 @@ private:
     inline LUTIndex findIndex(time_t t) const
     {
         /// First guess.
-        const UInt32 guess = ((t - time_offset_epoch) / 86400) & date_lut_mask;
+        const UInt32 guess = ((t / 86400) + daynum_offset_epoch) & date_lut_mask;
 
         /// UTC offset is from -12 to +14 in all known time zones. This requires checking only three indices.
-        if ((guess == 0 || t >= lut[guess].date) && t < lut[UInt32(guess + 1)].date)
+        if ((guess == daynum_offset_epoch || t >= lut[guess].date) && t < lut[UInt32(guess + 1)].date)
             return LUTIndex{guess};
 
         /// Time zones that have offset 0 from UTC do daylight saving time change (if any) towards increasing UTC offset (example: British Standard Time).
@@ -733,7 +734,7 @@ public:
             return toFirstDayNumOfYear(v);
 
         const auto i = toLUTIndex(v);
-        return toDayNum(years_lut[(lut[i].year - DATE_LUT_MIN_YEAR) / years * years]);
+        return toDayNum(years_lut[lut[i].year / years * years - DATE_LUT_MIN_YEAR]);
     }
 
     inline ExtendedDayNum toStartOfQuarterInterval(ExtendedDayNum d, UInt64 quarters) const

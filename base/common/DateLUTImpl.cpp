@@ -52,15 +52,16 @@ DateLUTImpl::DateLUTImpl(const std::string & time_zone_)
         throw Poco::Exception("Cannot load time zone " + time_zone_);
 
     const cctz::civil_day epoch{1970, 1, 1};
-    const cctz::civil_day lut_start{1900, 1, 1};
+    const cctz::civil_day lut_start{DATE_LUT_MIN_YEAR, 1, 1};
     time_t start_of_day = std::chrono::system_clock::to_time_t(cctz_time_zone.lookup(lut_start).pre);
     time_offset_epoch = cctz::convert(cctz::civil_second(lut_start), cctz_time_zone).time_since_epoch().count();
     // Within 2 days from pre-calculated offset for UTC: 2162968200 seconds from 1900-01-01 to EPOCH.
-    assert(2162968200 - 2 * 84600 > time_offset_epoch && time_offset_epoch < 2162968200 + 2 * 84600);
+
     daynum_offset_epoch = epoch - lut_start;
-    assert(daynum_offset_epoch == 25567);
+    assert(daynum_offset_epoch == 16436);
 
     offset_at_start_of_epoch = cctz_time_zone.lookup(cctz_time_zone.lookup(epoch).pre).offset;
+    offset_at_start_of_lut = cctz_time_zone.lookup(cctz_time_zone.lookup(lut_start).pre).offset;
     offset_is_whole_number_of_hours_everytime = true;
 
     cctz::civil_day date = lut_start;
