@@ -547,12 +547,12 @@ public:
 
     inline unsigned toRelativeQuarterNum(DayNum d) const
     {
-        return toRelativeMonthNum(d) / 3;
+        return (toRelativeMonthNum(d) - 1) / 3;
     }
 
     inline unsigned toRelativeQuarterNum(time_t t) const
     {
-        return toRelativeMonthNum(t) / 3;
+        return (toRelativeMonthNum(t) - 1) / 3;
     }
 
     /// We count all hour-length intervals, unrelated to offset changes.
