@@ -535,12 +535,14 @@ public:
     /// Number of month from some fixed moment in the past (year * 12 + month)
     inline unsigned toRelativeMonthNum(DayNum d) const
     {
-        return sinceEpoch<cctz::civil_month>(toCCTZ(d));
+        const auto date = toCCTZ<cctz::civil_month>(d);
+        return date.year() * 12 + date.month();
     }
 
     inline unsigned toRelativeMonthNum(time_t t) const
     {
-        return sinceEpoch<cctz::civil_month>(toCCTZ(t));
+        const auto date = toCCTZ<cctz::civil_month>(t);
+        return date.year() * 12 + date.month();
     }
 
     inline unsigned toRelativeQuarterNum(DayNum d) const
