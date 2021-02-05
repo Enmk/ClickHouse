@@ -532,17 +532,21 @@ public:
         return ((year & 3) == 0 && (year % 100 || (year % 400 == 0 && year)) ? 366 : 365);
     }
 
+    template <typename T>
+    inline unsigned toRelativeMonthNum(const cctz::detail::civil_time<T> val) const
+    {
+        return val.year() * 12 + val.month();
+    }
+
     /// Number of month from some fixed moment in the past (year * 12 + month)
     inline unsigned toRelativeMonthNum(DayNum d) const
     {
-        const auto date = toCCTZ<cctz::civil_month>(d);
-        return date.year() * 12 + date.month();
+        return toRelativeMonthNum(toCCTZ<cctz::civil_month>(d));
     }
 
     inline unsigned toRelativeMonthNum(time_t t) const
     {
-        const auto date = toCCTZ<cctz::civil_month>(t);
-        return date.year() * 12 + date.month();
+        return toRelativeMonthNum(toCCTZ<cctz::civil_month>(t));
     }
 
     inline unsigned toRelativeQuarterNum(DayNum d) const
@@ -593,54 +597,64 @@ public:
 
     inline DayNum toStartOfMonthInterval(DayNum d, UInt64 months) const
     {
+        if (months == 1)
+            return toFirstDayNumOfMonth(d);
+
 //        if (months == 1)
 //            return toFirstDayNumOfMonth(d);
 //        const auto & date = lut[d];
 //        UInt32 month_total_index = (date.year - DATE_LUT_MIN_YEAR) * 12 + date.month - 1;
 //        return years_months_lut[month_total_index / months * months];
-        return toDayNumFromCCTZ(toCCTZ<cctz::civil_month>(d) + months);
+        const auto date = toCCTZ<cctz::civil_month>(d);
+        const auto month_num = toRelativeMonthNum(date);
+        return toDayNumFromCCTZ(date - (month_num - 1) % months);
+//        return toDayNumFromCCTZ(cctz::civil_month(epoch_start) + toRelativeMonthNum(d) / months * months);
+//        return toDayNumFromCCTZ(toCCTZ<cctz::civil_month>(d) + months);
     }
 
-//    inline DayNum toStartOfWeekInterval(DayNum d, UInt64 weeks) const
-//    {
-//        if (weeks == 1)
-//            return toFirstDayNumOfWeek(d);
-//        UInt64 days = weeks * 7;
-//        // January 1st 1970 was Thursday so we need this 4-days offset to make weeks start on Monday.
-//        return DayNum(4 + (d - 4) / days * days);
-//    }
+    inline DayNum toStartOfWeekInterval(DayNum d, UInt64 weeks) const
+    {
+        if (weeks == 1)
+            return toFirstDayNumOfWeek(d);
+        UInt64 days = weeks * 7;
+        // January 1st 1970 was Thursday so we need this 4-days offset to make weeks start on Monday.
+        return DayNum(4 + (d - 4) / days * days);
+    }
 
     inline time_t toStartOfDayInterval(DayNum d, UInt64 days) const
     {
-//        if (days == 1)
-//            return toDate(d);
-//        return lut[d / days * days].date;
-        return toTimeTFromCCTZ(toCCTZ<cctz::civil_day>(d) + days);
+        if (days == 1)
+            return toDate(d);
+
+        return toDate(DayNum(d / days * days));
+//        auto datetime = toCCTZ<cctz::civil_day>(d) + days;
+//        datetime -= datetime.day() % days;
+//        return toTimeTFromCCTZ(datetime);
+
+//        return toTimeTFromCCTZ(toCCTZ<cctz::civil_day>(d) + days);
     }
 
     inline time_t toStartOfHourInterval(time_t t, UInt64 hours) const
     {
-//        if (hours == 1)
-//            return toStartOfHour(t);
-//        UInt64 seconds = hours * 3600;
-//        t = t / seconds * seconds;
+        if (hours == 1)
+            return toStartOfHour(t);
+        UInt64 seconds = hours * 3600;
+        t = t / seconds * seconds;
 //        if (offset_is_whole_number_of_hours_everytime)
 //            return t;
-//        return toStartOfHour(t);
-        auto datetime = toCCTZ<cctz::civil_hour>(t) + hours;
-        datetime -= datetime.hour() % hours;
-        return toTimeTFromCCTZ(datetime);
+        return toStartOfHour(t);
+//        auto datetime = toCCTZ<cctz::civil_hour>(t) + hours;
+//        datetime -= datetime.hour() % hours;
+//        return toTimeTFromCCTZ(datetime);
     }
 
     inline time_t toStartOfMinuteInterval(time_t t, UInt64 minutes) const
     {
-//        if (minutes == 1)
-//            return toStartOfMinute(t);
-//        UInt64 seconds = 60 * minutes;
-//        return t / seconds * seconds;
-        auto datetime = toCCTZ<cctz::civil_minute>(t) + minutes;
-        datetime -= datetime.minute() % minutes;
-        return toTimeTFromCCTZ(datetime);
+        if (minutes == 1)
+            return toStartOfMinute(t);
+
+        UInt64 seconds = 60 * minutes;
+        return t / seconds * seconds;
     }
 
     inline time_t toStartOfSecondInterval(time_t t, UInt64 seconds) const
@@ -760,51 +774,31 @@ public:
 
 //    /// If resulting month has less deys than source month, then saturation can happen.
 //    /// Example: 31 Aug + 1 month = 30 Sep.
-//    inline time_t addMonths(time_t t, Int64 delta) const
-//    {
-//        DayNum result_day = addMonths(toDayNum(t), delta);
+    inline time_t addMonths(time_t t, Int64 delta) const
+    {
+        const auto date = toCCTZ<cctz::civil_day>(t);
+        auto new_date = cctz::civil_day(cctz::civil_month(date) + delta) + date.day();
 
-//        time_t time_offset = toHour(t) * 3600 + toMinute(t) * 60 + toSecond(t);
+        return toTimeTFromCCTZ(new_date);
+    }
 
-//        if (time_offset >= lut[result_day].time_at_offset_change)
-//            time_offset -= lut[result_day].amount_of_offset_change;
+    inline NO_SANITIZE_UNDEFINED DayNum addMonths(DayNum d, Int64 delta) const
+    {
+        const auto date = toCCTZ<cctz::civil_day>(d);
+        auto new_date = cctz::civil_day(cctz::civil_month(date) + delta) + date.day();
 
-//        return lut[result_day].date + time_offset;
-//    }
+        return toDayNumFromCCTZ(new_date);
+    }
 
-//    inline NO_SANITIZE_UNDEFINED DayNum addMonths(DayNum d, Int64 delta) const
-//    {
-//        const Values & values = lut[d];
+    inline NO_SANITIZE_UNDEFINED time_t addQuarters(time_t t, Int64 delta) const
+    {
+        return addMonths(t, delta * 3);
+    }
 
-//        Int64 month = static_cast<Int64>(values.month) + delta;
-
-//        if (month > 0)
-//        {
-//            auto year = values.year + (month - 1) / 12;
-//            month = ((month - 1) % 12) + 1;
-//            auto day_of_month = saturateDayOfMonth(year, month, values.day_of_month);
-
-//            return makeDayNum(year, month, day_of_month);
-//        }
-//        else
-//        {
-//            auto year = values.year - (12 - month) / 12;
-//            month = 12 - (-month % 12);
-//            auto day_of_month = saturateDayOfMonth(year, month, values.day_of_month);
-
-//            return makeDayNum(year, month, day_of_month);
-//        }
-//    }
-
-//    inline NO_SANITIZE_UNDEFINED time_t addQuarters(time_t t, Int64 delta) const
-//    {
-//        return addMonths(t, delta * 3);
-//    }
-
-//    inline NO_SANITIZE_UNDEFINED DayNum addQuarters(DayNum d, Int64 delta) const
-//    {
-//        return addMonths(d, delta * 3);
-//    }
+    inline NO_SANITIZE_UNDEFINED DayNum addQuarters(DayNum d, Int64 delta) const
+    {
+        return addMonths(d, delta * 3);
+    }
 
 //    /// Saturation can occur if 29 Feb is mapped to non-leap year.
 //    inline NO_SANITIZE_UNDEFINED time_t addYears(time_t t, Int64 delta) const
@@ -1324,12 +1318,12 @@ TEST_P(DateLUT_Timezone_TimeRange, TestFullRangeTimeZone)
         EXPECT_EQ(lut.toRelativeHourNum(time), full_tz.toRelativeHourNum(time) /*time_t*/);
         EXPECT_EQ(lut.toRelativeMinuteNum(time), full_tz.toRelativeMinuteNum(time) /*time_t*/);
 
-        const auto dn = lut.toDayNum(time);
-        for (const auto shift : {1, 3, 7, 9, 11})
+        const auto daynum = lut.toDayNum(time);
+        for (const auto shift : {/*1, 3,*/ 7, 9, 11})
         {
             SCOPED_TRACE(::testing::Message("shift: ") << shift);
-            EXPECT_EQ(lut.toStartOfDayInterval(dn, shift), full_tz.toStartOfDayInterval(dn, shift));
-            EXPECT_EQ(lut.toStartOfMonthInterval(dn, shift), full_tz.toStartOfMonthInterval(dn, shift));
+            EXPECT_EQ(lut.toStartOfDayInterval(daynum, shift), full_tz.toStartOfDayInterval(daynum, shift));
+            EXPECT_EQ(lut.toStartOfMonthInterval(daynum, shift), full_tz.toStartOfMonthInterval(daynum, shift));
             EXPECT_EQ(lut.toStartOfHourInterval(time, shift), full_tz.toStartOfHourInterval(time, shift) /*time_t*/);
             EXPECT_EQ(lut.toStartOfMinuteInterval(time, shift), full_tz.toStartOfMinuteInterval(time, shift) /*time_t*/);
             EXPECT_EQ(lut.toStartOfSecondInterval(time, shift), full_tz.toStartOfSecondInterval(time, shift) /*time_t*/);
@@ -1354,6 +1348,207 @@ TEST_P(DateLUT_Timezone_TimeRange, TestFullRangeTimeZone)
             break;
     }
 }
+
+
+TEST_P(DateLUT_Timezone_TimeRange, DISABLED_LUTvsFullRangeTimeZone)
+{
+    const auto & [timezone_name, range_data] = GetParam();
+    const auto & [begin, end, step] = range_data;
+
+    cctz::time_zone tz;
+    ASSERT_TRUE(cctz::load_time_zone(timezone_name, &tz));
+
+    const auto & lut = DateLUT::instance(timezone_name);
+    const auto & full_tz = FullRangeTimeZone(tz);
+
+    const auto start = cctz::convert(begin, tz).time_since_epoch().count();
+    const auto stop = cctz::convert(end, tz).time_since_epoch().count();
+
+    ASSERT_EQ(lut.getTimeZone(), full_tz.getTimeZone());
+
+    for (time_t time = start; time < stop; time += step)
+    {
+        SCOPED_TRACE(::testing::Message("time: ") << time);
+
+        ASSERT_EQ(lut.toDayNum(time), full_tz.toDayNum(time));
+
+        const auto daynum = lut.toDayNum(time);
+        const auto year = lut.toYear(time);
+        const auto month = lut.toMonth(time);
+        const auto day_of_month = lut.toDayOfMonth(time);
+
+        EXPECT_EQ(lut.getTimeZone(), full_tz.getTimeZone());
+        EXPECT_EQ(lut.toDate(time), full_tz.toDate(time));
+        EXPECT_EQ(lut.toMonth(time), full_tz.toMonth(time));
+        EXPECT_EQ(lut.toQuarter(time), full_tz.toQuarter(time));
+        EXPECT_EQ(lut.toYear(time), full_tz.toYear(time));
+        EXPECT_EQ(lut.toDayOfWeek(time), full_tz.toDayOfWeek(time));
+        EXPECT_EQ(lut.toDayOfMonth(time), full_tz.toDayOfMonth(time));
+        EXPECT_EQ(lut.toFirstDayOfWeek(time), full_tz.toFirstDayOfWeek(time));
+        EXPECT_EQ(lut.toFirstDayNumOfWeek(daynum), full_tz.toFirstDayNumOfWeek(daynum));
+        EXPECT_EQ(lut.toFirstDayNumOfWeek(time), full_tz.toFirstDayNumOfWeek(time));
+        EXPECT_EQ(lut.toFirstDayOfMonth(time), full_tz.toFirstDayOfMonth(time));
+        EXPECT_EQ(lut.toFirstDayNumOfMonth(daynum), full_tz.toFirstDayNumOfMonth(daynum));
+        EXPECT_EQ(lut.toFirstDayNumOfMonth(time), full_tz.toFirstDayNumOfMonth(time));
+        EXPECT_EQ(lut.toFirstDayNumOfQuarter(daynum), full_tz.toFirstDayNumOfQuarter(daynum));
+        EXPECT_EQ(lut.toFirstDayNumOfQuarter(time), full_tz.toFirstDayNumOfQuarter(time));
+        EXPECT_EQ(lut.toFirstDayOfQuarter(time), full_tz.toFirstDayOfQuarter(time));
+        EXPECT_EQ(lut.toFirstDayOfYear(time), full_tz.toFirstDayOfYear(time));
+        EXPECT_EQ(lut.toFirstDayNumOfYear(daynum), full_tz.toFirstDayNumOfYear(daynum));
+        EXPECT_EQ(lut.toFirstDayNumOfYear(time), full_tz.toFirstDayNumOfYear(time));
+        EXPECT_EQ(lut.toFirstDayOfNextMonth(time), full_tz.toFirstDayOfNextMonth(time));
+        EXPECT_EQ(lut.toFirstDayOfPrevMonth(time), full_tz.toFirstDayOfPrevMonth(time));
+        EXPECT_EQ(lut.daysInMonth(daynum), full_tz.daysInMonth(daynum));
+        EXPECT_EQ(lut.daysInMonth(time), full_tz.daysInMonth(time));
+        EXPECT_EQ(lut.daysInMonth(year, month), full_tz.daysInMonth(year, month));
+
+        for (Int32 days_shift : {-7, -5, -3, -1, 0, 1, 3, 5, 7})
+        {
+            SCOPED_TRACE(::testing::Message("days_shift: ") << days_shift);
+            EXPECT_EQ(lut.toDateAndShift(time, days_shift), full_tz.toDateAndShift(time, days_shift));
+
+            if (HasFailure())
+                break;
+        }
+
+//        EXPECT_EQ(lut.toTime(time), full_tz.toTime(time));
+        EXPECT_EQ(lut.toHour(time), full_tz.toHour(time));
+        EXPECT_EQ(lut.toSecond(time), full_tz.toSecond(time));
+        EXPECT_EQ(lut.toMinute(time), full_tz.toMinute(time));
+        EXPECT_EQ(lut.toStartOfMinute(time), full_tz.toStartOfMinute(time));
+        EXPECT_EQ(lut.toStartOfFiveMinute(time), full_tz.toStartOfFiveMinute(time));
+        EXPECT_EQ(lut.toStartOfFifteenMinutes(time), full_tz.toStartOfFifteenMinutes(time));
+        EXPECT_EQ(lut.toStartOfTenMinutes(time), full_tz.toStartOfTenMinutes(time));
+        EXPECT_EQ(lut.toStartOfHour(time), full_tz.toStartOfHour(time));
+//        EXPECT_EQ(lut.toDayNum(time), full_tz.toDayNum(time));
+        EXPECT_EQ(lut.fromDayNum(daynum), full_tz.fromDayNum(daynum));
+        EXPECT_EQ(lut.toDate(daynum), full_tz.toDate(daynum));
+        EXPECT_EQ(lut.toMonth(daynum), full_tz.toMonth(daynum));
+        EXPECT_EQ(lut.toQuarter(daynum), full_tz.toQuarter(daynum));
+        EXPECT_EQ(lut.toYear(daynum), full_tz.toYear(daynum));
+        EXPECT_EQ(lut.toDayOfWeek(daynum), full_tz.toDayOfWeek(daynum));
+        EXPECT_EQ(lut.toDayOfMonth(daynum), full_tz.toDayOfMonth(daynum));
+        EXPECT_EQ(lut.toDayOfYear(daynum), full_tz.toDayOfYear(daynum));
+        EXPECT_EQ(lut.toDayOfYear(time), full_tz.toDayOfYear(time));
+        EXPECT_EQ(lut.toRelativeWeekNum(daynum), full_tz.toRelativeWeekNum(daynum));
+        EXPECT_EQ(lut.toRelativeWeekNum(time), full_tz.toRelativeWeekNum(time));
+
+        EXPECT_EQ(lut.toISOYear(daynum), full_tz.toISOYear(daynum));
+        EXPECT_EQ(lut.toISOYear(time), full_tz.toISOYear(time));
+//        EXPECT_EQ(lut.toFirstDayNumOfISOYear(daynum), full_tz.toFirstDayNumOfISOYear(daynum));
+//        EXPECT_EQ(lut.toFirstDayNumOfISOYear(time), full_tz.toFirstDayNumOfISOYear(time));
+//        EXPECT_EQ(lut.toFirstDayOfISOYear(time), full_tz.toFirstDayOfISOYear(time));
+//        EXPECT_EQ(lut.toISOWeek(daynum), full_tz.toISOWeek(daynum));
+//        EXPECT_EQ(lut.toISOWeek(time), full_tz.toISOWeek(time));
+
+        for (UInt8 week_mode = 0; week_mode <= 16; ++week_mode)
+        {
+            SCOPED_TRACE(::testing::Message("week_mode: ") << static_cast<int>(week_mode));
+
+//            EXPECT_EQ(lut.toYearWeek(daynum, week_mode), full_tz.toYearWeek(daynum, week_mode));
+            EXPECT_EQ(lut.toFirstDayNumOfWeek(daynum, week_mode), full_tz.toFirstDayNumOfWeek(daynum, week_mode));
+
+            if (HasFailure())
+                break;
+        }
+
+//        for (bool monday_first_mode : {true, false})
+//        {
+//            SCOPED_TRACE(::testing::Message("monday_first_mode: ") << monday_first_mode);
+//            EXPECT_EQ(lut.toYearWeekOfNewyearMode(daynum, monday_first_mode), full_tz.toYearWeekOfNewyearMode(daynum, monday_first_mode));
+//        }
+
+        //check_week_mode(UInt8 mode)
+        //calc_weekday(daynum, bool sunday_first_day_of_week)
+        //calc_days_in_year(UInt16 year)
+        EXPECT_EQ(lut.toRelativeMonthNum(daynum), full_tz.toRelativeMonthNum(daynum));
+        EXPECT_EQ(lut.toRelativeMonthNum(time), full_tz.toRelativeMonthNum(time));
+        EXPECT_EQ(lut.toRelativeQuarterNum(daynum), full_tz.toRelativeQuarterNum(daynum));
+        EXPECT_EQ(lut.toRelativeQuarterNum(time), full_tz.toRelativeQuarterNum(time));
+        EXPECT_EQ(lut.toRelativeHourNum(time), full_tz.toRelativeHourNum(time));
+        EXPECT_EQ(lut.toRelativeHourNum(daynum), full_tz.toRelativeHourNum(daynum));
+        EXPECT_EQ(lut.toRelativeMinuteNum(time), full_tz.toRelativeMinuteNum(time));
+        EXPECT_EQ(lut.toRelativeMinuteNum(daynum), full_tz.toRelativeMinuteNum(daynum));
+
+        for (UInt64 interval : {1, 3, 5, 7, 11})
+        {
+            SCOPED_TRACE(::testing::Message("interval: ") << interval);
+
+            EXPECT_EQ(lut.toStartOfYearInterval(daynum, interval), full_tz.toStartOfYearInterval(daynum, interval));
+//            EXPECT_EQ(lut.toStartOfQuarterInterval(daynum, interval), full_tz.toStartOfQuarterInterval(daynum, interval));
+            EXPECT_EQ(lut.toStartOfMonthInterval(daynum, interval), full_tz.toStartOfMonthInterval(daynum, interval));
+            EXPECT_EQ(lut.toStartOfWeekInterval(daynum, interval), full_tz.toStartOfWeekInterval(daynum, interval));
+            EXPECT_EQ(lut.toStartOfDayInterval(daynum, interval), full_tz.toStartOfDayInterval(daynum, interval));
+            EXPECT_EQ(lut.toStartOfHourInterval(time, interval), full_tz.toStartOfHourInterval(time, interval));
+            EXPECT_EQ(lut.toStartOfMinuteInterval(time, interval), full_tz.toStartOfMinuteInterval(time, interval));
+            EXPECT_EQ(lut.toStartOfSecondInterval(time, interval), full_tz.toStartOfSecondInterval(time, interval));
+
+            if (HasFailure())
+                break;
+        }
+
+        EXPECT_EQ(lut.makeDayNum(year, month, day_of_month), full_tz.makeDayNum(year, month, day_of_month));
+        EXPECT_EQ(lut.makeDate(year, month, day_of_month), full_tz.makeDate(year, month, day_of_month));
+
+        for (size_t hour = 0; hour < 24; hour += 3)
+        {
+            for (size_t minute = 0; minute < 60; minute += 5)
+            {
+                for (size_t second = 0; second < 60; second += 7)
+                {
+                    EXPECT_EQ(lut.makeDateTime(year, month, day_of_month, hour, minute, second), full_tz.makeDateTime(year, month, day_of_month, hour, minute, second))
+                            << " year: " << year
+                            << " month: " << month
+                            << " day_of_month: " << day_of_month
+                            << " hour: " << hour
+                            << " minute: " << minute
+                            << " second: " << second;
+
+                    if (HasFailure())
+                        break;
+                }
+            }
+        }
+        //getValues(daynum)
+        //getValues(time)
+        EXPECT_EQ(lut.toNumYYYYMM(time), full_tz.toNumYYYYMM(time));
+        EXPECT_EQ(lut.toNumYYYYMM(daynum), full_tz.toNumYYYYMM(daynum));
+        EXPECT_EQ(lut.toNumYYYYMMDD(time), full_tz.toNumYYYYMMDD(time));
+        EXPECT_EQ(lut.toNumYYYYMMDD(daynum), full_tz.toNumYYYYMMDD(daynum));
+
+        const auto YYYYMMDD = lut.toNumYYYYMMDD(time);
+        EXPECT_EQ(lut.YYYYMMDDToDate(YYYYMMDD), full_tz.YYYYMMDDToDate(YYYYMMDD));
+        EXPECT_EQ(lut.YYYYMMDDToDayNum(YYYYMMDD), full_tz.YYYYMMDDToDayNum(YYYYMMDD));
+
+        const auto YYYYMMDDhhmmss = lut.toNumYYYYMMDDhhmmss(time);
+        EXPECT_EQ(lut.toNumYYYYMMDDhhmmss(time), full_tz.toNumYYYYMMDDhhmmss(time));
+        EXPECT_EQ(lut.YYYYMMDDhhmmssToTime(YYYYMMDDhhmmss), full_tz.YYYYMMDDhhmmssToTime(YYYYMMDDhhmmss));
+
+        for (Int64 delta : {-7, -5, -3, -1, 0, 1, 3, 5, 7})
+        {
+            EXPECT_EQ(lut.addDays(time, delta), full_tz.addDays(time, delta));
+            EXPECT_EQ(lut.addWeeks(time, delta), full_tz.addWeeks(time, delta));
+            //saturateDayOfMonth(UInt16 year, UInt8 month, UInt8 day_of_month)
+            EXPECT_EQ(lut.addMonths(time, delta), full_tz.addMonths(time, delta));
+            EXPECT_EQ(lut.addMonths(daynum, delta), full_tz.addMonths(daynum, delta));
+            EXPECT_EQ(lut.addQuarters(time, delta), full_tz.addQuarters(time, delta));
+            EXPECT_EQ(lut.addQuarters(daynum, delta), full_tz.addQuarters(daynum, delta));
+//            EXPECT_EQ(lut.addYears(time, delta), full_tz.addYears(time, delta));
+//            EXPECT_EQ(lut.addYears(daynum, delta), full_tz.addYears(daynum, delta));
+
+            if (HasFailure())
+                break;
+        }
+
+        EXPECT_EQ(lut.timeToString(time), full_tz.timeToString(time));
+        EXPECT_EQ(lut.dateToString(time), full_tz.dateToString(time));
+        EXPECT_EQ(lut.dateToString(daynum), full_tz.dateToString(daynum));
+
+        if (HasFailure())
+            break;
+    }
+}
+
 
 /** Next tests are disabled due to following reasons:
  *  1. They are huge and take enormous amount of time to run
