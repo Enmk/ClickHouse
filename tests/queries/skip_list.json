@@ -481,7 +481,7 @@
         "polygon_dicts", // they use an explicitly specified database
         "01658_read_file_to_stringcolumn",
         "01721_engine_file_truncate_on_insert", // It's ok to execute in parallel but not several instances of the same test.
-        "01702_system_query_log", // It's ok to execute in parallel with oter tests but not several instances of the same test.
+        "01702_system_query_log", // It's ok to execute in parallel but not several instances of the same test.
         "01748_dictionary_table_dot", // creates database
         "00950_dict_get",
         "01683_flat_dictionary",
@@ -513,6 +513,7 @@
         "01915_create_or_replace_dictionary",
         "01925_test_storage_merge_aliases",
         "01933_client_replxx_convert_history", /// Uses non unique history file
-        "01902_table_function_merge_db_repr"
+        "01902_table_function_merge_db_repr",
+        "01747_system_session_log_long" // Reads from system.session_log and can't be run in parallel with any other test (since almost any other test writes to session_log)
     ]
 }

@@ -15,6 +15,7 @@ namespace DB
 class IColumn;
 class IDataType;
 class WriteBuffer;
+class MySQLSession;
 
 /** A stream for outputting data in a binary line-by-line format.
   */
@@ -25,11 +26,7 @@ public:
 
     String getName() const override { return "MySQLOutputFormat"; }
 
-    void setContext(ContextPtr context_)
-    {
-        context = context_;
-        packet_endpoint = std::make_unique<MySQLProtocol::PacketEndpoint>(out, const_cast<uint8_t &>(getContext()->mysql.sequence_id)); /// TODO: fix it
-    }
+    void setContext(ContextPtr context_);
 
     void consume(Chunk) override;
     void finalize() override;
@@ -37,6 +34,9 @@ public:
     void doWritePrefix() override { initialize(); }
 
     void initialize();
+
+private:
+    MySQLSession * getSession() const;
 
 private:
     bool initialized = false;

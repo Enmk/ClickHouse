@@ -6,6 +6,7 @@
 #include <Interpreters/TraceLog.h>
 #include <Interpreters/CrashLog.h>
 #include <Interpreters/MetricLog.h>
+#include <Interpreters/SessionLog.h>
 #include <Interpreters/AsynchronousMetricLog.h>
 #include <Interpreters/OpenTelemetrySpanLog.h>
 
@@ -37,7 +38,13 @@ std::shared_ptr<TSystemLog> createSystemLog(
     const String & config_prefix)
 {
     if (!config.has(config_prefix))
+    {
+        LOG_DEBUG(&Poco::Logger::get("SystemLog"),
+                "Not creating {}.{} since corresponding section '{}' is missing from config",
+                default_database_name, default_table_name, config_prefix);
+
         return {};
+    }
 
     String database = config.getString(config_prefix + ".database", default_database_name);
     String table = config.getString(config_prefix + ".table", default_table_name);
@@ -103,6 +110,7 @@ SystemLogs::SystemLogs(ContextPtr global_context, const Poco::Util::AbstractConf
     opentelemetry_span_log = createSystemLog<OpenTelemetrySpanLog>(
         global_context, "system", "opentelemetry_span_log", config,
         "opentelemetry_span_log");
+    session_log = createSystemLog<SessionLog>(global_context, "system", "session_log", config, "session_log");
 
     if (query_log)
         logs.emplace_back(query_log.get());
@@ -122,6 +130,8 @@ SystemLogs::SystemLogs(ContextPtr global_context, const Poco::Util::AbstractConf
         logs.emplace_back(asynchronous_metric_log.get());
     if (opentelemetry_span_log)
         logs.emplace_back(opentelemetry_span_log.get());
+    if (session_log)
+        logs.emplace_back(session_log.get());
 
     try
     {

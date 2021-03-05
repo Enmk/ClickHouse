@@ -2,6 +2,7 @@
 #include <Interpreters/ProcessList.h>
 #include <Formats/FormatFactory.h>
 #include <Interpreters/Context.h>
+#include <Core/MySQL/MySQLSession.h>
 
 namespace DB
 {
@@ -40,13 +41,18 @@ void MySQLOutputFormat::initialize()
             packet_endpoint->sendPacket(getColumnDefinition(column_name, data_types[i]->getTypeId()));
         }
 
-        if (!(getContext()->mysql.client_capabilities & Capability::CLIENT_DEPRECATE_EOF))
+        if (!(getSession()->client_capabilities & Capability::CLIENT_DEPRECATE_EOF))
         {
             packet_endpoint->sendPacket(EOFPacket(0, 0));
         }
     }
 }
 
+void MySQLOutputFormat::setContext(ContextPtr context_)
+{
+    context = context_;
+    packet_endpoint = std::make_unique<MySQLProtocol::PacketEndpoint>(out, getSession()->sequence_id);
+}
 
 void MySQLOutputFormat::consume(Chunk chunk)
 {
@@ -76,13 +82,15 @@ void MySQLOutputFormat::finalize()
             ReadableSize(info.read_bytes / info.elapsed_seconds));
     }
 
+    const auto * mysql_session = getSession();
+
     const auto & header = getPort(PortKind::Main).getHeader();
     if (header.columns() == 0)
         packet_endpoint->sendPacket(
-            OKPacket(0x0, getContext()->mysql.client_capabilities, affected_rows, 0, 0, "", human_readable_info), true);
-    else if (getContext()->mysql.client_capabilities & CLIENT_DEPRECATE_EOF)
+            OKPacket(0x0, mysql_session->client_capabilities, affected_rows, 0, 0, "", human_readable_info), true);
+    else if (mysql_session->client_capabilities & CLIENT_DEPRECATE_EOF)
         packet_endpoint->sendPacket(
-            OKPacket(0xfe, getContext()->mysql.client_capabilities, affected_rows, 0, 0, "", human_readable_info), true);
+            OKPacket(0xfe, mysql_session->client_capabilities, affected_rows, 0, 0, "", human_readable_info), true);
     else
         packet_endpoint->sendPacket(EOFPacket(0, 0), true);
 }
@@ -90,6 +98,13 @@ void MySQLOutputFormat::finalize()
 void MySQLOutputFormat::flush()
 {
     packet_endpoint->out->next();
+}
+
+MySQLSession * MySQLOutputFormat::getSession() const
+{
+    auto * session = typeid_cast<MySQLSession *>(getContext()->getSession());
+    assert(session != nullptr);
+    return session;
 }
 
 void registerOutputFormatProcessorMySQLWire(FormatFactory & factory)

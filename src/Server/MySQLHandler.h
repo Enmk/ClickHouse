@@ -17,6 +17,8 @@
 #    include <Poco/Net/SecureStreamSocket.h>
 #endif
 
+#include <memory>
+
 namespace CurrentMetrics
 {
     extern const Metric MySQLConnection;
@@ -24,6 +26,8 @@ namespace CurrentMetrics
 
 namespace DB
 {
+class MySQLSession;
+
 /// Handler for MySQL wire protocol connections. Allows to connect to ClickHouse using MySQL client.
 class MySQLHandler : public Poco::Net::TCPServerConnection
 {
@@ -56,7 +60,7 @@ private:
 protected:
     Poco::Logger * log;
 
-    ContextMutablePtr connection_context;
+    std::shared_ptr<MySQLSession> session;
 
     std::shared_ptr<MySQLProtocol::PacketEndpoint> packet_endpoint;
 
