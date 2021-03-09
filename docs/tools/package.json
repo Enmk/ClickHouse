@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "amphtml-validator": "^1.0.34",
+    "purify-css": "^1.1.9"
+  }
+}
