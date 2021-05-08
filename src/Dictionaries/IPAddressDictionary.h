@@ -20,7 +20,7 @@
 
 namespace DB
 {
-class IPAddressDictionary final : public IDictionaryBase
+class IPAddressDictionary final : public IDictionary
 {
 public:
     IPAddressDictionary(
@@ -37,6 +37,14 @@ public:
     size_t getBytesAllocated() const override { return bytes_allocated; }
 
     size_t getQueryCount() const override { return query_count.load(std::memory_order_relaxed); }
+
+    double getFoundRate() const override
+    {
+        size_t queries = query_count.load(std::memory_order_relaxed);
+        if (!queries)
+            return 0;
+        return static_cast<double>(found_count.load(std::memory_order_relaxed)) / queries;
+    }
 
     double getHitRate() const override { return 1.0; }
 
@@ -101,6 +109,7 @@ private:
             Decimal32,
             Decimal64,
             Decimal128,
+            Decimal256,
             Float32,
             Float64,
             String>
@@ -118,6 +127,7 @@ private:
             ContainerType<Decimal32>,
             ContainerType<Decimal64>,
             ContainerType<Decimal128>,
+            ContainerType<Decimal256>,
             ContainerType<Float32>,
             ContainerType<Float64>,
             ContainerType<StringRef>>
@@ -200,6 +210,7 @@ private:
     size_t element_count = 0;
     size_t bucket_count = 0;
     mutable std::atomic<size_t> query_count{0};
+    mutable std::atomic<size_t> found_count{0};
 
     Poco::Logger * logger;
 };
