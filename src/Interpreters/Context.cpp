@@ -2170,11 +2170,6 @@ OutputFormatPtr Context::getOutputFormatParallelIfPossible(const String & name, 
     return FormatFactory::instance().getOutputFormatParallelIfPossible(name, buf, sample, shared_from_this());
 }
 
-OutputFormatPtr Context::getOutputFormat(const String & name, WriteBuffer & buf, const Block & sample) const
-{
-    return FormatFactory::instance().getOutputFormat(name, buf, sample, shared_from_this());
-}
-
 
 time_t Context::getUptimeSeconds() const
 {

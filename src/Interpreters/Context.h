@@ -540,7 +540,6 @@ public:
     BlockOutputStreamPtr getOutputStream(const String & name, WriteBuffer & buf, const Block & sample) const;
 
     OutputFormatPtr getOutputFormatParallelIfPossible(const String & name, WriteBuffer & buf, const Block & sample) const;
-    OutputFormatPtr getOutputFormat(const String & name, WriteBuffer & buf, const Block & sample) const;
 
     InterserverIOHandler & getInterserverIOHandler();
 
@@ -578,12 +577,9 @@ public:
 
     ContextMutablePtr getGlobalContext() const;
 
-    // Exists only due to MySQLOutputFormat
+    /// Caller is responsible for lifetime of session. Used in MySQLHandler.
+    void setSession(Session * new_session) { session = getSessionContext()->session = new_session; }
     Session * getSession() const { return getSessionContext()->session; }
-    void setSession(Session * new_session)
-    {
-        session = getSessionContext()->session = new_session;
-    }
 
     bool hasGlobalContext() const { return !global_context.expired(); }
     bool isGlobalContext() const

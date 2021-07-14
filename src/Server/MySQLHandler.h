@@ -61,8 +61,7 @@ protected:
     Poco::Logger * log;
 
     std::shared_ptr<MySQLSession> session;
-
-    std::shared_ptr<MySQLProtocol::PacketEndpoint> packet_endpoint;
+    MySQLProtocol::PacketEndpointPtr packet_endpoint;
 
 private:
     UInt64 connection_id = 0;

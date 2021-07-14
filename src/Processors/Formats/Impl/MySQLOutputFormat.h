@@ -36,12 +36,11 @@ public:
     void initialize();
 
 private:
-    MySQLSession * getSession() const;
-
-private:
     bool initialized = false;
 
-    std::unique_ptr<MySQLProtocol::PacketEndpoint> packet_endpoint;
+    std::optional<MySQLWireContext> own_mysql_context;
+    MySQLWireContext * mysql_context = nullptr;
+    MySQLProtocol::PacketEndpointPtr packet_endpoint;
     FormatSettings format_settings;
     DataTypes data_types;
     Serializations serializations;
