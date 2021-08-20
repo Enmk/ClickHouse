@@ -412,12 +412,14 @@ template <> void inline copyOverlap<32, false>(UInt8 * op, const UInt8 *& match,
 /// See also https://stackoverflow.com/a/30669632
 
 template <size_t copy_amount, bool use_shuffle>
-void NO_INLINE decompressImpl(
+bool NO_INLINE decompressImpl(
      const char * const source,
      char * const dest,
+     size_t source_size,
      size_t dest_size)
 {
     const UInt8 * ip = reinterpret_cast<const UInt8 *>(source);
+    const UInt8 * const input_end = ip + source_size;
     UInt8 * op = reinterpret_cast<UInt8 *>(dest);
     UInt8 * const output_end = op + dest_size;
 
@@ -436,10 +438,13 @@ void NO_INLINE decompressImpl(
             {
                 s = *ip++;
                 length += s;
-            } while (unlikely(s == 255));
+            } while (unlikely(s == 255 && ip < input_end));
         };
 
         /// Get literal length.
+
+        if (unlikely(ip >= input_end))
+            return false;
 
         const unsigned token = *ip++;
         length = token >> 4;
@@ -461,13 +466,19 @@ void NO_INLINE decompressImpl(
         /// output: xyzHello, w
         ///                  ^-op (we will overwrite excessive bytes on next iteration)
 
+        if (unlikely(copy_end > output_end))
+            return false;
+
         wildCopy<copy_amount>(op, ip, copy_end);    /// Here we can write up to copy_amount - 1 bytes after buffer.
+
+        if (copy_end == output_end)
+            return true;
 
         ip += length;
         op = copy_end;
 
-        if (copy_end >= output_end)
-            return;
+        if (unlikely(ip + 1 >= input_end))
+            return false;
 
         /// Get match offset.
 
@@ -515,7 +526,11 @@ void NO_INLINE decompressImpl(
 
         copy<copy_amount>(op, match);   /// copy_amount + copy_amount - 1 - 4 * 2 bytes after buffer.
         if (length > copy_amount * 2)
+        {
+            if (unlikely(copy_end > output_end))
+                return false;
             wildCopy<copy_amount>(op + copy_amount, match + copy_amount, copy_end);
+        }
 
         op = copy_end;
     }
@@ -543,13 +558,13 @@ void decompress(
 
         Stopwatch watch;
         if (best_variant == 0)
-            decompressImpl<16, true>(source, dest, dest_size);
+            decompressImpl<16, true>(source, dest, source_size, dest_size);
         if (best_variant == 1)
-            decompressImpl<16, false>(source, dest, dest_size);
+            decompressImpl<16, false>(source, dest, source_size, dest_size);
         if (best_variant == 2)
-            decompressImpl<8, true>(source, dest, dest_size);
+            decompressImpl<8, true>(source, dest, source_size, dest_size);
         if (best_variant == 3)
-            decompressImpl<32, false>(source, dest, dest_size);
+            decompressImpl<32, false>(source, dest, source_size, dest_size);
 
         watch.stop();
 
@@ -559,7 +574,7 @@ void decompress(
     }
     else
     {
-        decompressImpl<8, false>(source, dest, dest_size);
+        decompressImpl<8, false>(source, dest, source_size, dest_size);
     }
 }
 
