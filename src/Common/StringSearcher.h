@@ -773,7 +773,7 @@ public:
 // Separators are anything inside ASCII (0-128) and not alphanum.
 // Any value outside of basic ASCII (>=128) is considered a non-separator symbol, hence UTF-8 strings
 // should work just fine. But any Unicode whitespace is not considered a token separtor.
-template <typename StringSearcher>
+template <typename StringSearcher, typename TokenExtractor>
 class TokenSearcher
 {
     StringSearcher searcher;
@@ -836,10 +836,7 @@ public:
 
     ALWAYS_INLINE static bool isTokenSeparator(const uint8_t c)
     {
-        if (isAlphaNumericASCII(c) || !isASCII(c))
-            return false;
-
-        return true;
+        return !TokenExtractor::isValidTokenChar(c);
     }
 };
 
@@ -848,8 +845,10 @@ using ASCIICaseSensitiveStringSearcher = StringSearcher<true, true>;
 using ASCIICaseInsensitiveStringSearcher = StringSearcher<false, true>;
 using UTF8CaseSensitiveStringSearcher = StringSearcher<true, false>;
 using UTF8CaseInsensitiveStringSearcher = StringSearcher<false, false>;
-using ASCIICaseSensitiveTokenSearcher = TokenSearcher<ASCIICaseSensitiveStringSearcher>;
-using ASCIICaseInsensitiveTokenSearcher = TokenSearcher<ASCIICaseInsensitiveStringSearcher>;
+template <typename TokenExtractor>
+using ASCIICaseSensitiveTokenSearcher = TokenSearcher<ASCIICaseSensitiveStringSearcher, TokenExtractor>;
+template <typename TokenExtractor>
+using ASCIICaseInsensitiveTokenSearcher = TokenSearcher<ASCIICaseInsensitiveStringSearcher, TokenExtractor>;
 
 
 /** Uses functions from libc.

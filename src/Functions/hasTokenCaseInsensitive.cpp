@@ -2,6 +2,7 @@
 #include <Functions/FunctionFactory.h>
 #include "HasTokenImpl.h"
 #include <Common/Volnitsky.h>
+#include <Storages/MergeTree/MergeTreeIndexFullText.h>
 
 
 namespace DB
@@ -15,7 +16,7 @@ struct NameHasTokenCaseInsensitive
 };
 
 using FunctionHasTokenCaseInsensitive
-    = FunctionsStringSearch<HasTokenImpl<VolnitskyCaseInsensitiveToken, false>, NameHasTokenCaseInsensitive>;
+    = FunctionsStringSearch<HasTokenImpl<VolnitskyCaseInsensitiveToken<SplitTokenExtractor>, NameHasTokenCaseInsensitive, false>>;
 
 }
 

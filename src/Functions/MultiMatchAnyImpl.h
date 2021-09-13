@@ -29,7 +29,7 @@ namespace ErrorCodes
 }
 
 
-template <typename Type, bool FindAny, bool FindAnyIndex, bool MultiSearchDistance>
+template <typename Type, typename Name, bool FindAny, bool FindAnyIndex, bool MultiSearchDistance>
 struct MultiMatchAnyImpl
 {
     static_assert(static_cast<int>(FindAny) + static_cast<int>(FindAnyIndex) == 1);
@@ -38,6 +38,8 @@ struct MultiMatchAnyImpl
     /// Variable for understanding, if we used offsets for the output, most
     /// likely to determine whether the function returns ColumnVector of ColumnArray.
     static constexpr bool is_column_array = false;
+    static constexpr auto name = Name::name;
+
     static auto getReturnType()
     {
         return std::make_shared<DataTypeNumber<ResultType>>();

@@ -96,6 +96,9 @@ MergeTreeIndexFactory::MergeTreeIndexFactory()
     registerCreator("tokenbf_v1", bloomFilterIndexCreator);
     registerValidator("tokenbf_v1", bloomFilterIndexValidator);
 
+    registerCreator("tokenbf_v2", bloomFilterIndexCreator);
+    registerValidator("tokenbf_v2", bloomFilterIndexValidator);
+
     registerCreator("bloom_filter", bloomFilterIndexCreatorNew);
     registerValidator("bloom_filter", bloomFilterIndexValidatorNew);
 }

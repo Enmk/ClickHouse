@@ -15,7 +15,7 @@ struct NameMultiSearchFirstIndex
 };
 
 using FunctionMultiSearchFirstIndex
-    = FunctionsMultiStringSearch<MultiSearchFirstIndexImpl<PositionCaseSensitiveASCII>, NameMultiSearchFirstIndex>;
+    = FunctionsMultiStringSearch<MultiSearchFirstIndexImpl<PositionCaseSensitiveASCII, NameMultiSearchFirstIndex>>;
 
 }
 

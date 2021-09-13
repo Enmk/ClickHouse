@@ -186,9 +186,25 @@ struct SplitTokenExtractor final : public ITokenExtractor
     bool nextInField(const char * data, size_t len, size_t * pos, size_t * token_start, size_t * token_len) const override;
     bool nextInColumn(const char * data, size_t len, size_t * pos, size_t * token_start, size_t * token_len) const override;
     bool nextLike(const String & str, size_t * pos, String & token) const override;
+    static bool isValidTokenChar(char c);
 
     bool supportLike() const override { return true; }
 };
+
+/// Same as SplitTokenExtractor also includes underscore symbol ('_') in tokens.
+/// So string "abc_def" is a single token, rathen than two: "abc" and "def" as produced by SplitTokenExtractor.
+struct SplitTokenExtractor2 final : public ITokenExtractor
+{
+    static String getName() { return "tokenbf_v2"; }
+
+    bool nextInField(const char * data, size_t len, size_t * pos, size_t * token_start, size_t * token_len) const override;
+    bool nextInColumn(const char * data, size_t len, size_t * pos, size_t * token_start, size_t * token_len) const override;
+    bool nextLike(const String & str, size_t * pos, String & token) const override;
+    static bool isValidTokenChar(char);
+
+    bool supportLike() const override { return true; }
+};
+
 
 
 class MergeTreeIndexFullText final : public IMergeTreeIndex

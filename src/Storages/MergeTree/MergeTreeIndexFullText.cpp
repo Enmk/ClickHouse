@@ -404,7 +404,7 @@ bool MergeTreeConditionFullText::atomFromAST(
             likeStringToBloomFilter(const_value.get<String>(), token_extractor, *out.bloom_filter);
             return true;
         }
-        else if (func_name == "hasToken")
+        else if (func_name == "hasToken" || func_name == "hasToken_v2")
         {
             out.key_column = key_column_num;
             out.function = RPNElement::FUNCTION_EQUALS;
@@ -756,6 +756,11 @@ bool SplitTokenExtractor::nextInColumn(const char * data, size_t len, size_t * p
     return *token_len > 0;
 }
 
+bool SplitTokenExtractor::isValidTokenChar(char c)
+{
+    return !isASCII(c) || isAlphaNumericASCII(c);
+}
+
 bool SplitTokenExtractor::nextLike(const String & str, size_t * pos, String & token) const
 {
     token.clear();
@@ -799,6 +804,172 @@ bool SplitTokenExtractor::nextLike(const String & str, size_t * pos, String & to
     return !bad_token && !token.empty();
 }
 
+inline bool SplitTokenExtractor2::isValidTokenChar(char c)
+{
+    return !isASCII(c) || isAlphaNumericASCII(c) || c == '_';
+}
+
+bool SplitTokenExtractor2::nextInField(const char * data, size_t len, size_t * pos, size_t * token_start, size_t * token_len) const
+{
+    *token_start = *pos;
+    *token_len = 0;
+
+    while (*pos < len)
+    {
+        if (!isValidTokenChar(data[*pos]))
+        {
+            /// Finish current token if any
+            if (*token_len > 0)
+                return true;
+            *token_start = ++*pos;
+        }
+        else
+        {
+            /// Note that UTF-8 sequence is completely consisted of non-ASCII bytes.
+            ++*pos;
+            ++*token_len;
+        }
+    }
+
+    return *token_len > 0;
+}
+
+bool SplitTokenExtractor2::nextInColumn(const char * data, size_t len, size_t * pos, size_t * token_start, size_t * token_len) const
+{
+    *token_start = *pos;
+    *token_len = 0;
+
+    while (*pos < len)
+    {
+#if defined(__SSE2__) && !defined(MEMORY_SANITIZER) /// We read uninitialized bytes and decide on the calculated mask
+        // NOTE: we assume that `data` string is padded from the right with 15 bytes.
+        const __m128i haystack = _mm_loadu_si128(reinterpret_cast<const __m128i *>(data + *pos));
+        const size_t haystack_length = 16;
+
+#if defined(__SSE4_2__)
+        // With the help of https://www.strchr.com/strcmp_and_strlen_using_sse_4.2
+        const auto alnum_chars_ranges = _mm_set_epi8(0, 0, 0, 0, 0, 0, '_', '_',
+                '\xFF', '\x80', 'z', 'a', 'Z', 'A', '9', '0');
+        // Every bit represents if `haystack` character is in the ranges (1) or not (0)
+        const int result_bitmask = _mm_cvtsi128_si32(_mm_cmpestrm(alnum_chars_ranges, 10, haystack, haystack_length, _SIDD_CMP_RANGES));
+#else
+        // NOTE: -1 and +1 required since SSE2 has no `>=` and `<=` instructions on packed 8-bit integers (epi8).
+        const auto number_begin =      _mm_set1_epi8('0' - 1);
+        const auto number_end =        _mm_set1_epi8('9' + 1);
+        const auto alpha_lower_begin = _mm_set1_epi8('a' - 1);
+        const auto alpha_lower_end =   _mm_set1_epi8('z' + 1);
+        const auto alpha_upper_begin = _mm_set1_epi8('A' - 1);
+        const auto alpha_upper_end =   _mm_set1_epi8('Z' + 1);
+        const auto underscore_begin = _mm_set1_epi8('_' - 1);
+        const auto underscore_end =   _mm_set1_epi8('_' + 1);
+        const auto zero =              _mm_set1_epi8(0);
+
+        // every bit represents if `haystack` character `c` satisfies condition:
+        // (c < 0) || (c > '0' - 1 && c < '9' + 1) || (c > 'a' - 1 && c < 'z' + 1) || (c > 'A' - 1 && c < 'Z' + 1)
+        // < 0 since _mm_cmplt_epi8 threats chars as SIGNED, and so all chars > 0x80 are negative.
+        const int result_bitmask = _mm_movemask_epi8(_mm_or_si128(_mm_or_si128(_mm_or_si128(_mm_or_si128(
+                _mm_cmplt_epi8(haystack, zero),
+                _mm_and_si128(_mm_cmpgt_epi8(haystack, number_begin),      _mm_cmplt_epi8(haystack, number_end))),
+                _mm_and_si128(_mm_cmpgt_epi8(haystack, alpha_lower_begin), _mm_cmplt_epi8(haystack, alpha_lower_end))),
+                _mm_and_si128(_mm_cmpgt_epi8(haystack, alpha_upper_begin), _mm_cmplt_epi8(haystack, alpha_upper_end))),
+                _mm_and_si128(_mm_cmpgt_epi8(haystack, underscore_begin), _mm_cmplt_epi8(haystack, underscore_end))));
+#endif
+        if (result_bitmask == 0)
+        {
+            if (*token_len != 0)
+                // end of token started on previous haystack
+                return true;
+
+            *pos += haystack_length;
+            continue;
+        }
+
+        const auto token_start_pos_in_current_haystack = getTrailingZeroBitsUnsafe(result_bitmask);
+        if (*token_len == 0)
+            // new token
+            *token_start = *pos + token_start_pos_in_current_haystack;
+        else if (token_start_pos_in_current_haystack != 0)
+            // end of token starting in one of previous haystacks
+            return true;
+
+        const auto token_bytes_in_current_haystack = getTrailingZeroBitsUnsafe(~(result_bitmask >> token_start_pos_in_current_haystack));
+        *token_len += token_bytes_in_current_haystack;
+
+        *pos += token_start_pos_in_current_haystack + token_bytes_in_current_haystack;
+        if (token_start_pos_in_current_haystack + token_bytes_in_current_haystack == haystack_length)
+            // check if there are leftovers in next `haystack`
+            continue;
+
+        break;
+#else
+        if (!isValidTokenChar(data[*pos]))
+        {
+            /// Finish current token if any
+            if (*token_len > 0)
+                return true;
+            *token_start = ++*pos;
+        }
+        else
+        {
+            /// Note that UTF-8 sequence is completely consisted of non-ASCII bytes.
+            ++*pos;
+            ++*token_len;
+        }
+#endif
+    }
+
+#if defined(__SSE2__) && !defined(MEMORY_SANITIZER)
+    // Could happen only if string is not padded with zeros, and we accidentally hopped over the end of data.
+    if (*token_start > len)
+        return false;
+    *token_len = std::min(len - *token_start, *token_len);
+#endif
+
+    return *token_len > 0;
+}
+
+bool SplitTokenExtractor2::nextLike(const String & str, size_t * pos, String & token) const
+{
+    token.clear();
+    bool bad_token = false; // % or _ before token
+    bool escaped = false;
+    while (*pos < str.size())
+    {
+        if (!escaped && (str[*pos] == '%' || str[*pos] == '_'))
+        {
+            token.clear();
+            bad_token = true;
+            ++*pos;
+        }
+        else if (!escaped && str[*pos] == '\\')
+        {
+            escaped = true;
+            ++*pos;
+        }
+        else if (!isValidTokenChar(str[*pos]))
+        {
+            if (!bad_token && !token.empty())
+                return true;
+
+            token.clear();
+            bad_token = false;
+            escaped = false;
+            ++*pos;
+        }
+        else
+        {
+            const size_t sz = UTF8::seqLength(static_cast<UInt8>(str[*pos]));
+            for (size_t j = 0; j < sz; ++j)
+            {
+                token += str[*pos];
+                ++*pos;
+            }
+            escaped = false;
+        }
+    }
+
+    return !bad_token && !token.empty();
+}
 
 MergeTreeIndexPtr bloomFilterIndexCreator(
     const IndexDescription & index)
@@ -826,6 +997,17 @@ MergeTreeIndexPtr bloomFilterIndexCreator(
 
         return std::make_shared<MergeTreeIndexFullText>(index, params, std::move(tokenizer));
     }
+    else if (index.type == SplitTokenExtractor2::getName())
+    {
+        BloomFilterParameters params(
+            index.arguments[0].get<size_t>(),
+            index.arguments[1].get<size_t>(),
+            index.arguments[2].get<size_t>());
+
+        auto tokenizer = std::make_unique<SplitTokenExtractor2>();
+
+        return std::make_shared<MergeTreeIndexFullText>(index, params, std::move(tokenizer));
+    }
     else
     {
         throw Exception("Unknown index type: " + backQuote(index.name), ErrorCodes::LOGICAL_ERROR);
@@ -846,6 +1028,11 @@ void bloomFilterIndexValidator(const IndexDescription & index, bool /*attach*/)
             throw Exception("`ngrambf` index must have exactly 4 arguments.", ErrorCodes::INCORRECT_QUERY);
     }
     else if (index.type == SplitTokenExtractor::getName())
+    {
+        if (index.arguments.size() != 3)
+            throw Exception("`tokenbf` index must have exactly 3 arguments.", ErrorCodes::INCORRECT_QUERY);
+    }
+    else if (index.type == SplitTokenExtractor2::getName())
     {
         if (index.arguments.size() != 3)
             throw Exception("`tokenbf` index must have exactly 3 arguments.", ErrorCodes::INCORRECT_QUERY);
