@@ -1,0 +1,17 @@
+EQUAL
+3	by_underscore
+4	snake_case
+		"rows_read": 6,
+LIKE
+		"rows_read": 10,
+3	by_underscore
+		"rows_read": 10,
+IN
+3	by_underscore
+13	abc
+		"rows_read": 4,
+hasToken_v2
+3	by_underscore
+14	some_text with words separated by_underscore
+		"rows_read": 4,
+2
