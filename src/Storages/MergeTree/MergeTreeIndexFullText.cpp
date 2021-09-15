@@ -1021,32 +1021,24 @@ void bloomFilterIndexValidator(const IndexDescription & index, bool /*attach*/)
         if (data_type->getTypeId() != TypeIndex::String && data_type->getTypeId() != TypeIndex::FixedString)
             throw Exception("Bloom filter index can be used only with `String` or `FixedString` column.", ErrorCodes::INCORRECT_QUERY);
     }
+    static const std::unordered_map<std::string, size_t> argument_count_by_index =
+    {
+        {NgramTokenExtractor::getName(), 4},
+        {SplitTokenExtractor::getName(), 3},
+        {SplitTokenExtractor2::getName(), 3},
+    };
+    const auto p = argument_count_by_index.find(index.type);
+    if (p == argument_count_by_index.end())
+        throw Exception(ErrorCodes::LOGICAL_ERROR, "Unknown index type: `{}`", backQuote(index.name));
 
-    if (index.type == NgramTokenExtractor::getName())
-    {
-        if (index.arguments.size() != 4)
-            throw Exception("`ngrambf` index must have exactly 4 arguments.", ErrorCodes::INCORRECT_QUERY);
-    }
-    else if (index.type == SplitTokenExtractor::getName())
-    {
-        if (index.arguments.size() != 3)
-            throw Exception("`tokenbf` index must have exactly 3 arguments.", ErrorCodes::INCORRECT_QUERY);
-    }
-    else if (index.type == SplitTokenExtractor2::getName())
-    {
-        if (index.arguments.size() != 3)
-            throw Exception("`tokenbf` index must have exactly 3 arguments.", ErrorCodes::INCORRECT_QUERY);
-    }
-    else
-    {
-        throw Exception("Unknown index type: " + backQuote(index.name), ErrorCodes::LOGICAL_ERROR);
-    }
+    if (p->second != index.arguments.size())
+        throw Exception(ErrorCodes::INCORRECT_QUERY, "`{}` index must have exactly {} arguments.", index.type, p->second);
 
     assert(index.arguments.size() >= 3);
 
     for (const auto & arg : index.arguments)
         if (arg.getType() != Field::Types::UInt64)
-            throw Exception("All parameters to *bf_v1 index must be unsigned integers", ErrorCodes::BAD_ARGUMENTS);
+            throw Exception(ErrorCodes::BAD_ARGUMENTS, "All parameters to `{}` index must be unsigned integers", index.type);
 
     /// Just validate
     BloomFilterParameters params(
