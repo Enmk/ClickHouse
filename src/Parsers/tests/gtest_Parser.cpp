@@ -1,5 +1,5 @@
 #include <Parsers/ParserOptimizeQuery.h>
-
+#include <Parsers/ParserCreateQuery.h>
 #include <Parsers/ParserQueryWithOutput.h>
 #include <Parsers/parseQuery.h>
 #include <Parsers/formatAST.h>
@@ -130,5 +130,33 @@ INSTANTIATE_TEST_SUITE_P(ParserOptimizeQuery_FAIL, ParserTest, ::testing::Values
     {
         std::make_shared<ParserOptimizeQuery>(),
         "OPTIMIZE TABLE table_name DEDUPLICATE BY db.a, db.b, db.c",
+    }
+));
+
+INSTANTIATE_TEST_SUITE_P(ParserCreateQuery_DICTIONARY_WITH_COMMENT, ParserTest, ::testing::Values(
+    ParserTestCase
+    {
+        std::make_shared<ParserCreateQuery>(),
+        R"sql(CREATE DICTIONARY 2024_dictionary_with_comment
+(
+    id UInt64,
+    value String
+)
+PRIMARY KEY id
+SOURCE(CLICKHOUSE(HOST 'localhost' PORT tcpPort() TABLE 'source_table'))
+LAYOUT(FLAT())
+LIFETIME(MIN 0 MAX 1000)
+COMMENT 'Test dictionary with comment';
+)sql",
+        R"sql(CREATE DICTIONARY `2024_dictionary_with_comment`
+(
+    `id` UInt64,
+    `value` String
+)
+PRIMARY KEY id
+SOURCE(CLICKHOUSE(HOST 'localhost' PORT tcpPort() TABLE 'source_table'))
+LIFETIME(MIN 0 MAX 1000)
+LAYOUT(FLAT())
+COMMENT 'Test dictionary with comment')sql"
     }
 ));
