@@ -131,15 +131,26 @@ Out & dumpValue(Out & out, T && x)
 template <typename Out, typename T>
 Out & dump(Out & out, const char * name, T && x)
 {
+    // Dumping string literal, printing name and demangled type is irrelevant.
+    if constexpr (std::is_same_v<const char *, std::decay_t<std::remove_reference_t<T>>>)
+    {
+         const auto name_len = strlen(name);
+         const auto value_len = strlen(x);
+         // `name` is the same as quoted `x`
+         if (name_len > 2 && value_len > 0 && name[0] == '"' && name[name_len - 1] == '"'
+                 && strncmp(name + 1, x, std::min(value_len, name_len) - 1) == 0)
+             return out << x;
+    }
+
     out << demangle(typeid(x).name()) << " " << name << " = ";
-    return dumpValue(out, x);
+    return dumpValue(out, x) << ";";
 }
 
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
-#define DUMPVAR(VAR) ::dump(std::cerr, #VAR, (VAR)); std::cerr << "; ";
+#define DUMPVAR(VAR) ::dump(std::cerr, #VAR, (VAR));
 #define DUMPHEAD std::cerr << __FILE__ << ':' << __LINE__ << " [ " << getThreadId() << " ] ";
 #define DUMPTAIL std::cerr << '\n';
 
