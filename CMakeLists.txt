@@ -150,6 +150,7 @@ if (CMAKE_GENERATOR STREQUAL "Ninja" AND NOT DISABLE_COLORED_BUILD)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
 endif ()
 
+include (cmake/check_flags.cmake)
 include (cmake/add_warning.cmake)
 
 if (NOT MSVC)
@@ -608,9 +609,6 @@ include_directories(${ConfigIncludePath})
 
 # Add as many warnings as possible for our own code.
 include (cmake/warnings.cmake)
-
-# Check if needed compiler flags are supported
-include (cmake/check_flags.cmake)
 
 add_subdirectory (base)
 add_subdirectory (src)
