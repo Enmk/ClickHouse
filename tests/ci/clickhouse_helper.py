@@ -15,7 +15,7 @@ class ClickHouseHelper:
                 "X-ClickHouse-User": get_parameter_from_ssm(
                     "clickhouse-test-stat-login2"
                 ),
-                "X-ClickHouse-Key": : get_parameter_from_ssm(
+                "X-ClickHouse-Key": get_parameter_from_ssm(
                     "clickhouse-test-stat-password"
                 ),
             }
