@@ -247,7 +247,7 @@ def build_and_push_one_image(
         cmd = (
             "docker buildx build --builder default "
             f"--label build-url={GITHUB_RUN_URL} "
-            f"{from_tag_arg}"
+#             f"{from_tag_arg}"
             # A hack to invalidate cache, grep for it in docker/ dir
             f"--build-arg CACHE_INVALIDATOR={GITHUB_RUN_URL} "
             f"--tag {image.repo}:{version_string} "
