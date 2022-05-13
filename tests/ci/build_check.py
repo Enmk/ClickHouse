@@ -235,7 +235,7 @@ def main():
                 ).replace(" ", "%20")
             else:
                 build_urls.append(
-                    "https://s3.amazonaws.com/clickhouse-builds/"
+                    f"https://s3.amazonaws.com/{S3_BUILDS_BUCKET}/"
                     + url.replace("+", "%2B").replace(" ", "%20")
                 )
         success = len(build_urls) > 0
