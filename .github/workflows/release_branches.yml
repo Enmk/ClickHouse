@@ -54,11 +54,11 @@ jobs:
           sudo rm -fr "$GITHUB_WORKSPACE" && mkdir "$GITHUB_WORKSPACE"
       - name: Check out repository code
         uses: actions/checkout@v2
-      - name: Download changed aarch64 images
-        uses: actions/download-artifact@v2
-        with:
-          name: changed_images_aarch64
-          path: ${{ runner.temp }}
+#      - name: Download changed aarch64 images
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: changed_images_aarch64
+#          path: ${{ runner.temp }}
       - name: Download changed amd64 images
         uses: actions/download-artifact@v2
         with:
@@ -67,7 +67,7 @@ jobs:
       - name: Images check
         run: |
           cd "$GITHUB_WORKSPACE/tests/ci"
-          python3 docker_manifests_merge.py --suffix amd64 --suffix aarch64
+          python3 docker_manifests_merge.py --suffix amd64
       - name: Upload images files to artifacts
         uses: actions/upload-artifact@v2
         with:
