@@ -132,6 +132,8 @@ jobs:
       - name: Clear repository
         run: |
           sudo rm -fr "$GITHUB_WORKSPACE" && mkdir "$GITHUB_WORKSPACE"
+      - name: Trust My Directory
+        run: git config --global --add safe.directory *
       - name: Check out repository code
         uses: actions/checkout@v2
         with:
