@@ -133,7 +133,7 @@ jobs:
         run: |
           sudo rm -fr "$GITHUB_WORKSPACE" && mkdir "$GITHUB_WORKSPACE"
       - name: Trust My Directory
-        run: git config --global --add safe.directory *
+        run: git config --global --add safe.directory * # https://stackoverflow.com/a/71940133
       - name: Check out repository code
         uses: actions/checkout@v2
         with:
