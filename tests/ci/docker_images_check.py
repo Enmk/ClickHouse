@@ -235,6 +235,7 @@ def build_and_push_one_image(
         cmd = (
             "docker buildx build --builder default "
             f"--label build-url={GITHUB_RUN_URL} "
+#           TODO: fix providing base image
 #           Commented out as a workaround to make it work with Altinity's dockerhub account
 #             f"{from_tag_arg}"
             f"--build-arg BUILDKIT_INLINE_CACHE=1 "
