@@ -8,7 +8,7 @@ on: # yamllint disable-line rule:truthy
   push:
     branches:
       # Anything/22.3 (e.g customizations/22.3)
-      - '**/22.3'
+      - '**/22.3*'
 
 jobs:
   DockerHubPushAarch64:
