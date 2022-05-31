@@ -271,7 +271,7 @@ def main():
 
     update_version_local(version, version_type)
 
-    logging.info("Updated local files with version")
+    logging.info(f"Updated local files with version : {version.string} / {version.describe}")
 
     logging.info("Build short name %s", build_name)
 
