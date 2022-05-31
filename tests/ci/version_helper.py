@@ -157,7 +157,7 @@ class ClickHouseVersion:
 class VersionType:
     LTS = "lts"
     PRESTABLE = "prestable"
-    STABLE = "stable"
+    STABLE = "altinitystable"
     TESTING = "testing"
     VALID = (TESTING, PRESTABLE, STABLE, LTS)
 
