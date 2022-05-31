@@ -163,6 +163,10 @@ jobs:
           docker kill "$(docker ps -q)" ||:
           docker rm -f "$(docker ps -a -q)" ||:
           sudo rm -fr "$TEMP_PATH" "$CACHES_PATH"
+      # Temporary step to speed up dev
+      - name: intentionallyFail
+        if: success()
+        run: exit 1
   ############################################################################################
   ##################################### BUILD REPORTER #######################################
   ############################################################################################
