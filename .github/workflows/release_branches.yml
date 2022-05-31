@@ -130,6 +130,7 @@ jobs:
           CACHES_PATH=${{runner.temp}}/../ccaches
           CHECK_NAME=ClickHouse build check (actions)
           BUILD_NAME=package_release
+          CLICKHOUSE_STABLE_VERSION_SUFFIX=altinitystable
           EOF
       - name: Download changed images
         uses: actions/download-artifact@v2

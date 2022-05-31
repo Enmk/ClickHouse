@@ -8,7 +8,7 @@ import sys
 import time
 from typing import List, Optional, Tuple
 
-from env_helper import REPO_COPY, TEMP_PATH, CACHES_PATH, IMAGES_PATH, S3_BUILDS_BUCKET, GITHUB_JOB
+from env_helper import REPO_COPY, TEMP_PATH, CACHES_PATH, IMAGES_PATH, S3_BUILDS_BUCKET, GITHUB_JOB, CLICKHOUSE_STABLE_VERSION_SUFFIX
 from s3_helper import S3Helper
 from pr_info import PRInfo
 from version_helper import (
@@ -259,11 +259,15 @@ def main():
 
     logging.info("Got version from repo %s", version.string)
 
-    official_flag = pr_info.number == 0
-    version_type = "testing"
-    if "release" in pr_info.labels or "release-lts" in pr_info.labels:
-        version_type = "stable"
-        official_flag = True
+    official_flag = True
+    version_type = CLICKHOUSE_STABLE_VERSION_SUFFIX
+    # TODO (vnemkov): right now we'll use simplified version management:
+    # only update git hash and explicitly set stable version suffix.
+    # official_flag = pr_info.number == 0
+    # version_type = "testing"
+    # if "release" in pr_info.labels or "release-lts" in pr_info.labels:
+    #     version_type = CLICKHOUSE_STABLE_VERSION_SUFFIX
+    #     official_flag = True
 
     update_version_local(version, version_type)
 
