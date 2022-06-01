@@ -26,7 +26,7 @@ IMAGE_NAME = "altinityinfra/binary-builder"
 
 
 def get_build_config(build_check_name: str, build_name: str) -> BuildConfig:
-    if build_check_name == "ClickHouse build check actions":
+    if build_check_name == "ClickHouse build check (actions)":
         build_config_name = "build_config"
     else:
         raise Exception(f"Unknown build check name {build_check_name}")
@@ -305,7 +305,7 @@ def main():
         build_config,
         os.path.join(REPO_COPY, "docker/packager"),
         build_output_path,
-        version.string,
+        f"{version.string}-{CLICKHOUSE_STABLE_VERSION_SUFFIX}",
         image_version,
         ccache_path,
         official=official_flag,

@@ -205,6 +205,8 @@ def get_version_from_repo(
         versions["patch"],
         versions["revision"],
         git,
+        # Explicitly use tweak value from version file
+        tweak=versions["revision"]
     )
 
 
