@@ -20,7 +20,6 @@ from ccache_utils import get_ccache_if_not_exists, upload_ccache
 from ci_config import CI_CONFIG, BuildConfig
 from docker_pull_helper import get_image_with_version
 from tee_popen import TeePopen
-from git_helper import Git, Runner
 
 IMAGE_NAME = "altinityinfra/binary-builder"
 
@@ -202,12 +201,6 @@ def upload_master_static_binaries(
 
 def main():
     logging.basicConfig(level=logging.INFO)
-
-    git = Git()
-    logging.info(f"""git stuff, latest: {git.latest_tag},
-        description: {git.description},
-        remotes: {Runner().run('git status')}
-    """)
 
     build_check_name = sys.argv[1]
     build_name = sys.argv[2]
