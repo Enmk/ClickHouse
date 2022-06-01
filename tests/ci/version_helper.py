@@ -113,7 +113,7 @@ class ClickHouseVersion:
             (str(self.major), str(self.minor), str(self.patch), str(self.tweak))
         )
         if self._flavour:
-            version_as_string = f"{version_as_string}-{self._flavour}"
+            version_as_string = f"{version_as_string}.{self._flavour}"
         return version_as_string
 
     def as_dict(self) -> VERSIONS:
