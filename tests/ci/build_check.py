@@ -267,7 +267,7 @@ def main():
     logging.info("Got version from repo %s", version.string)
 
     official_flag = True
-    version_type = CLICKHOUSE_STABLE_VERSION_SUFFIX
+    version._flavour = version_type = CLICKHOUSE_STABLE_VERSION_SUFFIX
     # TODO (vnemkov): right now we'll use simplified version management:
     # only update git hash and explicitly set stable version suffix.
     # official_flag = pr_info.number == 0
@@ -305,7 +305,7 @@ def main():
         build_config,
         os.path.join(REPO_COPY, "docker/packager"),
         build_output_path,
-        f"{version.string}-{CLICKHOUSE_STABLE_VERSION_SUFFIX}",
+        version.string,
         image_version,
         ccache_path,
         official=official_flag,
