@@ -56,7 +56,6 @@ ARG TARGETARCH
 # Download Minio-related binaries
 RUN arch=${TARGETARCH:-amd64} \
     && wget "https://dl.min.io/server/minio/release/linux-${arch}/archive/minio-20220103182258.0.0.x86_64.rpm" \
-    && chmod +x ./minio \
     && wget "https://dl.min.io/client/mc/release/linux-${arch}/mc" \
     && chmod +x ./mc
 
