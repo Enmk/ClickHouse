@@ -190,10 +190,12 @@ if __name__ == "__main__":
         run_by_hash_total = 0
         check_name_with_group = check_name
 
-    rerun_helper = RerunHelper(gh, pr_info, check_name_with_group)
-    if rerun_helper.is_already_finished_by_status():
-        logging.info("Check is already finished according to github status, exiting")
-        sys.exit(0)
+    # Always re-run, even if it finished in previous run.
+    # gh = Github(get_best_robot_token())
+    # rerun_helper = RerunHelper(gh, pr_info, check_name_with_group)
+    # if rerun_helper.is_already_finished_by_status():
+    #     logging.info("Check is already finished according to github status, exiting")
+    #     sys.exit(0)
 
     if not os.path.exists(temp_path):
         os.makedirs(temp_path)
