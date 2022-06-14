@@ -8,7 +8,9 @@ RUN apt-get update -y \
     && env DEBIAN_FRONTEND=noninteractive \
         apt-get install --yes --no-install-recommends \
         python3-requests \
-        llvm-9
+        llvm-9 \
+        rpm2cpio \
+        cpio
 
 COPY s3downloader /s3downloader
 
