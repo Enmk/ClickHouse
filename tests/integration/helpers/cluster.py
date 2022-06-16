@@ -689,7 +689,7 @@ class ClickHouseCluster:
             binary_path = binary_path[: -len("-server")]
 
         env_variables["keeper_binary"] = binary_path
-        env_variables["image"] = "clickhouse/integration-test:" + self.docker_base_tag
+        env_variables["image"] = "altinityinfra/integration-test:" + self.docker_base_tag
         env_variables["user"] = str(os.getuid())
         env_variables["keeper_fs"] = "bind"
         for i in range(1, 4):
@@ -1169,7 +1169,7 @@ class ClickHouseCluster:
         with_hive=False,
         hostname=None,
         env_variables=None,
-        image="clickhouse/integration-test",
+        image="altinityinfra/integration-test",
         tag=None,
         stay_alive=False,
         ipv4_address=None,
@@ -2643,7 +2643,7 @@ class ClickHouseInstance:
         copy_common_configs=True,
         hostname=None,
         env_variables=None,
-        image="clickhouse/integration-test",
+        image="altinityinfra/integration-test",
         tag="latest",
         stay_alive=False,
         ipv4_address=None,

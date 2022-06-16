@@ -30,17 +30,17 @@ from tee_popen import TeePopen
 # When update, update
 # integration/ci-runner.py:ClickhouseIntegrationTestsRunner.get_images_names too
 IMAGES = [
-    "clickhouse/integration-tests-runner",
-    "clickhouse/mysql-golang-client",
-    "clickhouse/mysql-java-client",
-    "clickhouse/mysql-js-client",
-    "clickhouse/mysql-php-client",
-    "clickhouse/postgresql-java-client",
-    "clickhouse/integration-test",
-    "clickhouse/kerberos-kdc",
-    "clickhouse/kerberized-hadoop",
-    "clickhouse/integration-helper",
-    "clickhouse/dotnet-client",
+    "altinityinfra/integration-tests-runner",
+    "altinityinfra/mysql-golang-client",
+    "altinityinfra/mysql-java-client",
+    "altinityinfra/mysql-js-client",
+    "altinityinfra/mysql-php-client",
+    "altinityinfra/postgresql-java-client",
+    "altinityinfra/integration-test",
+    "altinityinfra/kerberos-kdc",
+    "altinityinfra/kerberized-hadoop",
+    "altinityinfra/integration-helper",
+    "altinityinfra/dotnet-client",
 ]
 
 
