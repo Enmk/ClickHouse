@@ -7,6 +7,7 @@ import platform
 import shutil
 import subprocess
 import time
+import sys
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from github import Github
@@ -465,6 +466,9 @@ def main():
     )
     ch_helper = ClickHouseHelper()
     ch_helper.insert_events_into(db="gh-data", table="checks", events=prepared_events)
+
+    if status == "error":
+        sys.exit(1)
 
 
 if __name__ == "__main__":
