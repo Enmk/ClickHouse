@@ -74,7 +74,7 @@ RUN python3 -m pip install \
     kazoo \
     lz4 \
     minio \
-    protobuf==3.19 \
+    protobuf==3.20 \
     psycopg2-binary==2.8.6 \
     pymongo==3.11.0 \
     pytest \
