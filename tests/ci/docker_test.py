@@ -37,31 +37,31 @@ class TestDockerImageCheck(unittest.TestCase):
         self.maxDiff = None
         expected = sorted(
             [
-                di.DockerImage("docker/test/base", "clickhouse/test-base", False),
+                di.DockerImage("docker/test/base", "altinityinfra/test-base", False),
                 di.DockerImage("docker/docs/builder", "clickhouse/docs-builder", True),
                 di.DockerImage(
                     "docker/test/stateless",
                     "clickhouse/stateless-test",
                     False,
-                    "clickhouse/test-base",
+                    "altinityinfra/test-base",
                 ),
                 di.DockerImage(
                     "docker/test/integration/base",
                     "clickhouse/integration-test",
                     False,
-                    "clickhouse/test-base",
+                    "altinityinfra/test-base",
                 ),
                 di.DockerImage(
                     "docker/test/fuzzer",
                     "clickhouse/fuzzer",
                     False,
-                    "clickhouse/test-base",
+                    "altinityinfra/test-base",
                 ),
                 di.DockerImage(
                     "docker/test/keeper-jepsen",
                     "clickhouse/keeper-jepsen-test",
                     False,
-                    "clickhouse/test-base",
+                    "altinityinfra/test-base",
                 ),
                 di.DockerImage(
                     "docker/docs/check",
