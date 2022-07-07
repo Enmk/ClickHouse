@@ -232,6 +232,7 @@ def build_and_push_one_image(
     from_tag_arg = ""
     if child:
         from_tag_arg = f"--build-arg FROM_TAG={version_string} "
+    logging.info(f'From tag: {from_tag_arg}')
 
     with open(build_log, "wb") as bl:
         cmd = (
@@ -251,6 +252,7 @@ def build_and_push_one_image(
             retcode = proc.wait()
 
         if retcode != 0:
+            logging.error(f"Building image failed with error: {retcode}\n{'\n'.join(open(bl, 'rt'))}")
             return False, build_log
 
     logging.info("Processing of %s successfully finished", image.repo)
