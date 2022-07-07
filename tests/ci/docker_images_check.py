@@ -265,7 +265,7 @@ def build_and_push_one_image(
             retcode = proc.wait()
 
         if retcode != 0:
-            logging.error(f"Building image failed with error: {retcode}\n{'\n'.join(open(bl, 'rt'))}")
+            logging.error("Building image failed with error: {}\n{}".format(retcode, '\n'.join(open(bl, 'rt'))))
             return False, build_log
 
     logging.info("Processing of %s successfully finished", image.repo)
