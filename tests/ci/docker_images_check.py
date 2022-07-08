@@ -232,15 +232,12 @@ def build_and_push_one_image(
     from_tag_arg = ""
     if child:
         from_tag_arg = f"--build-arg FROM_TAG={version_string} "
-    logging.info(f'From tag: {from_tag_arg}')
 
     with open(build_log, "wb") as bl:
         cmd = (
             "docker buildx build --builder default "
             f"--label build-url={GITHUB_RUN_URL} "
-#           TODO: fix providing base image
-#           Commented out as a workaround to make it work with Altinity's dockerhub account
-#             f"{from_tag_arg}"
+            f"{from_tag_arg}"
             f"--build-arg BUILDKIT_INLINE_CACHE=1 "
             f"--tag {image.repo}:{version_string} "
             f"--cache-from type=registry,ref={image.repo}:{version_string} "
