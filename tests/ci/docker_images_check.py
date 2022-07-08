@@ -233,7 +233,6 @@ def build_and_push_one_image(
     from_tag_arg = ""
     if child:
         from_tag_arg = f"--build-arg FROM_TAG={version_string} "
-    logging.info(f'From tag: {from_tag_arg}')
 
     cache_from = (
         f"--cache-from type=registry,ref={image.repo}:{version_string} "
@@ -249,9 +248,7 @@ def build_and_push_one_image(
         cmd = (
             "docker buildx build --builder default "
             f"--label build-url={GITHUB_RUN_URL} "
-#           TODO: fix providing base image
-#           Commented out as a workaround to make it work with Altinity's dockerhub account
-#             f"{from_tag_arg}"
+            f"{from_tag_arg}"
             # A hack to invalidate cache, grep for it in docker/ dir
             f"--build-arg CACHE_INVALIDATOR={GITHUB_RUN_URL} "
             f"--tag {image.repo}:{version_string} "
