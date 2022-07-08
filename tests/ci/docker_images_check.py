@@ -240,6 +240,19 @@ def build_and_push_one_image(
             f"{from_tag_arg}"
             f"--build-arg BUILDKIT_INLINE_CACHE=1 "
             f"--tag {image.repo}:{version_string} "
+            # FIXME: many tests utilize packages without specifying version, hence docker pulls :latest
+            # this will fail multiple jobs are going to be executed on different machines and
+            # push different images as latest.
+            # To fix it we may:
+            # - require jobs to be executed on same machine images were built (no parallelism)
+            # - change all the test's code (mostly docker-compose files in integration tests)
+            #   that depend on said images and push version somehow into docker-compose.
+            #   (and that is lots of work and many potential conflicts with upstream)
+            # - tag and push all images as :latest and then just pray that collisions are infrequent.
+            #   and if even if collision happens, image is not that different and would still properly work.
+            #   (^^^ CURRENT SOLUTION ^^^) But this is just a numbers game, it will blow up at some point.
+            # - do something crazy
+            f"--tag {image.repo}:latest "
             f"--cache-from type=registry,ref={image.repo}:{version_string} "
             f"{push_arg}"
             f"--progress plain {image.full_path}"
