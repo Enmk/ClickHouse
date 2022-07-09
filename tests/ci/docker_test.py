@@ -51,30 +51,30 @@ class TestDockerImageCheck(unittest.TestCase):
                     False,
                     "altinityinfra/test-base",
                 ),
-                di.DockerImage(
-                    "docker/test/fuzzer",
-                    "altinityinfra/fuzzer",
-                    False,
-                    "altinityinfra/test-base",
-                ),
+                # di.DockerImage(
+                #     "docker/test/fuzzer",
+                #     "altinityinfra/fuzzer",
+                #     False,
+                #     "altinityinfra/test-base",
+                # ),
                 di.DockerImage(
                     "docker/test/keeper-jepsen",
                     "altinityinfra/keeper-jepsen-test",
                     False,
                     "altinityinfra/test-base",
                 ),
-                di.DockerImage(
-                    "docker/docs/check",
-                    "altinityinfra/docs-check",
-                    False,
-                    "altinityinfra/docs-builder",
-                ),
-                di.DockerImage(
-                    "docker/docs/release",
-                    "altinityinfra/docs-release",
-                    False,
-                    "altinityinfra/docs-builder",
-                ),
+                # di.DockerImage(
+                #     "docker/docs/check",
+                #     "altinityinfra/docs-check",
+                #     False,
+                #     "altinityinfra/docs-builder",
+                # ),
+                # di.DockerImage(
+                #     "docker/docs/release",
+                #     "altinityinfra/docs-release",
+                #     False,
+                #     "altinityinfra/docs-builder",
+                # ),
                 di.DockerImage(
                     "docker/test/stateful",
                     "altinityinfra/stateful-test",
