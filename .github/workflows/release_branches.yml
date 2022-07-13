@@ -170,20 +170,6 @@ jobs:
           sudo rm -fr "$TEMP_PATH" "$CACHES_PATH"
           git -C "$GITHUB_WORKSPACE" submodule sync --recursive
           git -C "$GITHUB_WORKSPACE" submodule update --depth=1 --recursive --init --jobs=10
-          # shellcheck disable=SC2046
-          docker rm -f $(docker ps -a -q) ||:
-          git -C "$GITHUB_WORKSPACE" submodule sync --recursive
-          git -C "$GITHUB_WORKSPACE" submodule update --depth=1 --recursive --init --jobs=10
-          # shellcheck disable=SC2046
-          docker rm -f $(docker ps -a -q) ||:
-          git -C "$GITHUB_WORKSPACE" submodule sync --recursive
-          git -C "$GITHUB_WORKSPACE" submodule update --depth=1 --recursive --init --jobs=10
-          # shellcheck disable=SC2046
-          docker rm -f $(docker ps -a -q) ||:
-          git -C "$GITHUB_WORKSPACE" submodule sync --recursive
-          git -C "$GITHUB_WORKSPACE" submodule update --depth=1 --recursive --init --jobs=10
-          # shellcheck disable=SC2046
-          docker rm -f $(docker ps -a -q) ||:
   ############################################################################################
   ##################################### BUILD REPORTER #######################################
   ############################################################################################
