@@ -13,8 +13,11 @@ issue_18249 = "https://github.com/ClickHouse/ClickHouse/issues/18249"
 issue_18250 = "https://github.com/ClickHouse/ClickHouse/issues/18250"
 issue_18251 = "https://github.com/ClickHouse/ClickHouse/issues/18251"
 issue_24029 = "https://github.com/ClickHouse/ClickHouse/issues/24029"
+issue_39987 = "https://github.com/ClickHouse/ClickHouse/issues/39987"
 
 xfails = {
+    # decrypt
+    "decrypt/invalid parameters/null in ciphertext": [(Fail, issue_39987)],
     # encrypt
     "encrypt/invalid key or iv length for mode/mode=\"'aes-???-gcm'\", key_len=??, iv_len=12, aad=True/iv is too short": [
         (Fail, "known issue")
