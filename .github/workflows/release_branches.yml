@@ -249,7 +249,7 @@ jobs:
   MarkReleaseReady:
     needs:
       - BuilderDebRelease
-      - BuilderDebAarch64
+      # - BuilderDebAarch64
     runs-on: [self-hosted, style-checker]
     steps:
       - name: Clear repository
