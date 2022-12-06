@@ -1,4 +1,4 @@
-name: ReleaseCI
+name: ReleaseBranchCI
 
 env:
   # Force the stdout and stderr streams to be unbuffered
@@ -151,8 +151,8 @@ jobs:
           fetch-depth: 0 # otherwise we will have no info about contributors
       - name: Build
         run: |
-          git -C "$GITHUB_WORKSPACE" submodule sync --recursive
-          git -C "$GITHUB_WORKSPACE" submodule update --depth=1 --recursive --init --jobs=10
+          git -C "$GITHUB_WORKSPACE" submodule sync
+          git -C "$GITHUB_WORKSPACE" submodule update --single-branch --depth=1 --init --jobs=10
           sudo rm -fr "$TEMP_PATH"
           mkdir -p "$TEMP_PATH"
           cp -r "$GITHUB_WORKSPACE" "$TEMP_PATH"
@@ -171,8 +171,7 @@ jobs:
           # shellcheck disable=SC2046
           docker rm -f $(docker ps -a -q) ||:
           sudo rm -fr "$TEMP_PATH" "$CACHES_PATH"
-          git -C "$GITHUB_WORKSPACE" submodule sync --recursive
-          git -C "$GITHUB_WORKSPACE" submodule update --depth=1 --recursive --init --jobs=10
+
   ############################################################################################
   ##################################### Docker images  #######################################
   ############################################################################################
@@ -210,6 +209,7 @@ jobs:
     needs:
       - BuilderDebRelease
     runs-on: [self-hosted, style-checker]
+    if: ${{ success() || failure() }}
     steps:
       - name: Set envs
         run: |
@@ -246,6 +246,21 @@ jobs:
           # shellcheck disable=SC2046
           docker rm -f $(docker ps -a -q) ||:
           sudo rm -fr "$TEMP_PATH"
+  MarkReleaseReady:
+    needs:
+      - BuilderDebRelease
+      - BuilderDebAarch64
+    runs-on: [self-hosted, style-checker]
+    steps:
+      - name: Clear repository
+        run: |
+          sudo rm -fr "$GITHUB_WORKSPACE" && mkdir "$GITHUB_WORKSPACE"
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Mark Commit Release Ready
+        run: |
+          cd "$GITHUB_WORKSPACE/tests/ci"
+          python3 mark_release_ready.py
   ##############################################################################################
   ########################### FUNCTIONAl STATELESS TESTS #######################################
   ##############################################################################################
@@ -452,6 +467,7 @@ jobs:
       - DockerHubPush
       - DockerServerImages
       - BuilderReport
+      - MarkReleaseReady
       - FunctionalStatelessTestRelease
       - FunctionalStatefulTestRelease
       - IntegrationTestsRelease0
