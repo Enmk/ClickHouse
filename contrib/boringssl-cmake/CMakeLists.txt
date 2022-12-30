@@ -18,6 +18,7 @@ if(FIPS_CLICKHOUSE)
 set(BORINGSSL_BUILD_DIR "${CMAKE_BINARY_DIR}/go1.19-boringssl-build")
 set(BORINGSSL_BINARIES_DIR "${BORINGSSL_BUILD_DIR}/output")
 
+message("Will build BoringSSL in FIPS mode according to go1.19 recipe...")
 # build BoringSSL in FIPS mode accoring to the Security Policy:
 # https://csrc.nist.gov/CSRC/media/projects/cryptographic-module-validation-program/documents/security-policies/140sp3678.pdf
 # We re-use golang-1.19 routine, for that we need only 3 files from golang repo, so no need to checkout a full repository:
@@ -26,6 +27,7 @@ set(BORINGSSL_BINARIES_DIR "${BORINGSSL_BUILD_DIR}/output")
 # - src/crypto/internal/boring/goboringcrypto.h - required for producing golangs syso (whuch we do not need), but build will fail without it.
 # hashsums were calculated on 28 Dec 2022
 
+message("Downloading build files from go1.19 github...")
 file(DOWNLOAD
     https://raw.githubusercontent.com/golang/go/go1.19/src/crypto/internal/boring/goboringcrypto.h
     ${BORINGSSL_BUILD_DIR}/goboringcrypto.h
@@ -71,10 +73,18 @@ docker cp $id:/boring/boringssl/include $OUTPUT_DIR
 docker rm $id"
 )
 
+# patch a single file in krb5 that relies on file missing from this version of BoringSSL
+SET(krb5_filb_to_patch ${PROJECT_SOURCE_DIR}/contrib/krb5/src/lib/crypto/openssl/enc_provider/aes.c)
+message("Patching ${krb5_filb_to_patch} to allow building against older version of BoringSSL")
+file(READ ${krb5_filb_to_patch} FILE_CONTENTS)
+string(REPLACE "#include <openssl/modes.h>" "//#include <openssl/modes.h>" FILE_CONTENTS "${FILE_CONTENTS}")
+file(WRITE ${krb5_filb_to_patch} "${FILE_CONTENTS}")
+
+message("Creating directory for BoringSSL binaries and includes in ${BORINGSSL_BINARIES_DIR}")
 execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${BORINGSSL_BINARIES_DIR}/include")
 
 add_custom_target(build-boringssl
-    COMMENT "Build BoringSSL in FIPS mode with docker (using go1.19 build suite)"
+#    COMMENT "Build BoringSSL in FIPS mode with docker (using go1.19 build suite)"
     DEPENDS ${BORINGSSL_BINARIES_DIR}/libssl.a ${BORINGSSL_BINARIES_DIR}/libcrypto.a
 )
 
@@ -83,6 +93,7 @@ add_custom_command(
         "${BORINGSSL_BUILD_DIR}/output/libssl.a"
         "${BORINGSSL_BUILD_DIR}/output/libcrypto.a"
         "${BORINGSSL_BUILD_DIR}/output/libdecrepit.a"
+    COMMENT "Building BoringSSL in FIPS mode using Docker"
     COMMAND bash -c "chmod +x ${BORINGSSL_BUILD_DIR}/build_boringssl_fips.sh ${BORINGSSL_BUILD_DIR}/build.sh"
     COMMAND bash -c "${BORINGSSL_BUILD_DIR}/build_boringssl_fips.sh ${BORINGSSL_BINARIES_DIR}"
     WORKING_DIRECTORY ${BORINGSSL_BUILD_DIR}
