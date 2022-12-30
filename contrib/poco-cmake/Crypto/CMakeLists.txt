@@ -32,6 +32,12 @@ if (ENABLE_SSL)
     target_link_libraries (_poco_crypto PUBLIC Poco::Foundation OpenSSL::SSL OpenSSL::Crypto)
 
     message (STATUS "Using Poco::Crypto")
+
+    if(FIPS_CLICKHOUSE)
+        # Due to OpenSSLInitializer.h
+        target_compile_definitions(_poco_crypto PUBLIC OPENSSL_FIPS=1)
+    endif() # FIPS_CLICKHOUSE
+
 else ()
     add_library (_poco_crypto INTERFACE)
     add_library (Poco::Crypto ALIAS _poco_crypto)
