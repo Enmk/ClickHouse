@@ -486,7 +486,7 @@ void Server::initialize(Poco::Util::Application & self)
 
     if (Poco::Crypto::OpenSSLInitializer::isFIPSEnabled())
     {
-        LOG_INFO(&logger(), "Stating in FIPS mode, KAT test result: {}", BORINGSSL_self_test());
+        LOG_INFO(&logger(), "Starting in FIPS mode, KAT test result: {}", BORINGSSL_self_test());
     }
 }
 
