@@ -1,4 +1,36 @@
 #!/usr/bin/env bash
+
+set -e
+
+mkdir -p /etc/docker/
+echo '{
+    "ipv6": true,
+    "fixed-cidr-v6": "fd00::/8",
+    "ip-forward": true,
+    "log-level": "debug",
+    "insecure-registries" : ["dockerhub-proxy.dockerhub-proxy-zone:5000"],
+    "registry-mirrors" : ["http://dockerhub-proxy.dockerhub-proxy-zone:5000"]
+}' | dd of=/etc/docker/daemon.json 2>/dev/null
+
+# In case of test hung it is convenient to use pytest --pdb to debug it,
+# and on hung you can simply press Ctrl-C and it will spawn a python pdb,
+# but on SIGINT dockerd will exit, so ignore it to preserve the daemon.
+trap '' INT
+dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --default-address-pool base=172.17.0.0/12,size=24 &
+
+set +e
+reties=0
+while true; do
+    docker info &>/dev/null && break
+    reties=$((reties+1))
+    if [[ $reties -ge 100 ]]; then # 10 sec max
+        echo "Can't start docker daemon, timeout exceeded." >&2
+        exit 1;
+    fi
+    sleep 0.1
+done
+set -e
+
 set -x -e
 
 exec &> >(ts)

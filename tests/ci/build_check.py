@@ -63,7 +63,7 @@ def get_packager_cmd(
     comp = build_config["compiler"]
     cmd = (
         f"cd {packager_path} && ./packager --output-dir={output_path} "
-        f"--package-type={package_type} --compiler={comp}"
+        f"--package-type={package_type} --compiler={comp} --fips"
     )
 
     if build_config["build_type"]:
