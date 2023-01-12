@@ -89,6 +89,7 @@ def run_docker_image_with_env(
     else:
         user = f"{os.geteuid()}:{os.getegid()}"
 
+    # Added v /var/run/docker.sock:/var/run/docker.sock, required for docker-in-docker to build BoringSSL in FIPS mode.
     cmd = (
         f"docker run -v /var/run/docker.sock:/var/run/docker.sock --network=host --user={user} --rm --volume={output}:/output "
         f"--volume={ch_root}:/build --volume={ccache_dir}:/ccache {env_part} "

@@ -3,26 +3,6 @@
 ARG FROM_TAG=latest
 FROM altinityinfra/test-util:$FROM_TAG
 
-# Rust toolchain and libraries
-ENV RUSTUP_HOME=/rust/rustup
-ENV CARGO_HOME=/rust/cargo
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-RUN chmod 777 -R /rust
-ENV PATH="/rust/cargo/env:${PATH}"
-ENV PATH="/rust/cargo/bin:${PATH}"
-RUN rustup target add aarch64-unknown-linux-gnu && \
-        rustup target add x86_64-apple-darwin && \
-        rustup target add x86_64-unknown-freebsd && \
-        rustup target add aarch64-apple-darwin && \
-        rustup target add powerpc64le-unknown-linux-gnu
-RUN apt-get install \
-        gcc-aarch64-linux-gnu \
-        build-essential \
-        libc6 \
-        libc6-dev \
-        libc6-dev-arm64-cross \
-        --yes
-
 # Install CMake 3.20+ for Rust compilation
 # Used https://askubuntu.com/a/1157132 as reference
 RUN apt purge cmake --yes
