@@ -95,5 +95,6 @@ RUN mkdir /workdir && chmod 777 /workdir
 WORKDIR /workdir
 
 COPY build.sh /
+COPY daemon.json /etc/docker/
 
 CMD ["bash", "-c", "/build.sh 2>&1"]

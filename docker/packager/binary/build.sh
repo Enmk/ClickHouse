@@ -2,16 +2,6 @@
 
 set -e
 
-mkdir -p /etc/docker/
-echo '{
-    "ipv6": true,
-    "fixed-cidr-v6": "fd00::/8",
-    "ip-forward": true,
-    "log-level": "debug",
-    "insecure-registries" : ["dockerhub-proxy.dockerhub-proxy-zone:5000"],
-    "registry-mirrors" : ["http://dockerhub-proxy.dockerhub-proxy-zone:5000"]
-}' | dd of=/etc/docker/daemon.json 2>/dev/null
-
 # In case of test hung it is convenient to use pytest --pdb to debug it,
 # and on hung you can simply press Ctrl-C and it will spawn a python pdb,
 # but on SIGINT dockerd will exit, so ignore it to preserve the daemon.
