@@ -89,8 +89,9 @@ def run_docker_image_with_env(
     else:
         user = f"{os.geteuid()}:{os.getegid()}"
 
+    # Added v /var/run/docker.sock:/var/run/docker.sock, required for docker-in-docker to build BoringSSL in FIPS mode.
     cmd = (
-        f"docker run --network=host --user={user} --rm --volume={output}:/output "
+        f"docker run -v /var/run/docker.sock:/var/run/docker.sock --network=host --user={user} --rm --volume={output}:/output "
         f"--volume={ch_root}:/build --volume={ccache_dir}:/ccache {env_part} "
         f"{interactive} {image_name}:{docker_image_version}"
     )
@@ -124,6 +125,7 @@ def parse_env_variables(
     additional_pkgs,
     with_coverage,
     with_binaries,
+    fips,
 ):
     DARWIN_SUFFIX = "-darwin"
     DARWIN_ARM_SUFFIX = "-darwin-aarch64"
@@ -189,6 +191,10 @@ def parse_env_variables(
     else:
         cc = compiler
         result.append("DEB_ARCH=amd64")
+
+    if fips:
+        cmake_flags.append("-DLINKER_NAME=/usr/lib/llvm-14/bin/ld.lld")
+        cmake_flags.append("-DFIPS_CLICKHOUSE=ON")
 
     cxx = cc.replace("gcc", "g++").replace("clang", "clang++")
 
@@ -376,6 +382,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--as-root", action="store_true", help="if the container should run as root"
     )
+    parser.add_argument(
+        "--fips", action="store_true", help="enbale FIPS build", default=False
+    )
 
     args = parser.parse_args()
 
@@ -412,6 +421,7 @@ if __name__ == "__main__":
         args.additional_pkgs,
         args.with_coverage,
         args.with_binaries,
+        args.fips,
     )
 
     pre_build(args.clickhouse_repo_path, env_prepared)
