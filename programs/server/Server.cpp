@@ -484,7 +484,7 @@ void Server::initialize(Poco::Util::Application & self)
         Poco::Environment::osVersion(),
         Poco::Environment::osArchitecture());
 
-    if (Poco::Crypto::OpenSSLInitializer::isFIPSEnabled())
+    if (FIPS_mode())
     {
         LOG_INFO(&logger(), "Starting in FIPS mode, KAT test result: {}", BORINGSSL_self_test());
     }

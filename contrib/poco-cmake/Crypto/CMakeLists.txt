@@ -33,10 +33,11 @@ if (ENABLE_SSL)
 
     message (STATUS "Using Poco::Crypto")
 
-    if(FIPS_CLICKHOUSE)
-        # Due to OpenSSLInitializer.h
-        target_compile_definitions(_poco_crypto PUBLIC OPENSSL_FIPS=1)
-    endif() # FIPS_CLICKHOUSE
+#    Setting OPENSSL_FIPS affects Poco to choose weak TLSv1, which makes CH harder to work with
+#    if(FIPS_CLICKHOUSE)
+#        # Due to OpenSSLInitializer.h
+#        target_compile_definitions(_poco_crypto PUBLIC OPENSSL_FIPS=1)
+#    endif() # FIPS_CLICKHOUSE
 
 else ()
     add_library (_poco_crypto INTERFACE)
