@@ -15,7 +15,7 @@
 #include "ArrowBufferedStreams.h"
 #include "ArrowColumnToCHColumn.h"
 #include <DataTypes/NestedUtils.h>
-#include <boost/range/irange.hpp>
+
 
 namespace DB
 {
