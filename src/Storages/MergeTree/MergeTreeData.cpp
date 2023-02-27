@@ -1941,7 +1941,7 @@ size_t MergeTreeData::clearOldBrokenPartsFromDetachedDirecory()
 
     for (auto & [old_name, new_name, disk] : renamed_parts.old_and_new_names)
     {
-        removeDetachedPart(disk, fs::path(relative_data_path) / "detached" / new_name / "", old_name, false);
+        removeDetachedPart(disk, fs::path(relative_data_path) / "detached" / new_name / "", old_name);
         LOG_DEBUG(log, "Removed broken detached part {} due to a timeout for broken detached parts", old_name);
         old_name.clear();
     }
@@ -3136,7 +3136,23 @@ void MergeTreeData::restoreAndActivatePart(const DataPartPtr & part, DataPartsLo
     modifyPartState(part, DataPartState::Active);
 }
 
-void MergeTreeData::forgetPartAndMoveToDetached(const MergeTreeData::DataPartPtr & part_to_detach, const String & prefix, bool restore_covered)
+
+void MergeTreeData::outdateBrokenPartAndCloneToDetached(const DataPartPtr & part_to_detach, const String & prefix)
+{
+    auto metadata_snapshot = getInMemoryMetadataPtr();
+    if (prefix.empty())
+        LOG_INFO(log, "Cloning part {} to {} and making it obsolete.", part_to_detach->data_part_storage->getPartDirectory(), part_to_detach->name);
+    else
+        LOG_INFO(log, "Cloning part {} to {}_{} and making it obsolete.", part_to_detach->data_part_storage->getPartDirectory(), prefix, part_to_detach->name);
+
+    part_to_detach->makeCloneInDetached(prefix, metadata_snapshot);
+
+    DataPartsLock lock = lockParts();
+    if (part_to_detach->getState() == DataPartState::Active)
+        removePartsFromWorkingSet(NO_TRANSACTION_RAW, {part_to_detach}, true, &lock);
+}
+
+void MergeTreeData::forcefullyMovePartToDetachedAndRemoveFromMemory(const MergeTreeData::DataPartPtr & part_to_detach, const String & prefix, bool restore_covered)
 {
     if (prefix.empty())
         LOG_INFO(log, "Renaming {} to {} and forgetting it.", part_to_detach->data_part_storage->getPartDirectory(), part_to_detach->name);
@@ -4629,7 +4645,7 @@ void MergeTreeData::dropDetached(const ASTPtr & partition, bool part, ContextPtr
 
     for (auto & [old_name, new_name, disk] : renamed_parts.old_and_new_names)
     {
-        bool keep_shared = removeDetachedPart(disk, fs::path(relative_data_path) / "detached" / new_name / "", old_name, false);
+        bool keep_shared = removeDetachedPart(disk, fs::path(relative_data_path) / "detached" / new_name / "", old_name);
         LOG_DEBUG(log, "Dropped detached part {}, keep shared data: {}", old_name, keep_shared);
         old_name.clear();
     }
@@ -6285,7 +6301,7 @@ PartitionCommandsResultInfo MergeTreeData::unfreezeAll(
     return unfreezePartitionsByMatcher([] (const String &) { return true; }, backup_name, local_context);
 }
 
-bool MergeTreeData::removeDetachedPart(DiskPtr disk, const String & path, const String &, bool)
+bool MergeTreeData::removeDetachedPart(DiskPtr disk, const String & path, const String &)
 {
     disk->removeRecursive(path);
 
@@ -6300,7 +6316,7 @@ PartitionCommandsResultInfo MergeTreeData::unfreezePartitionsByMatcher(MatcherFn
 
     auto disks = getStoragePolicy()->getDisks();
 
-    return Unfreezer().unfreezePartitionsFromTableDirectory(matcher, backup_name, disks, backup_path, local_context);
+    return Unfreezer(local_context).unfreezePartitionsFromTableDirectory(matcher, backup_name, disks, backup_path);
 }
 
 bool MergeTreeData::canReplacePartition(const DataPartPtr & src_part) const
