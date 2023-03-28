@@ -74,8 +74,6 @@ Chunk ParquetBlockInputFormat::generate()
     }
     else
     {
-        current_record_batch_reader.reset();
-        file_reader.reset();
         return {};
     }
 
@@ -92,6 +90,7 @@ void ParquetBlockInputFormat::resetParser()
     IInputFormat::resetParser();
 
     file_reader.reset();
+    current_record_batch_reader.reset();
     column_indices.clear();
     row_group_current = 0;
     block_missing_values.clear();

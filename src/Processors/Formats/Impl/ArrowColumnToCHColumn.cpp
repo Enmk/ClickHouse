@@ -89,7 +89,7 @@ static ColumnWithTypeAndName readColumnWithNumericData(std::shared_ptr<arrow::Ch
 
         /// buffers[0] is a null bitmap and buffers[1] are actual values
         std::shared_ptr<arrow::Buffer> buffer = chunk->data()->buffers[1];
-        const auto * raw_data = reinterpret_cast<const NumericType *>(buffer->data());
+        const auto * raw_data = reinterpret_cast<const NumericType *>(buffer->data()) + chunk->offset();
         column_data.insert_assume_reserved(raw_data, raw_data + chunk->length());
     }
     return {std::move(internal_column), std::move(internal_type), column_name};
@@ -346,7 +346,7 @@ static ColumnWithTypeAndName readColumnWithIndexesDataImpl(std::shared_ptr<arrow
 
         /// buffers[0] is a null bitmap and buffers[1] are actual values
         std::shared_ptr<arrow::Buffer> buffer = chunk->data()->buffers[1];
-        const auto * data = reinterpret_cast<const NumericType *>(buffer->data());
+        const auto * data = reinterpret_cast<const NumericType *>(buffer->data()) + chunk->offset();
 
         /// Check that indexes are correct (protection against corrupted files)
         for (int64_t i = 0; i != chunk->length(); ++i)
