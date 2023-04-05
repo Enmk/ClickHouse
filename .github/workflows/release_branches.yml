@@ -935,7 +935,7 @@ jobs:
       - name: Run ${{ env.SUITE }} suite
         run: python3 
               -u ${{ env.SUITE }}/benchmark.py
-              --storage gcs
+              --storage s3_gcs
               --gcs-uri ${{ secrets.REGRESSION_GCS_URI }}
               --gcs-key-id ${{ secrets.REGRESSION_GCS_KEY_ID }}
               --gcs-key-secret ${{ secrets.REGRESSION_GCS_KEY_SECRET }}
