@@ -24,8 +24,6 @@ on: # yamllint disable-line rule:truthy
   push:
     branches:
       - 'releases/22.8**'
-  schedule:
-    - cron: '0 0 * * 0'
 
 jobs:
   # DockerHubPushAarch64:
@@ -137,7 +135,7 @@ jobs:
           REPO_COPY=${{runner.temp}}/build_check/ClickHouse
           CACHES_PATH=${{runner.temp}}/../ccaches
           BUILD_NAME=package_release
-          CLICKHOUSE_STABLE_VERSION_SUFFIX=altinityfips
+          CLICKHOUSE_STABLE_VERSION_SUFFIX=altinitystable
           EOF
       - name: Download changed images
         uses: actions/download-artifact@v3
@@ -232,7 +230,8 @@ jobs:
       - name: Check docker clickhouse/clickhouse-server building
         run: |
           cd "$GITHUB_WORKSPACE/tests/ci"
-          python3 docker_server.py --release-type head --no-push
+          python3 docker_server.py --release-type head --no-push \
+            --image-repo clickhouse/clickhouse-server --image-path docker/server
           python3 docker_server.py --release-type head --no-push --no-ubuntu \
             --image-repo clickhouse/clickhouse-keeper --image-path docker/keeper
       - name: Cleanup
