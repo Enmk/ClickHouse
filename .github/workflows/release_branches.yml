@@ -2206,7 +2206,7 @@ jobs:
         run: python3 
               -u ${{ env.SUITE }}/regression.py
               --clickhouse-binary-path ${{ env.clickhouse_binary_path }}
-              --with_minio
+              --with-minio
               --test-to-end
               --local
               --collect-service-logs 
@@ -2271,7 +2271,7 @@ jobs:
               --log raw.log
               --with-s3amazon
               --aws-s3-access-key ${{ secrets.REGRESSION_AWS_S3_SECRET_ACCESS_KEY }}
-              --aws-s3-key-id ${{ secrets.AWS_S3_KEY_ID }}
+              --aws-s3-key-id ${{ secrets.REGRESSION_AWS_S3_KEY_ID }}
               --aws-s3-uri https://s3.${{ secrets.REGRESSION_AWS_S3_REGION}}.amazonaws.com/${{ secrets.REGRESSION_AWS_S3_BUCKET }}/data/
       - name: Create and upload logs
         if: always()
