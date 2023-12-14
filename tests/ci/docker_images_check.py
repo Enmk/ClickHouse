@@ -144,15 +144,20 @@ def get_changed_docker_images(
 
 
 def gen_versions(
-    pr_info: PRInfo, suffix: Optional[str]
+    pr_info: PRInfo, suffix: Optional[str],
+    override_versions : Optional[List[str]]
 ) -> Tuple[List[str], Union[str, List[str]]]:
-    pr_commit_version = str(pr_info.number) + "-" + pr_info.sha
-    # The order is important, PR number is used as cache during the build
-    versions = [str(pr_info.number), pr_commit_version]
-    result_version = pr_commit_version  # type: Union[str, List[str]]
-    if pr_info.number == 0 and pr_info.base_ref == "master":
-        # First get the latest for cache
-        versions.insert(0, "latest")
+
+    if override_versions:
+        versions = override_versions
+    else:
+        pr_commit_version = str(pr_info.number) + "-" + pr_info.sha
+        # The order is important, PR number is used as cache during the build
+        versions = [str(pr_info.number), pr_commit_version]
+        result_version = pr_commit_version  # type: Union[str, List[str]]
+        if pr_info.number == 0 and pr_info.base_ref == "master":
+            # First get the latest for cache
+            versions.insert(0, "latest")
 
     if suffix:
         # We should build architecture specific images separately and merge a
@@ -380,6 +385,7 @@ def parse_args() -> argparse.Namespace:
         default=argparse.SUPPRESS,
         help="don't push images to docker hub",
     )
+    parser.add_argument('--image-versions', action='append', help='Tag to assign to newly built images (also tag of base images to build from)')
 
     return parser.parse_args()
 
@@ -424,7 +430,7 @@ def main():
             "Has changed images: %s", ", ".join([im.path for im in changed_images])
         )
 
-    image_versions, result_version = gen_versions(pr_info, args.suffix)
+    image_versions, result_version = gen_versions(pr_info, args.suffix, args.image_versions)
 
     result_images = {}
     test_results = []  # type: TestResults
