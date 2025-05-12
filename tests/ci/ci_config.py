@@ -388,7 +388,7 @@ class CI:
             required_builds=[BuildNames.PACKAGE_TSAN],
             num_batches=8,
         ),
-        JobNames.INTEGRATION_TEST_AARCH64: CommonJobConfigs.INTEGRATION_TEST.with_properties(
+        JobNames.INTEGRATION_TEST_AARCH64_DISTRIBUTED_PLAN: CommonJobConfigs.INTEGRATION_TEST.with_properties(
             required_builds=[BuildNames.PACKAGE_AARCH64],
             num_batches=8,
             runner_type=Runners.FUNC_TESTER_AARCH64,
