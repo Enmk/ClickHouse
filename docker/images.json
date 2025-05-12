@@ -1,0 +1,170 @@
+{
+    "docker/packager/binary-builder": {
+        "name": "altinityinfra/binary-builder",
+        "dependent": []
+    },
+    "docker/packager/cctools": {
+        "name": "altinityinfra/cctools",
+        "dependent": []
+    },
+    "docker/test/compatibility/centos": {
+        "name": "altinityinfra/test-old-centos",
+        "dependent": []
+    },
+    "docker/test/compatibility/ubuntu": {
+        "name": "altinityinfra/test-old-ubuntu",
+        "dependent": []
+    },
+    "docker/test/integration/base": {
+        "only_amd64": true,
+        "name": "altinityinfra/integration-test",
+        "dependent": []
+    },
+    "docker/test/fuzzer": {
+        "name": "altinityinfra/fuzzer",
+        "dependent": []
+    },
+    "docker/test/libfuzzer": {
+        "name": "altinityinfra/libfuzzer",
+        "dependent": []
+    },
+    "docker/test/performance-comparison": {
+        "name": "altinityinfra/performance-comparison",
+        "dependent": []
+    },
+    "docker/test/util": {
+        "name": "altinityinfra/test-util",
+        "dependent": [
+            "docker/test/base",
+            "docker/test/fasttest"
+        ]
+    },
+    "docker/test/stateless": {
+        "name": "altinityinfra/stateless-test",
+        "dependent": [
+            "docker/test/stateful"
+        ]
+    },
+    "docker/test/stateful": {
+        "name": "altinityinfra/stateful-test",
+        "dependent": [
+            "docker/test/stress"
+        ]
+    },
+    "docker/test/unit": {
+        "name": "altinityinfra/unit-test",
+        "dependent": []
+    },
+    "docker/test/stress": {
+        "name": "altinityinfra/stress-test",
+        "dependent": []
+    },
+    "docker/test/integration/runner": {
+        "only_amd64": true,
+        "name": "altinityinfra/integration-tests-runner",
+        "dependent": []
+    },
+    "docker/test/fasttest": {
+        "name": "altinityinfra/fasttest",
+        "dependent": [
+            "docker/packager/binary-builder"
+        ]
+    },
+    "docker/test/style": {
+        "name": "altinityinfra/style-test",
+        "dependent": []
+    },
+    "docker/test/integration/s3_proxy": {
+        "name": "altinityinfra/s3-proxy",
+        "dependent": []
+    },
+    "docker/test/integration/resolver": {
+        "name": "altinityinfra/python-bottle",
+        "dependent": []
+    },
+    "docker/test/integration/helper_container": {
+        "only_amd64": true,
+        "name": "altinityinfra/integration-helper",
+        "dependent": []
+    },
+    "docker/test/integration/mysql_golang_client": {
+        "name": "altinityinfra/mysql-golang-client",
+        "dependent": []
+    },
+    "docker/test/integration/dotnet_client": {
+        "name": "altinityinfra/dotnet-client",
+        "dependent": []
+    },
+    "docker/test/integration/mysql_java_client": {
+        "name": "altinityinfra/mysql-java-client",
+        "dependent": []
+    },
+    "docker/test/integration/mysql_js_client": {
+        "name": "altinityinfra/mysql-js-client",
+        "dependent": []
+    },
+    "docker/test/integration/mysql_php_client": {
+        "name": "altinityinfra/mysql-php-client",
+        "dependent": []
+    },
+    "docker/test/integration/postgresql_java_client": {
+        "name": "altinityinfra/postgresql-java-client",
+        "dependent": []
+    },
+    "docker/test/integration/kerberos_kdc": {
+        "only_amd64": true,
+        "name": "altinityinfra/kerberos-kdc",
+        "dependent": []
+    },
+    "docker/test/base": {
+         "name": "altinityinfra/test-base",
+         "dependent": [
+            "docker/test/clickbench",
+            "docker/test/fuzzer",
+            "docker/test/integration/base",
+            "docker/test/keeper-jepsen",
+            "docker/test/libfuzzer",
+            "docker/test/server-jepsen",
+            "docker/test/sqllogic",
+            "docker/test/sqltest",
+            "docker/test/stateless",
+            "docker/test/unit"
+         ]
+    },
+    "docker/test/sqlancer": {
+        "name": "altinityinfra/sqlancer-test",
+        "dependent": []
+    },
+    "docker/test/keeper-jepsen": {
+        "name": "altinityinfra/keeper-jepsen-test",
+        "dependent": []
+    },
+    "docker/test/server-jepsen": {
+        "name": "altinityinfra/server-jepsen-test",
+        "dependent": []
+    },
+    "docker/test/clickbench": {
+        "name": "altinityinfra/clickbench",
+        "dependent": []
+    },
+    "docker/test/install/deb": {
+        "name": "altinityinfra/install-deb-test",
+        "dependent": []
+    },
+    "docker/test/install/rpm": {
+        "name": "altinityinfra/install-rpm-test",
+        "dependent": []
+    },
+    "docker/test/sqllogic": {
+        "name": "altinityinfra/sqllogic-test",
+        "dependent": []
+    },
+    "docker/test/sqltest": {
+        "name": "altinityinfra/sqltest",
+        "dependent": []
+    },
+    "docker/test/integration/nginx_dav": {
+        "name": "altinityinfra/nginx-dav",
+        "dependent": []
+    }
+}
