@@ -1,6 +1,5 @@
-# docker build -t clickhouse/integration-tests-runner .
-ARG FROM_TAG=latest
-FROM clickhouse/test-util:$FROM_TAG
+# docker build -t altinityinfra/integration-tests-runner .
+FROM ubuntu:22.04
 
 # ARG for quick switch to a given ubuntu mirror
 ARG apt_archive="http://archive.ubuntu.com"
@@ -87,7 +86,7 @@ COPY modprobe.sh /usr/local/bin/modprobe
 COPY dockerd-entrypoint.sh /usr/local/bin/
 COPY misc/ /misc/
 
-COPY --from=clickhouse/cctools:13cfebfd8f1bbc65ab49 /opt/gdb /opt/gdb
+COPY --from=altinityinfra/cctools:0de95b3aeb28 /opt/gdb /opt/gdb
 ENV PATH="/opt/gdb/bin:${PATH}"
 
 # Same options as in test/base/Dockerfile
