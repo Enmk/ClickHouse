@@ -41,7 +41,7 @@ SECRET_CI_DB_URL = "CHECKS_DATABASE_HOST"
 SECRET_CI_DB_USER = "CHECKS_DATABASE_USER"
 SECRET_CI_DB_PASSWORD = "CHECKS_DATABASE_PASSWORD"
 
-# USE_CUSTOM_GH_AUTH = True
+USE_CUSTOM_GH_AUTH = False
 # SECRET_GH_APP_ID: str = "woolenwolf_gh_app.clickhouse-app-id"
 # SECRET_GH_APP_PEM_KEY: str = "woolenwolf_gh_app.clickhouse-app-key"
 
