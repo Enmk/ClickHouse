@@ -1,15 +1,16 @@
 from praktika import Artifact, Docker, Job, Secret
 from praktika.utils import MetaClasses, Utils
+from settings import altinity_overrides
 
 # i.e. "ClickHouse/ci/tmp"
 TEMP_DIR = f"{Utils.cwd()}/ci/tmp"  # == _Settings.TEMP_DIR != env_helper.TEMP_PATH
 
-SYNC = "CH Inc sync"
+SYNC = "Altinity sync"
 
-S3_BUCKET_NAME = "clickhouse-builds"
-S3_REPORT_BUCKET_NAME = "clickhouse-test-reports"
-S3_BUCKET_HTTP_ENDPOINT = "clickhouse-builds.s3.amazonaws.com"
-S3_REPORT_BUCKET_HTTP_ENDPOINT = "s3.amazonaws.com/clickhouse-test-reports"
+S3_BUCKET_NAME = altinity_overrides.S3_BUCKET_NAME
+S3_REPORT_BUCKET_NAME = altinity_overrides.S3_REPORT_BUCKET_NAME
+S3_BUCKET_HTTP_ENDPOINT = altinity_overrides.S3_BUCKET_HTTP_ENDPOINT
+S3_REPORT_BUCKET_HTTP_ENDPOINT = altinity_overrides.S3_REPORT_BUCKET_HTTP_ENDPOINT
 
 
 class RunnerLabels:
@@ -28,7 +29,7 @@ class CIFiles:
     UNIT_TESTS_BIN = f"{TEMP_DIR}/build/src/unit_tests_dbms"
 
 
-BASE_BRANCH = "master"
+BASE_BRANCH = altinity_overrides.BASE_BRANCH
 
 azure_secret = Secret.Config(
     name="azure_connection_string",
@@ -37,19 +38,19 @@ azure_secret = Secret.Config(
 
 SECRETS = [
     Secret.Config(
-        name="DOCKER_PASSWORD",
+        name=altinity_overrides.DOCKER_PASSWORD,
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name="CLICKHOUSE_TEST_STAT_URL",
+        name=altinity_overrides.CLICKHOUSE_TEST_STAT_URL,
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name="CLICKHOUSE_TEST_STAT_LOGIN",
+        name=altinity_overrides.CLICKHOUSE_TEST_STAT_LOGIN,
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name="CLICKHOUSE_TEST_STAT_PASSWORD",
+        name=altinity_overrides.CLICKHOUSE_TEST_STAT_PASSWORD,
         type=Secret.Type.GH_SECRET,
     ),
     azure_secret,
