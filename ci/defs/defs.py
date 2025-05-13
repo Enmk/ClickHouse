@@ -32,35 +32,35 @@ BASE_BRANCH = "master"
 
 azure_secret = Secret.Config(
     name="azure_connection_string",
-    type=Secret.Type.AWS_SSM_VAR,
+    type=Secret.Type.GH_SECRET,
 )
 
 SECRETS = [
+    # Secret.Config(
+    #     name="dockerhub_robot_password",
+    #     type=Secret.Type.GH_SECRET,
+    # ),
     Secret.Config(
-        name="dockerhub_robot_password",
-        type=Secret.Type.AWS_SSM_VAR,
+        name="CHECKS_DATABASE_HOST",
+        type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name="clickhouse-test-stat-url",
-        type=Secret.Type.AWS_SSM_VAR,
+        name="CHECKS_DATABASE_USER",
+        type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name="clickhouse-test-stat-login",
-        type=Secret.Type.AWS_SSM_VAR,
-    ),
-    Secret.Config(
-        name="clickhouse-test-stat-password",
-        type=Secret.Type.AWS_SSM_VAR,
+        name="CHECKS_DATABASE_PASSWORD",
+        type=Secret.Type.GH_SECRET,
     ),
     azure_secret,
-    Secret.Config(
-        name="woolenwolf_gh_app.clickhouse-app-id",
-        type=Secret.Type.AWS_SSM_SECRET,
-    ),
-    Secret.Config(
-        name="woolenwolf_gh_app.clickhouse-app-key",
-        type=Secret.Type.AWS_SSM_SECRET,
-    ),
+    # Secret.Config(
+    #     name="woolenwolf_gh_app.clickhouse-app-id",
+    #     type=Secret.Type.AWS_SSM_SECRET,
+    # ),
+    # Secret.Config(
+    #     name="woolenwolf_gh_app.clickhouse-app-key",
+    #     type=Secret.Type.AWS_SSM_SECRET,
+    # ),
 ]
 
 DOCKERS = [
