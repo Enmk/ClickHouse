@@ -30,6 +30,7 @@ env:
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   ROBOT_TOKEN: ${{ secrets.ROBOT_TOKEN }}
   GH_TOKEN: ${{ github.token }}
+  azure_connection_string: "placeholder"
 
 # Allow updating GH commit statuses and PR comments to post an actual job reports link
 permissions: write-all
