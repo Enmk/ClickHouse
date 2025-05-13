@@ -42,15 +42,15 @@ SECRETS = [
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name=altinity_overrides.CLICKHOUSE_TEST_STAT_URL,
+        name=altinity_overrides.SECRET_CI_DB_URL,
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name=altinity_overrides.CLICKHOUSE_TEST_STAT_LOGIN,
+        name=altinity_overrides.SECRET_CI_DB_USER,
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name=altinity_overrides.CLICKHOUSE_TEST_STAT_PASSWORD,
+        name=altinity_overrides.SECRET_CI_DB_PASSWORD,
         type=Secret.Type.GH_SECRET,
     ),
     azure_secret,
