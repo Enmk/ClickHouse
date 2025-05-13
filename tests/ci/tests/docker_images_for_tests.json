@@ -39,14 +39,7 @@
     "docker/test/stateless": {
         "name": "altinityinfra/stateless-test",
         "dependent": [
-            "docker/test/stateful",
             "docker/test/unit"
-        ]
-    },
-    "docker/test/stateful": {
-        "name": "altinityinfra/stateful-test",
-        "dependent": [
-            "docker/test/stress"
         ]
     },
     "docker/test/unit": {
@@ -129,14 +122,6 @@
     },
     "docker/test/keeper-jepsen": {
         "name": "altinityinfra/keeper-jepsen-test",
-        "dependent": []
-    },
-    "docker/docs/check": {
-        "name": "altinityinfra/docs-check",
-        "dependent": []
-    },
-    "docker/docs/release": {
-        "name": "altinityinfra/docs-release",
         "dependent": []
     },
     "docker/test/sqllogic": {

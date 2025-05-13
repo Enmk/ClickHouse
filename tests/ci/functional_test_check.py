@@ -85,7 +85,7 @@ def get_image_name(check_name: str) -> str:
     if "stateless" in check_name.lower() or "validation" in check_name.lower():
         return "altinityinfra/stateless-test"
     if "stateful" in check_name.lower():
-        return "altinityinfra/stateful-test"
+        return "altinityinfra/stateless-test"
     raise ValueError(f"Cannot deduce image name based on check name {check_name}")
 
 

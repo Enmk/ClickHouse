@@ -1,7 +1,7 @@
 # rebuild in #33610
 # docker build -t altinityinfra/upgrade-check .
 ARG FROM_TAG=latest
-FROM altinityinfra/stateful-test:$FROM_TAG
+FROM altinityinfra/stateless-test:$FROM_TAG
 
 RUN apt-get update -y \
     && env DEBIAN_FRONTEND=noninteractive \
