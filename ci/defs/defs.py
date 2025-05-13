@@ -41,15 +41,15 @@ SECRETS = [
     #     type=Secret.Type.GH_SECRET,
     # ),
     Secret.Config(
-        name="CHECKS_DATABASE_HOST",
+        name="CLICKHOUSE_TEST_STAT_URL",
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name="CHECKS_DATABASE_USER",
+        name="CLICKHOUSE_TEST_STAT_LOGIN",
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
-        name="CHECKS_DATABASE_PASSWORD",
+        name="CLICKHOUSE_TEST_STAT_PASSWORD",
         type=Secret.Type.GH_SECRET,
     ),
     azure_secret,
