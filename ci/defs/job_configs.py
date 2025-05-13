@@ -31,7 +31,7 @@ class JobConfigs:
         name=JobNames.STYLE_CHECK,
         runs_on=RunnerLabels.STYLE_CHECK_ARM,
         command="python3 ./ci/jobs/check_style.py",
-        run_in_docker="clickhouse/style-test",
+        run_in_docker="altinityinfra/style-test",
         enable_commit_status=True,
     )
     fast_test = Job.Config(
@@ -39,7 +39,7 @@ class JobConfigs:
         runs_on=RunnerLabels.BUILDER_AMD,
         command="python3 ./ci/jobs/fast_test.py",
         # --network=host required for ec2 metadata http endpoint to work
-        run_in_docker="clickhouse/fasttest+--network=host",
+        run_in_docker="altinityinfra/fasttest+--network=host",
         digest_config=Job.CacheDigestConfig(
             include_paths=[
                 "./ci/jobs/fast_test.py",
@@ -63,7 +63,7 @@ class JobConfigs:
         runs_on=["...from params..."],
         requires=[],
         command="python3 ./ci/jobs/build_clickhouse.py --build-type {PARAMETER}",
-        run_in_docker="clickhouse/binary-builder+--network=host",
+        run_in_docker="altinityinfra/binary-builder+--network=host",
         timeout=3600 * 4,
         digest_config=Job.CacheDigestConfig(
             include_paths=[
@@ -94,7 +94,7 @@ class JobConfigs:
         requires=["Build (amd_tidy)"],
         command="python3 ./ci/jobs/build_clickhouse.py --build-type {PARAMETER}",
         # --network=host required for ec2 metadata http endpoint to work
-        run_in_docker="clickhouse/binary-builder+--network=host",
+        run_in_docker="altinityinfra/binary-builder+--network=host",
         timeout=3600 * 4,
         allow_merge_on_failure=True,
         digest_config=Job.CacheDigestConfig(
@@ -125,7 +125,7 @@ class JobConfigs:
         requires=[],
         command="python3 ./ci/jobs/build_clickhouse.py --build-type {PARAMETER}",
         # --network=host required for ec2 metadata http endpoint to work
-        run_in_docker="clickhouse/binary-builder+--network=host",
+        run_in_docker="altinityinfra/binary-builder+--network=host",
         timeout=3600 * 2,
         digest_config=Job.CacheDigestConfig(
             include_paths=[
@@ -217,7 +217,7 @@ class JobConfigs:
         requires=[],
         command="python3 ./ci/jobs/build_clickhouse.py --build-type {PARAMETER}",
         # --network=host required for ec2 metadata http endpoint to work
-        run_in_docker="clickhouse/binary-builder+--network=host",
+        run_in_docker="altinityinfra/binary-builder+--network=host",
         timeout=3600 * 2,
         digest_config=Job.CacheDigestConfig(
             include_paths=[
@@ -495,7 +495,7 @@ class JobConfigs:
         name=JobNames.UNITTEST,
         runs_on=["..params.."],
         command=f"python3 ./ci/jobs/unit_tests_job.py",
-        run_in_docker="clickhouse/fasttest",
+        run_in_docker="altinityinfra/fasttest",
         digest_config=Job.CacheDigestConfig(
             include_paths=["./ci/jobs/unit_tests_job.py"],
         ),
@@ -801,7 +801,7 @@ class JobConfigs:
         runs_on=["#from param"],
         command="python3 ./ci/jobs/performance_tests.py --test-options {PARAMETER}",
         # TODO: switch to stateless-test image
-        run_in_docker="clickhouse/performance-comparison",
+        run_in_docker="altinityinfra/performance-comparison",
         digest_config=Job.CacheDigestConfig(
             include_paths=[
                 "./tests/performance/",
@@ -829,7 +829,7 @@ class JobConfigs:
         runs_on=["#from param"],
         command="python3 ./ci/jobs/performance_tests.py --test-options {PARAMETER}",
         # TODO: switch to stateless-test image
-        run_in_docker="clickhouse/performance-comparison",
+        run_in_docker="altinityinfra/performance-comparison",
         digest_config=Job.CacheDigestConfig(
             include_paths=[
                 "./tests/performance/",
@@ -868,7 +868,7 @@ class JobConfigs:
         digest_config=Job.CacheDigestConfig(
             include_paths=["./ci/jobs/clickbench.py", "./ci/jobs/scripts/clickbench/"],
         ),
-        run_in_docker="clickhouse/stateless-test+--shm-size=16g",
+        run_in_docker="altinityinfra/stateless-test+--shm-size=16g",
     ).parametrize(
         parameter=[
             BuildTypes.AMD_RELEASE,
@@ -894,7 +894,7 @@ class JobConfigs:
                 "./ci/jobs/docs_job.py",
             ],
         ),
-        run_in_docker="clickhouse/docs-builder",
+        run_in_docker="altinityinfra/docs-builder",
         requires=[JobNames.STYLE_CHECK],
     )
     docker_sever = Job.Config(
@@ -934,7 +934,7 @@ class JobConfigs:
         digest_config=Job.CacheDigestConfig(
             include_paths=["./ci/jobs/sqlancer_job.sh"],
         ),
-        run_in_docker="clickhouse/sqlancer-test",
+        run_in_docker="altinityinfra/sqlancer-test",
         timeout=3600,
     ).parametrize(
         parameter=[
@@ -955,7 +955,7 @@ class JobConfigs:
             ],
         ),
         requires=[ArtifactNames.CH_ARM_RELEASE],
-        run_in_docker="clickhouse/stateless-test",
+        run_in_docker="altinityinfra/stateless-test",
         timeout=10800,
     )
     # TODO: run by labels Labels.PR_BUGFIX, Labels.PR_CRITICAL_BUGFIX
