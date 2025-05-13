@@ -32,8 +32,8 @@ ENABLE_ARTIFACTS_REPORT = True
 COMPRESS_THRESHOLD_MB = 32
 TEXT_CONTENT_EXTENSIONS = [".txt", ".log", ".err", ".out", ".tsv", ".csv", ".json"]
 
-# DOCKERHUB_USERNAME = "robotclickhouse"
-# DOCKERHUB_SECRET = "dockerhub_robot_password"
+DOCKERHUB_USERNAME = "altinityinfra"
+DOCKERHUB_SECRET = "DOCKER_PASSWORD"
 
 CI_DB_DB_NAME = "gh-data"
 CI_DB_TABLE_NAME = "checks"

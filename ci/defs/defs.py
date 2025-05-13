@@ -36,10 +36,10 @@ azure_secret = Secret.Config(
 )
 
 SECRETS = [
-    # Secret.Config(
-    #     name="dockerhub_robot_password",
-    #     type=Secret.Type.GH_SECRET,
-    # ),
+    Secret.Config(
+        name="DOCKER_PASSWORD",
+        type=Secret.Type.GH_SECRET,
+    ),
     Secret.Config(
         name="CLICKHOUSE_TEST_STAT_URL",
         type=Secret.Type.GH_SECRET,
