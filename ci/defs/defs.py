@@ -38,7 +38,7 @@ azure_secret = Secret.Config(
 
 SECRETS = [
     Secret.Config(
-        name=altinity_overrides.DOCKER_PASSWORD,
+        name=altinity_overrides.DOCKERHUB_SECRET,
         type=Secret.Type.GH_SECRET,
     ),
     Secret.Config(
