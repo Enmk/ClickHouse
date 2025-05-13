@@ -29,7 +29,7 @@ class CIFiles:
     UNIT_TESTS_BIN = f"{TEMP_DIR}/build/src/unit_tests_dbms"
 
 
-BASE_BRANCH = altinity_overrides.BASE_BRANCH
+BASE_BRANCH = altinity_overrides.MAIN_BRANCH
 
 azure_secret = Secret.Config(
     name="azure_connection_string",
