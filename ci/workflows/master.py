@@ -59,8 +59,7 @@ workflow = Workflow.Config(
     secrets=SECRETS,
     enable_job_filtering_by_changes=True,
     enable_cache=True,
-    # Note(strtgbb): Disable for now, aws-cli is not installed on the runners
-    enable_report=False,
+    enable_report=True,
     enable_cidb=True,
     enable_commit_status_on_failure=True,
     pre_hooks=[
