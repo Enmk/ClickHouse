@@ -70,6 +70,14 @@ SECRETS = [
     #     name="woolenwolf_gh_app.clickhouse-app-key",
     #     type=Secret.Type.AWS_SSM_SECRET,
     # ),
+    Secret.Config(
+        name="AWS_ACCESS_KEY_ID",
+        type=Secret.Type.GH_SECRET,
+    ),
+    Secret.Config(
+        name="AWS_SECRET_ACCESS_KEY",
+        type=Secret.Type.GH_SECRET,
+    ),
 ]
 
 DOCKERS = [
