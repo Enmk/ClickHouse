@@ -254,12 +254,12 @@ DOCKERS = [
         platforms=Docker.Platforms.arm_amd,
         depends_on=[],
     ),
-    Docker.Config(
-        name="altinityinfra/docs-builder",
-        path="./ci/docker/docs-builder",
-        platforms=Docker.Platforms.arm_amd,
-        depends_on=[],
-    ),
+    # Docker.Config(
+    #     name="altinityinfra/docs-builder",
+    #     path="./ci/docker/docs-builder",
+    #     platforms=Docker.Platforms.arm_amd,
+    #     depends_on=[],
+    # ),
     Docker.Config(
         name="altinityinfra/install-deb-test",
         path="docker/test/install/deb",
