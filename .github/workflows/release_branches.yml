@@ -38,7 +38,7 @@ permissions: write-all
 jobs:
 
   config_workflow:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-style-checker-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-style-checker-aarch64]
     name: "Config Workflow"
     outputs:
       data: ${{ steps.run.outputs.DATA }}
@@ -81,7 +81,7 @@ jobs:
       #     echo "Workflow Run Report: [View Report]($REPORT_LINK)" >> $GITHUB_STEP_SUMMARY
 
   dockers_build_arm:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-style-checker-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-style-checker-aarch64]
     needs: [config_workflow]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'RG9ja2VycyBCdWlsZCAoYXJtKQ==') }}
     name: "Dockers Build (arm)"
@@ -461,7 +461,7 @@ jobs:
           fi
 
   build_arm_release:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-builder-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-builder-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'QnVpbGQgKGFybV9yZWxlYXNlKQ==') }}
     name: "Build (arm_release)"
@@ -499,7 +499,7 @@ jobs:
           fi
 
   build_arm_asan:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-builder-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-builder-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'QnVpbGQgKGFybV9hc2FuKQ==') }}
     name: "Build (arm_asan)"
@@ -537,7 +537,7 @@ jobs:
           fi
 
   build_arm_coverage:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-builder-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-builder-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_amd_tidy, build_amd_debug, build_amd_release, build_amd_asan, build_amd_tsan, build_amd_msan, build_amd_ubsan, build_amd_binary, build_arm_release, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'QnVpbGQgKGFybV9jb3ZlcmFnZSk=') }}
     name: "Build (arm_coverage)"
@@ -575,7 +575,7 @@ jobs:
           fi
 
   build_arm_binary:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-builder-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-builder-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_amd_tidy, build_amd_debug, build_amd_release, build_amd_asan, build_amd_tsan, build_amd_msan, build_amd_ubsan, build_amd_binary, build_arm_release, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'QnVpbGQgKGFybV9iaW5hcnkp') }}
     name: "Build (arm_binary)"
@@ -613,7 +613,7 @@ jobs:
           fi
 
   build_fuzzers:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-builder-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-builder-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_amd_tidy, build_amd_debug, build_amd_release, build_amd_asan, build_amd_tsan, build_amd_msan, build_amd_ubsan, build_amd_binary, build_arm_release, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'QnVpbGQgKGZ1enplcnMp') }}
     name: "Build (fuzzers)"
@@ -917,7 +917,7 @@ jobs:
           fi
 
   install_packages_aarch64:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-style-checker-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-style-checker-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'SW5zdGFsbCBwYWNrYWdlcyAoYWFyY2g2NCk=') }}
     name: "Install packages (aarch64)"
@@ -993,7 +993,7 @@ jobs:
           fi
 
   compatibility_check_aarch64:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-style-checker-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-style-checker-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'Q29tcGF0aWJpbGl0eSBjaGVjayAoYWFyY2g2NCk=') }}
     name: "Compatibility check (aarch64)"
@@ -1753,7 +1753,7 @@ jobs:
           fi
 
   stateless_tests_aarch64:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChhYXJjaDY0KQ==') }}
     name: "Stateless tests (aarch64)"
@@ -1791,7 +1791,7 @@ jobs:
           fi
 
   stateless_tests_azure_arm_asan_1_3:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChhenVyZSwgYXJtX2FzYW4sIDEvMyk=') }}
     name: "Stateless tests (azure, arm_asan, 1/3)"
@@ -1829,7 +1829,7 @@ jobs:
           fi
 
   stateless_tests_azure_arm_asan_2_3:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChhenVyZSwgYXJtX2FzYW4sIDIvMyk=') }}
     name: "Stateless tests (azure, arm_asan, 2/3)"
@@ -1867,7 +1867,7 @@ jobs:
           fi
 
   stateless_tests_azure_arm_asan_3_3:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChhenVyZSwgYXJtX2FzYW4sIDMvMyk=') }}
     name: "Stateless tests (azure, arm_asan, 3/3)"
@@ -2285,7 +2285,7 @@ jobs:
           fi
 
   integration_tests_aarch64_distributed_plan_1_4:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'SW50ZWdyYXRpb24gdGVzdHMgKGFhcmNoNjQsIGRpc3RyaWJ1dGVkIHBsYW4sIDEvNCk=') }}
     name: "Integration tests (aarch64, distributed plan, 1/4)"
@@ -2323,7 +2323,7 @@ jobs:
           fi
 
   integration_tests_aarch64_distributed_plan_2_4:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'SW50ZWdyYXRpb24gdGVzdHMgKGFhcmNoNjQsIGRpc3RyaWJ1dGVkIHBsYW4sIDIvNCk=') }}
     name: "Integration tests (aarch64, distributed plan, 2/4)"
@@ -2361,7 +2361,7 @@ jobs:
           fi
 
   integration_tests_aarch64_distributed_plan_3_4:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'SW50ZWdyYXRpb24gdGVzdHMgKGFhcmNoNjQsIGRpc3RyaWJ1dGVkIHBsYW4sIDMvNCk=') }}
     name: "Integration tests (aarch64, distributed plan, 3/4)"
@@ -2399,7 +2399,7 @@ jobs:
           fi
 
   integration_tests_aarch64_distributed_plan_4_4:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'SW50ZWdyYXRpb24gdGVzdHMgKGFhcmNoNjQsIGRpc3RyaWJ1dGVkIHBsYW4sIDQvNCk=') }}
     name: "Integration tests (aarch64, distributed plan, 4/4)"
@@ -2665,7 +2665,7 @@ jobs:
           fi
 
   stateless_tests_coverage_1_6:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_coverage, stateless_tests_asan_distributed_plan_1_2, stateless_tests_asan_distributed_plan_2_2]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChjb3ZlcmFnZSwgMS82KQ==') }}
     name: "Stateless tests (coverage, 1/6)"
@@ -2703,7 +2703,7 @@ jobs:
           fi
 
   stateless_tests_coverage_2_6:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_coverage, stateless_tests_asan_distributed_plan_1_2, stateless_tests_asan_distributed_plan_2_2]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChjb3ZlcmFnZSwgMi82KQ==') }}
     name: "Stateless tests (coverage, 2/6)"
@@ -2741,7 +2741,7 @@ jobs:
           fi
 
   stateless_tests_coverage_3_6:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_coverage, stateless_tests_asan_distributed_plan_1_2, stateless_tests_asan_distributed_plan_2_2]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChjb3ZlcmFnZSwgMy82KQ==') }}
     name: "Stateless tests (coverage, 3/6)"
@@ -2779,7 +2779,7 @@ jobs:
           fi
 
   stateless_tests_coverage_4_6:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_coverage, stateless_tests_asan_distributed_plan_1_2, stateless_tests_asan_distributed_plan_2_2]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChjb3ZlcmFnZSwgNC82KQ==') }}
     name: "Stateless tests (coverage, 4/6)"
@@ -2817,7 +2817,7 @@ jobs:
           fi
 
   stateless_tests_coverage_5_6:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_coverage, stateless_tests_asan_distributed_plan_1_2, stateless_tests_asan_distributed_plan_2_2]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChjb3ZlcmFnZSwgNS82KQ==') }}
     name: "Stateless tests (coverage, 5/6)"
@@ -2855,7 +2855,7 @@ jobs:
           fi
 
   stateless_tests_coverage_6_6:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_coverage, stateless_tests_asan_distributed_plan_1_2, stateless_tests_asan_distributed_plan_2_2]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RhdGVsZXNzIHRlc3RzIChjb3ZlcmFnZSwgNi82KQ==') }}
     name: "Stateless tests (coverage, 6/6)"
@@ -2969,7 +2969,7 @@ jobs:
           fi
 
   stress_test_arm_asan:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U3RyZXNzIHRlc3QgKGFybV9hc2FuKQ==') }}
     name: "Stress test (arm_asan)"
@@ -3197,7 +3197,7 @@ jobs:
           fi
 
   ast_fuzzer_arm_asan:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'QVNUIGZ1enplciAoYXJtX2FzYW4p') }}
     name: "AST fuzzer (arm_asan)"
@@ -3387,7 +3387,7 @@ jobs:
           fi
 
   buzzhouse_arm_asan:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_asan]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'QnV6ekhvdXNlIChhcm1fYXNhbik=') }}
     name: "BuzzHouse (arm_asan)"
@@ -3653,7 +3653,7 @@ jobs:
           fi
 
   performance_comparison_arm_release_master_head_1_3:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'UGVyZm9ybWFuY2UgQ29tcGFyaXNvbiAoYXJtX3JlbGVhc2UsbWFzdGVyX2hlYWQsMS8zKQ==') }}
     name: "Performance Comparison (arm_release,master_head,1/3)"
@@ -3691,7 +3691,7 @@ jobs:
           fi
 
   performance_comparison_arm_release_master_head_2_3:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'UGVyZm9ybWFuY2UgQ29tcGFyaXNvbiAoYXJtX3JlbGVhc2UsbWFzdGVyX2hlYWQsMi8zKQ==') }}
     name: "Performance Comparison (arm_release,master_head,2/3)"
@@ -3729,7 +3729,7 @@ jobs:
           fi
 
   performance_comparison_arm_release_master_head_3_3:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'UGVyZm9ybWFuY2UgQ29tcGFyaXNvbiAoYXJtX3JlbGVhc2UsbWFzdGVyX2hlYWQsMy8zKQ==') }}
     name: "Performance Comparison (arm_release,master_head,3/3)"
@@ -3805,7 +3805,7 @@ jobs:
           fi
 
   clickbench_arm_release:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'Q2xpY2tCZW5jaCAoYXJtX3JlbGVhc2Up') }}
     name: "ClickBench (arm_release)"
@@ -3881,7 +3881,7 @@ jobs:
           fi
 
   sqltest:
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-func-tester-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-func-tester-aarch64]
     needs: [config_workflow, dockers_build_amd_and_merge, build_arm_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).cache_success_base64, 'U1FMVGVzdA==') }}
     name: "SQLTest"
@@ -3993,7 +3993,7 @@ jobs:
       - GrypeScan
       - SignRelease
       - SignAarch64
-    runs-on: [self-hosted, altinity-on-demand, image-x86-app-docker-ce, altinity-style-checker-aarch64]
+    runs-on: [self-hosted, altinity-on-demand, image-arm-app-docker-ce, altinity-style-checker-aarch64]
     steps:
       - name: Check out repository code
         uses: Altinity/checkout@19599efdf36c4f3f30eb55d5bb388896faea69f6
