@@ -37,9 +37,9 @@ def scan_file_for_sensitive_data(file_content, file_name):
     if not matches:
         return
 
-    logging.error(f"Sensitive values found in {file_name}")
+    print(f"ERROR: Sensitive values found in {file_name}")
     for file_name, line_number, match in matches:
-        logging.error(f"{file_name}:{line_number}: {match}")
+        print(f"{file_name}:{line_number}: {match}")
 
     raise ValueError(f"Sensitive values found in {file_name}")
 
@@ -167,7 +167,7 @@ class S3:
         try:
             file_content = Path(local_path).read_text(encoding="utf-8")
         except UnicodeDecodeError:
-            logging.warning("Failed to scan file %s, unknown encoding", local_path)
+            print(f"WARNING: Failed to scan file {local_path}, unknown encoding")
         else:
             scan_file_for_sensitive_data(file_content, Path(local_path).name)
 
