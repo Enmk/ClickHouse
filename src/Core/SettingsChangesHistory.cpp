@@ -94,6 +94,8 @@ const VersionToSettingsChangesMap & getSettingsChangesHistory()
             {"iceberg_snapshot_id", 0, 0, "New setting."},
             {"parallel_replicas_for_cluster_engines", false, true, "New setting."},
             /// Release closed. Please use 25.4
+            {"use_object_storage_list_objects_cache", true, false, "New setting."},
+            {"allow_retries_in_cluster_requests", false, false, "New setting."},
         });
         addSettingsChanges(settings_changes_history, "24.12.2.20000",
         {

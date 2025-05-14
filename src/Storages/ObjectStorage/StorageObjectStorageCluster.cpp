@@ -363,6 +363,28 @@ void StorageObjectStorageCluster::updateQueryToSendIfNeeded(
         args.insert(args.end(), object_storage_type_arg);
 }
 
+class TaskDistributor : public TaskIterator
+{
+public:
+    TaskDistributor(std::shared_ptr<IObjectIterator> iterator,
+        const std::vector<std::string> & ids_of_hosts)
+        : task_distributor(iterator, ids_of_hosts) {}
+    ~TaskDistributor() override = default;
+    bool supportRerunTask() const override { return true; }
+    void rescheduleTasksFromReplica(size_t number_of_current_replica) override
+    {
+        task_distributor.rescheduleTasksFromReplica(number_of_current_replica);
+    }
+
+    std::string operator()(size_t number_of_current_replica) const override
+    {
+        return task_distributor.getNextTask(number_of_current_replica).value_or("");
+    }
+
+private:
+    mutable StorageObjectStorageStableTaskDistributor task_distributor;
+};
+
 RemoteQueryExecutor::Extension StorageObjectStorageCluster::getTaskIteratorExtension(
     const ActionsDAG::Node * predicate,
     const std::optional<ActionsDAG> & filter_actions_dag,
@@ -386,12 +408,7 @@ RemoteQueryExecutor::Extension StorageObjectStorageCluster::getTaskIteratorExten
         }
     }
 
-    auto task_distributor = std::make_shared<StorageObjectStorageStableTaskDistributor>(iterator, ids_of_hosts);
-
-    auto callback = std::make_shared<TaskIterator>(
-        [task_distributor](size_t number_of_current_replica) mutable -> String {
-            return task_distributor->getNextTask(number_of_current_replica).value_or("");
-        });
+    auto callback = std::make_shared<TaskDistributor>(iterator, ids_of_hosts);
 
     return RemoteQueryExecutor::Extension{ .task_iterator = std::move(callback) };
 }

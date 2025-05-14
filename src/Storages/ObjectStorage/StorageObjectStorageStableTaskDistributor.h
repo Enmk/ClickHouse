@@ -6,6 +6,8 @@
 #include <Storages/ObjectStorage/StorageObjectStorageSource.h>
 #include <Storages/ObjectStorageQueue/ObjectStorageQueueSource.h>
 #include <unordered_set>
+#include <unordered_map>
+#include <list>
 #include <vector>
 #include <mutex>
 #include <memory>
@@ -22,6 +24,9 @@ public:
 
     std::optional<String> getNextTask(size_t number_of_current_replica);
 
+    /// Insert objects back to unprocessed files
+    void rescheduleTasksFromReplica(size_t number_of_current_replica);
+
 private:
     size_t getReplicaForFile(const String & file_path);
     std::optional<String> getPreQueuedFile(size_t number_of_current_replica);
@@ -34,6 +39,7 @@ private:
     std::unordered_set<String> unprocessed_files;
 
     std::vector<std::string> ids_of_nodes;
+    std::unordered_map<size_t, std::list<String>> replica_to_files_to_be_processed;
 
     std::mutex mutex;
     bool iterator_exhausted = false;

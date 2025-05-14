@@ -6131,6 +6131,9 @@ Possible values:
 - Positive integer.
 - 0 — All hosts in cluster.
 )", EXPERIMENTAL) \
+    DECLARE(Bool, allow_retries_in_cluster_requests, false, R"(
+Allow retries in cluster request, when one node goes offline
+)", EXPERIMENTAL) \
     \
     /** Experimental tsToGrid aggregate function. */ \
     DECLARE(Bool, allow_experimental_ts_to_grid_aggregate_function, false, R"(
