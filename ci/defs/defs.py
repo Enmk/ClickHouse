@@ -16,12 +16,20 @@ S3_REPORT_BUCKET_HTTP_ENDPOINT = altinity_overrides.S3_REPORT_BUCKET_HTTP_ENDPOI
 class RunnerLabels:
     CI_SERVICES = "ci_services"
     CI_SERVICES_EBS = "ci_services_ebs"
-    BUILDER_AMD = ["self-hosted", "builder"]
-    BUILDER_ARM = ["self-hosted", "builder-aarch64"]
-    FUNC_TESTER_AMD = ["self-hosted", "func-tester"]
-    FUNC_TESTER_ARM = ["self-hosted", "func-tester-aarch64"]
-    STYLE_CHECK_AMD = ["self-hosted", "style-checker"]
-    STYLE_CHECK_ARM = ["self-hosted", "style-checker-aarch64"]
+    BUILDER_AMD = ["self-hosted", "altinity-on-demand", "altinity-builder"]
+    BUILDER_ARM = ["self-hosted", "altinity-on-demand", "altinity-builder-aarch64"]
+    FUNC_TESTER_AMD = ["self-hosted", "altinity-on-demand", "altinity-func-tester"]
+    FUNC_TESTER_ARM = [
+        "self-hosted",
+        "altinity-on-demand",
+        "altinity-func-tester-aarch64",
+    ]
+    STYLE_CHECK_AMD = ["self-hosted", "altinity-on-demand", "altinity-style-checker"]
+    STYLE_CHECK_ARM = [
+        "self-hosted",
+        "altinity-on-demand",
+        "altinity-style-checker-aarch64",
+    ]
 
 
 class CIFiles:
