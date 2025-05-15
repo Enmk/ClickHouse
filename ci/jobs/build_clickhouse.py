@@ -107,10 +107,7 @@ def main():
 
     cmake_cmd = BUILD_TYPE_TO_CMAKE[build_type]
     info = Info()
-    if not info.is_local_run:
-        os.environ["AWS_ACCESS_KEY_ID"] = info.get_secret("AWS_ACCESS_KEY_ID").get_value()
-        os.environ["AWS_SECRET_ACCESS_KEY"] = info.get_secret("AWS_SECRET_ACCESS_KEY").get_value()
-        # Default timeout (10min), can be too low, we run this in docker
+    if not info.is_local_run:        # Default timeout (10min), can be too low, we run this in docker
         # anyway, will be terminated once the build is finished
         os.environ["SCCACHE_IDLE_TIMEOUT"] = "7200"
         os.environ["SCCACHE_BUCKET"] = Settings.S3_ARTIFACT_PATH
