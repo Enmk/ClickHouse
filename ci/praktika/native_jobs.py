@@ -455,6 +455,8 @@ def _config_workflow(workflow: Workflow.Config, job_name) -> Result:
                 info=info,
             )
         )
+    else:
+        print("DEBUG: Cache Lookup", results[-1].status, workflow.enable_cache)
     workflow_config.dump()
 
     if results[-1].is_ok() and workflow.enable_report:
