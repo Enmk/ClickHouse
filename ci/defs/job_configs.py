@@ -63,7 +63,7 @@ class JobConfigs:
         runs_on=["...from params..."],
         requires=[],
         command="python3 ./ci/jobs/build_clickhouse.py --build-type {PARAMETER}",
-        run_in_docker="altinityinfra/binary-builder+--network=host",
+        run_in_docker='altinityinfra/binary-builder+--network=host+--env=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"+--env=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"',
         timeout=3600 * 4,
         digest_config=Job.CacheDigestConfig(
             include_paths=[
@@ -94,7 +94,7 @@ class JobConfigs:
         requires=["Build (amd_tidy)"],
         command="python3 ./ci/jobs/build_clickhouse.py --build-type {PARAMETER}",
         # --network=host required for ec2 metadata http endpoint to work
-        run_in_docker="altinityinfra/binary-builder+--network=host",
+        run_in_docker='altinityinfra/binary-builder+--network=host+--env=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"+--env=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"',
         timeout=3600 * 4,
         allow_merge_on_failure=True,
         digest_config=Job.CacheDigestConfig(
@@ -217,7 +217,7 @@ class JobConfigs:
         requires=[],
         command="python3 ./ci/jobs/build_clickhouse.py --build-type {PARAMETER}",
         # --network=host required for ec2 metadata http endpoint to work
-        run_in_docker="altinityinfra/binary-builder+--network=host",
+        run_in_docker='altinityinfra/binary-builder+--network=host+--env=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"+--env=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"',
         timeout=3600 * 2,
         digest_config=Job.CacheDigestConfig(
             include_paths=[
