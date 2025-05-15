@@ -11,7 +11,7 @@ from .settings import Settings
 from .usage import StorageUsage
 from .utils import MetaClasses, Shell, Utils
 
-sensitive_var_pattern = re.compile(r"[A-Z_]*(SECRET|PASSWORD|KEY|TOKEN)[A-Z_]*")
+sensitive_var_pattern = re.compile(r"[A-Z_]*(SECRET|PASSWORD|KEY|TOKEN|AZURE)[A-Z_]*")
 sensitive_strings = {
     var: value for var, value in os.environ.items() if sensitive_var_pattern.match(var)
 }

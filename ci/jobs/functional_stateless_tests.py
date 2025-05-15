@@ -67,8 +67,8 @@ def main():
         f"aws ssm get-parameter --region us-east-1 --name azure_connection_string --with-decryption --output text --query Parameter.Value",
         verbose=True,
     )
-    # Note(strgbb): Turning off for now
-    no_azure = True
+
+    no_azure = False
     if not os.environ["AZURE_CONNECTION_STRING"]:
         no_azure = True
 
