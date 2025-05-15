@@ -57,9 +57,9 @@ workflow = Workflow.Config(
     dockers=DOCKERS,
     set_latest_in_dockers_build=True,
     secrets=SECRETS,
-    # Note(strtgbb): Disabling job filtering and caching for now to make jobs easier to debug
+    # Note(strtgbb): Disabling job filtering for now to make jobs easier to debug
     enable_job_filtering_by_changes=False,
-    enable_cache=False,
+    enable_cache=True,
     enable_report=True,
     enable_cidb=True,
     enable_commit_status_on_failure=True,
