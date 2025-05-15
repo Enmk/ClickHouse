@@ -61,7 +61,7 @@ SECRETS = [
         name=altinity_overrides.SECRET_CI_DB_PASSWORD,
         type=Secret.Type.GH_SECRET,
     ),
-    azure_secret,
+    # azure_secret,
     # Secret.Config(
     #     name="woolenwolf_gh_app.clickhouse-app-id",
     #     type=Secret.Type.AWS_SSM_SECRET,
