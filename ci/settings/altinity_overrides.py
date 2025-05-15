@@ -1,7 +1,7 @@
 S3_BUCKET_NAME = "altinity-build-artifacts"
-S3_REPORT_BUCKET_NAME = "altinity-test-reports"
+S3_REPORT_BUCKET_NAME = "altinity-build-artifacts"
 S3_BUCKET_HTTP_ENDPOINT = "altinity-build-artifacts.s3.amazonaws.com"
-S3_REPORT_BUCKET_HTTP_ENDPOINT = "s3.amazonaws.com/altinity-test-reports"
+S3_REPORT_BUCKET_HTTP_ENDPOINT = "altinity-build-artifacts.s3.amazonaws.com"
 
 
 class RunnerLabels:
