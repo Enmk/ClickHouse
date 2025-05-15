@@ -16,7 +16,5 @@ runs:
     - name: Install awscli
       shell: bash
       run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -i)-1.40.12.zip" -o "awscli.zip"
-          unzip awscli.zip
-          sudo ./aws/install
-          rm -f awscli.zip
+          sudo apt-get update
+          sudo apt-get install -y awscli
