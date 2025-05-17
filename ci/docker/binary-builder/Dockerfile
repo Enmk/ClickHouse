@@ -15,7 +15,7 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test --yes \
     && apt-get update \
     && apt-get install --yes \
         binutils-riscv64-linux-gnu \
-        compiler-rt-19-dev \
+        libclang-rt-19-dev \
         build-essential \
         python3-boto3 \
         yasm \
