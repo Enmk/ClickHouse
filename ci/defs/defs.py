@@ -17,7 +17,7 @@ class RunnerLabels:
     CI_SERVICES = "ci_services"
     CI_SERVICES_EBS = "ci_services_ebs"
     BUILDER_AMD = ["self-hosted", "altinity-on-demand", "altinity-builder"]
-    BUILDER_ARM = ["self-hosted", "altinity-on-demand", "altinity-builder-aarch64"]
+    BUILDER_ARM = ["self-hosted", "altinity-on-demand", "altinity-builder"]
     FUNC_TESTER_AMD = ["self-hosted", "altinity-on-demand", "altinity-func-tester"]
     FUNC_TESTER_ARM = [
         "self-hosted",

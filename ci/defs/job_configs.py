@@ -152,7 +152,7 @@ class JobConfigs:
             BuildTypes.AMD_UBSAN,
             BuildTypes.AMD_BINARY,
             BuildTypes.ARM_RELEASE,
-            BuildTypes.ARM_ASAN,
+            # BuildTypes.ARM_ASAN, # NOTE(strtgbb): cross-compilation is not set up correctly for ARM_ASAN
         ],
         provides=[
             [
@@ -194,10 +194,10 @@ class JobConfigs:
                 ArtifactNames.RPM_ARM_RELEASE,
                 ArtifactNames.TGZ_ARM_RELEASE,
             ],
-            [
-                ArtifactNames.CH_ARM_ASAN,
-                ArtifactNames.DEB_ARM_ASAN,
-            ],
+            # [
+            #     ArtifactNames.CH_ARM_ASAN,
+            #     ArtifactNames.DEB_ARM_ASAN,
+            # ],
         ],
         runs_on=[
             RunnerLabels.BUILDER_AMD,
@@ -776,7 +776,7 @@ class JobConfigs:
     ).parametrize(
         parameter=[
             "amd_debug",
-            "arm_asan",
+            # "arm_asan",
             "amd_tsan",
             "amd_msan",
             "amd_ubsan",
@@ -790,7 +790,7 @@ class JobConfigs:
         ],
         requires=[
             ["Build (amd_debug)"],
-            ["Build (arm_asan)"],
+            # ["Build (arm_asan)"],
             ["Build (amd_tsan)"],
             ["Build (amd_msan)"],
             ["Build (amd_ubsan)"],

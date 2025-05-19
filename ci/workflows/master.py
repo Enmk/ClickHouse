@@ -28,7 +28,7 @@ workflow = Workflow.Config(
         *JobConfigs.compatibility_test_jobs,
         *JobConfigs.functional_tests_jobs_required,
         *JobConfigs.functional_tests_jobs_non_required,
-        *JobConfigs.functional_tests_jobs_azure_master_only,
+        # *JobConfigs.functional_tests_jobs_azure_master_only, # NOTE(strtgbb): cross-compilation is not set up correctly for ARM_ASAN
         *JobConfigs.integration_test_jobs_required,
         *JobConfigs.integration_test_jobs_non_required,
         *[
@@ -39,7 +39,7 @@ workflow = Workflow.Config(
         *JobConfigs.stress_test_azure_master_jobs,
         *JobConfigs.ast_fuzzer_jobs,
         *JobConfigs.buzz_fuzzer_jobs,
-        *JobConfigs.performance_comparison_with_master_head_jobs,
+        # *JobConfigs.performance_comparison_with_master_head_jobs,
         *JobConfigs.clickbench_master_jobs,
         *JobConfigs.sqlancer_master_jobs,
         JobConfigs.sqltest_master_job,
