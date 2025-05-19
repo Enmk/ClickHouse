@@ -66,14 +66,6 @@ jobs:
           ${{ toJson(needs) }}
           EOF
           ENV_SETUP_SCRIPT_EOF
-
-      - name: Init praktika report
-        # TODO(strtgbb): This doesn't need to be run every time, should only be run for release
-        run: |
-          . ./ci/tmp/praktika_setup_env.sh
-          pip install htmlmin
-          python3 -m praktika html
-
       - name: Run
         id: run
         run: |
