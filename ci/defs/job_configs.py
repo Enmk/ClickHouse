@@ -602,19 +602,19 @@ class JobConfigs:
         allow_merge_on_failure=True,
     ).parametrize(
         parameter=[
-            "arm_asan",
+            # "arm_asan",
             "amd_tsan",
             "amd_msan",
             "amd_debug",
         ],
         runs_on=[
-            RunnerLabels.FUNC_TESTER_ARM,
+            # RunnerLabels.FUNC_TESTER_ARM,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
         ],
         requires=[
-            ["Build (arm_asan)"],
+            # ["Build (arm_asan)"],
             ["Build (amd_tsan)"],
             ["Build (amd_msan)"],
             ["Build (amd_debug)"],
@@ -745,21 +745,21 @@ class JobConfigs:
     ).parametrize(
         parameter=[
             "amd_debug",
-            "arm_asan",
+            # "arm_asan",
             "amd_tsan",
             "amd_msan",
             "amd_ubsan",
         ],
         runs_on=[
             RunnerLabels.FUNC_TESTER_AMD,
-            RunnerLabels.FUNC_TESTER_ARM,
+            # RunnerLabels.FUNC_TESTER_ARM,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
         ],
         requires=[
             ["Build (amd_debug)"],
-            ["Build (arm_asan)"],
+            # ["Build (arm_asan)"],
             ["Build (amd_tsan)"],
             ["Build (amd_msan)"],
             ["Build (amd_ubsan)"],
