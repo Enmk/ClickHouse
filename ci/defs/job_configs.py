@@ -208,7 +208,7 @@ class JobConfigs:
             RunnerLabels.BUILDER_AMD,
             RunnerLabels.BUILDER_AMD,
             RunnerLabels.BUILDER_ARM,
-            RunnerLabels.BUILDER_ARM,
+            # RunnerLabels.BUILDER_ARM,
         ],
     )
     special_build_jobs = Job.Config(
