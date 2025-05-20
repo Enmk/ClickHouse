@@ -783,7 +783,7 @@ class JobConfigs:
         ],
         runs_on=[
             RunnerLabels.FUNC_TESTER_AMD,
-            RunnerLabels.FUNC_TESTER_ARM,
+            # RunnerLabels.FUNC_TESTER_ARM,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
