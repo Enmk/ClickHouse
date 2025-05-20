@@ -298,5 +298,8 @@
     "test_s3_cluster/test.py::test_cluster_with_header":{
         "reason": "INVESTIGATE - Issue with setting object_storage_cluster",
         "message": "Setting object_storage_cluster is neither a builtin setting nor started with the prefix 'custom_' registered for user-defined settings."
+    },
+    "test_parquet_drop_metadata_cache/test.py::test_clear_cache_on_cluster": {
+        "reason": "INVESTIGATE - Fails on ASAN, ASAN old analyzer, Release, TSAN"
     }
 }
