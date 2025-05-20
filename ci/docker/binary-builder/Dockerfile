@@ -21,6 +21,8 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test --yes \
         zstd \
         zip \
         clang-tidy-${LLVM_VERSION} \
+        crossbuild-essential-arm64 \
+        libc6-dev-arm64-cross \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/debconf /tmp/*
 
