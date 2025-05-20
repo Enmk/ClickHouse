@@ -3691,7 +3691,7 @@ jobs:
             python3 -m praktika run 'SQLTest' --workflow "MasterCI" --ci |& tee ./ci/tmp/job.log
           fi
   GrypeScan:
-    needs: [config_workflow, dockers_build_amd_and_merge]
+    needs: [config_workflow, docker_server_image, docker_keeper_image]
     if: ${{ !failure() && !cancelled() }}
     strategy:
       fail-fast: false
@@ -3706,7 +3706,7 @@ jobs:
     uses: ./.github/workflows/grype_scan.yml
     secrets: inherit
     with:
-      docker_image: altinityinfra/clickhouse-${{ matrix.image }}:${{ github.event.pull_request.number || 0 }}-${{ fromJson(needs.RunConfig.outputs.data).version }}${{ matrix.suffix }}
+      docker_image: altinityinfra/clickhouse-${{ matrix.image }}:${{ github.event.pull_request.number || 0 }}-${{ fromJson(needs.config_workflow.outputs.data).custom_data.version.string }}${{ matrix.suffix }}
 #############################################################################################
 ##################################### REGRESSION TESTS ######################################
 #############################################################################################
