@@ -3710,28 +3710,30 @@ jobs:
 #############################################################################################
 ##################################### REGRESSION TESTS ######################################
 #############################################################################################
-  # RegressionTestsRelease:
-  #   needs: [config_workflow, build_amd_release]
-  #   if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).ci_settings.exclude_keywords, 'regression')}}
-  #   uses: ./.github/workflows/regression.yml
-  #   secrets: inherit
-  #   with:
-  #     runner_type: altinity-on-demand, altinity-regression-tester
-  #     commit: ed06445a1df92eb3a2f7d6a56adad1c27a3203e6
-  #     arch: release
-  #     build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-  #     timeout_minutes: 300
-  # RegressionTestsAarch64:
-  #   needs: [config_workflow, build_arm_release]
-  #   if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).ci_settings.exclude_keywords, 'regression') && !contains(fromJson(needs.config_workflow.outputs.data).ci_settings.exclude_keywords, 'aarch64')}}
-  #   uses: ./.github/workflows/regression.yml
-  #   secrets: inherit
-  #   with:
-  #     runner_type: altinity-on-demand, altinity-regression-tester-aarch64
-  #     commit: ed06445a1df92eb3a2f7d6a56adad1c27a3203e6
-  #     arch: aarch64
-  #     build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-  #     timeout_minutes: 300
+  RegressionTestsRelease:
+    needs: [config_workflow, build_amd_release]
+    if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).ci_settings.exclude_keywords, 'regression')}}
+    uses: ./.github/workflows/regression.yml
+    secrets: inherit
+    with:
+      runner_type: altinity-on-demand, altinity-regression-tester
+      commit: ed06445a1df92eb3a2f7d6a56adad1c27a3203e6
+      arch: release
+      build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      timeout_minutes: 300
+      workflow_config: ${{ needs.config_workflow.outputs.data }}
+  RegressionTestsAarch64:
+    needs: [config_workflow, build_arm_release]
+    if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).ci_settings.exclude_keywords, 'regression') && !contains(fromJson(needs.config_workflow.outputs.data).ci_settings.exclude_keywords, 'aarch64')}}
+    uses: ./.github/workflows/regression.yml
+    secrets: inherit
+    with:
+      runner_type: altinity-on-demand, altinity-regression-tester-aarch64
+      commit: ed06445a1df92eb3a2f7d6a56adad1c27a3203e6
+      arch: aarch64
+      build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      timeout_minutes: 300
+      workflow_config: ${{ needs.config_workflow.outputs.data }}
   SignRelease:
     needs: [config_workflow, build_amd_release]
     if: ${{ !failure() && !cancelled() }}

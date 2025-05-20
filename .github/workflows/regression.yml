@@ -35,6 +35,10 @@ name: Regression test workflow - Release
       additional_envs:
         description: additional ENV variables to setup the job
         type: string
+      workflow_config:
+        description: workflow config for the run
+        required: true
+        type: string
     secrets:
       secret_envs:
         description: if given, it's passed to the environments
@@ -161,18 +165,19 @@ jobs:
           REPORTS_PATH=${{ runner.temp }}/reports_dir
           SUITE=${{ matrix.SUITE }}
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run: EXITCODE=0;
@@ -224,18 +229,19 @@ jobs:
           SUITE=alter
           STORAGE=/${{ matrix.ONLY }}_partition
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
@@ -288,18 +294,19 @@ jobs:
           SUITE=ontime_benchmark
           STORAGE=/${{ matrix.STORAGE }}
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
@@ -355,18 +362,19 @@ jobs:
           SUITE=clickhouse_keeper
           STORAGE=/ssl
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
@@ -418,18 +426,19 @@ jobs:
           REPORTS_PATH=${{ runner.temp }}/reports_dir
           SUITE=ldap/${{ matrix.SUITE }}
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
@@ -476,18 +485,19 @@ jobs:
           REPORTS_PATH=${{ runner.temp }}/reports_dir
           SUITE=parquet
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
@@ -539,18 +549,19 @@ jobs:
           SUITE=parquet
           STORAGE=${{ matrix.STORAGE}}
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
@@ -607,18 +618,19 @@ jobs:
           SUITE=s3
           STORAGE=/${{ matrix.STORAGE }}
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
@@ -681,18 +693,19 @@ jobs:
           SUITE=tiered_storage
           STORAGE=/${{ matrix.STORAGE }}
           EOF
-      - name: Download json reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ env.REPORTS_PATH }}
-          name: build_report_package_${{ inputs.arch }}
-      - name: Rename reports
-        run: |
-          mv ${{ env.REPORTS_PATH }}/build_report_*.json ${{ env.REPORTS_PATH }}/build_report_package_${{ inputs.arch }}.json
       - name: Setup
         run: .github/setup.sh
       - name: Get deb url
-        run: python3 .github/get-deb-url.py --reports-path ${{ env.REPORTS_PATH }} --github-env $GITHUB_ENV
+        env:
+          S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+        run: |
+          cat > $REPORTS_PATH/workflow_config.json << 'EOF'
+          ${{ inputs.workflow_config }}
+          EOF
+
+          python3 .github/get-deb-url.py --github-env $GITHUB_ENV --workflow-config $REPORTS_PATH/workflow_config.json --s3-base-url $S3_BASE_URL --pr-number $PR_NUMBER --branch-name ${{ github.ref_name }} --commit-hash ${{ inputs.build_sha }}
+
       - name: Run ${{ env.SUITE }} suite
         id: run_suite
         run:  EXITCODE=0;
