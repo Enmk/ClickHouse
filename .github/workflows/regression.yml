@@ -172,6 +172,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -236,6 +237,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -301,6 +303,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -369,6 +372,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -433,6 +437,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -492,6 +497,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -556,6 +562,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -625,6 +632,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
@@ -700,6 +708,7 @@ jobs:
           S3_BASE_URL: https://altinity-build-artifacts.s3.amazonaws.com/
           PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
         run: |
+          mkdir -p $REPORTS_PATH
           cat > $REPORTS_PATH/workflow_config.json << 'EOF'
           ${{ inputs.workflow_config }}
           EOF
