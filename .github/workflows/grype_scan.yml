@@ -15,6 +15,11 @@ on:
                 description: 'Docker image. If no tag, it will be determined by version_helper.py'
                 required: true
                 type: string
+            tag-suffix:
+                description: 'Tag suffix. To be appended the version from version_helper.py'
+                required: false
+                type: string
+                default: ""
 env:
   PYTHONUNBUFFERED: 1
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -47,10 +52,12 @@ jobs:
         - name: Set image tag if not given
           if: ${{ !contains(inputs.docker_image, ':') }}
           id: set_version
+          env:
+            TAG_SUFFIX: ${{ inputs.tag-suffix }}
           run: |
             python3 ./tests/ci/version_helper.py | tee /tmp/version_info
             source /tmp/version_info
-            echo "docker_image=${{ inputs.docker_image }}:${{ github.event.pull_request.number || 0 }}-$CLICKHOUSE_VERSION_STRING" >> $GITHUB_OUTPUT
+            echo "docker_image=${{ inputs.docker_image }}:${{ github.event.pull_request.number || 0 }}-$CLICKHOUSE_VERSION_STRING$TAG_SUFFIX" >> $GITHUB_OUTPUT
             echo "commit_sha=$CLICKHOUSE_VERSION_GITHASH" >> $GITHUB_OUTPUT
 
         - name: Run Grype Scan

@@ -3706,7 +3706,8 @@ jobs:
     uses: ./.github/workflows/grype_scan.yml
     secrets: inherit
     with:
-      docker_image: altinityinfra/clickhouse-${{ matrix.image }}:${{ github.event.pull_request.number || 0 }}-${{ fromJson(needs.config_workflow.outputs.data).custom_data.version.string }}${{ matrix.suffix }}
+      docker_image: altinityinfra/clickhouse-${{ matrix.image }}
+      tag-suffix: ${{ matrix.suffix }}
 #############################################################################################
 ##################################### REGRESSION TESTS ######################################
 #############################################################################################
