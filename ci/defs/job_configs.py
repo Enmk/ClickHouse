@@ -152,7 +152,7 @@ class JobConfigs:
             BuildTypes.AMD_UBSAN,
             BuildTypes.AMD_BINARY,
             BuildTypes.ARM_RELEASE,
-            # BuildTypes.ARM_ASAN, # NOTE(strtgbb): cross-compilation is not set up correctly for ARM_ASAN
+            BuildTypes.ARM_ASAN,
         ],
         provides=[
             [
@@ -194,10 +194,10 @@ class JobConfigs:
                 ArtifactNames.RPM_ARM_RELEASE,
                 ArtifactNames.TGZ_ARM_RELEASE,
             ],
-            # [
-            #     ArtifactNames.CH_ARM_ASAN,
-            #     ArtifactNames.DEB_ARM_ASAN,
-            # ],
+            [
+                ArtifactNames.CH_ARM_ASAN,
+                ArtifactNames.DEB_ARM_ASAN,
+            ],
         ],
         runs_on=[
             RunnerLabels.BUILDER_AMD,
@@ -208,7 +208,7 @@ class JobConfigs:
             RunnerLabels.BUILDER_AMD,
             RunnerLabels.BUILDER_AMD,
             RunnerLabels.BUILDER_ARM,
-            # RunnerLabels.BUILDER_ARM,
+            RunnerLabels.BUILDER_ARM,
         ],
     )
     special_build_jobs = Job.Config(
@@ -539,21 +539,21 @@ class JobConfigs:
         parameter=[
             "amd_debug",
             "amd_tsan",
-            # "arm_asan",
+            "arm_asan",
             "amd_ubsan",
             "amd_msan",
         ],
         runs_on=[
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
-            # RunnerLabels.FUNC_TESTER_ARM,
+            RunnerLabels.FUNC_TESTER_ARM,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
         ],
         requires=[
             ["Build (amd_debug)"],
             ["Build (amd_tsan)"],
-            # ["Build (arm_asan)"],
+            ["Build (arm_asan)"],
             ["Build (amd_ubsan)"],
             ["Build (amd_msan)"],
         ],
@@ -602,19 +602,19 @@ class JobConfigs:
         allow_merge_on_failure=True,
     ).parametrize(
         parameter=[
-            # "arm_asan",
+            "arm_asan",
             "amd_tsan",
             "amd_msan",
             "amd_debug",
         ],
         runs_on=[
-            # RunnerLabels.FUNC_TESTER_ARM,
+            RunnerLabels.FUNC_TESTER_ARM,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
         ],
         requires=[
-            # ["Build (arm_asan)"],
+            ["Build (arm_asan)"],
             ["Build (amd_tsan)"],
             ["Build (amd_msan)"],
             ["Build (amd_debug)"],
@@ -745,21 +745,21 @@ class JobConfigs:
     ).parametrize(
         parameter=[
             "amd_debug",
-            # "arm_asan",
+            "arm_asan",
             "amd_tsan",
             "amd_msan",
             "amd_ubsan",
         ],
         runs_on=[
             RunnerLabels.FUNC_TESTER_AMD,
-            # RunnerLabels.FUNC_TESTER_ARM,
+            RunnerLabels.FUNC_TESTER_ARM,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
         ],
         requires=[
             ["Build (amd_debug)"],
-            # ["Build (arm_asan)"],
+            ["Build (arm_asan)"],
             ["Build (amd_tsan)"],
             ["Build (amd_msan)"],
             ["Build (amd_ubsan)"],
@@ -776,21 +776,21 @@ class JobConfigs:
     ).parametrize(
         parameter=[
             "amd_debug",
-            # "arm_asan",
+            "arm_asan",
             "amd_tsan",
             "amd_msan",
             "amd_ubsan",
         ],
         runs_on=[
             RunnerLabels.FUNC_TESTER_AMD,
-            # RunnerLabels.FUNC_TESTER_ARM,
+            RunnerLabels.FUNC_TESTER_ARM,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
             RunnerLabels.FUNC_TESTER_AMD,
         ],
         requires=[
             ["Build (amd_debug)"],
-            # ["Build (arm_asan)"],
+            ["Build (arm_asan)"],
             ["Build (amd_tsan)"],
             ["Build (amd_msan)"],
             ["Build (amd_ubsan)"],
