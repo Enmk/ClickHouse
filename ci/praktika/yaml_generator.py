@@ -35,6 +35,7 @@ jobs:
 name: {NAME}
 
 on:
+  workflow_dispatch:
   {EVENT}:
     branches: [{BRANCHES}]
 
@@ -268,7 +269,11 @@ class PullRequestPushYamlGen:
             needs = ", ".join(map(Utils.normalize_string, job.needs))
             job_name = job.name
             job_addons = []
+
             job_addons.append(AltinityWorkflowTemplates.JOB_SETUP_STEPS)
+            if job_name == Settings.CI_CONFIG_JOB_NAME:
+                job_addons.append(AltinityWorkflowTemplates.ADDITIONAL_CI_CONFIG_STEPS)
+
             for addon in job.addons:
                 if addon.install_python:
                     job_addons.append(
@@ -448,6 +453,7 @@ class PullRequestPushYamlGen:
                     VAR_NAME=secret.name
                 )
         format_kwargs["ENV_SECRETS"] = GH_VAR_ENVS + SECRET_ENVS
+        format_kwargs["ENV_SECRETS"] += AltinityWorkflowTemplates.ADDITIONAL_GLOBAL_ENV
 
         template_1 = base_template.strip().format(
             NAME=self.workflow_config.name,
@@ -456,7 +462,15 @@ class PullRequestPushYamlGen:
             **format_kwargs,
         )
         res = template_1.format(*job_items)
-        res += AltinityWorkflowTemplates.ADDITIONAL_JOBS
+
+        # Use replace instead of format to avoid having to escape curly braces
+        res += AltinityWorkflowTemplates.ADDITIONAL_JOBS.replace(
+            "{ALL_JOBS}",
+            "\n".join(
+                "      - " + Utils.normalize_string(job.name)
+                for job in self.workflow_config.jobs
+            ),
+        ).replace("{REGRESSION_HASH}", AltinityWorkflowTemplates.REGRESSION_HASH)
 
         return res
 

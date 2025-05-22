@@ -1,9 +1,35 @@
 class AltinityWorkflowTemplates:
+    # Envs not defined in ci/defs/defs.py SECRETS
+    # Braces must be escaped
+    ADDITIONAL_GLOBAL_ENV = r"""  AWS_DEFAULT_REGION: ${{{{ secrets.AWS_DEFAULT_REGION }}}}
+  AZURE_STORAGE_KEY: ${{{{ secrets.AZURE_STORAGE_KEY }}}}
+  AZURE_ACCOUNT_NAME: ${{{{ secrets.AZURE_ACCOUNT_NAME }}}}
+  AZURE_CONTAINER_NAME: ${{{{ secrets.AZURE_CONTAINER_NAME }}}}
+  AZURE_STORAGE_ACCOUNT_URL: "https://${{{{ secrets.AZURE_ACCOUNT_NAME }}}}.blob.core.windows.net/"
+  ROBOT_TOKEN: ${{{{ secrets.ROBOT_TOKEN }}}}
+  GH_TOKEN: ${{{{ github.token }}}}
+"""
+    # Additional pre steps for all jobs
     JOB_SETUP_STEPS = """
       - name: Setup
         uses: ./.github/actions/runner_setup
 """
+    # Additional pre steps for config workflow job
+    ADDITIONAL_CI_CONFIG_STEPS = r"""
+      - name: Note report location to summary
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || 0 }}
+          COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          REPORT_LINK=https://s3.amazonaws.com/altinity-build-artifacts/$PR_NUMBER/$COMMIT_SHA/ci_run_report.html
+          echo "Workflow Run Report: [View Report]($REPORT_LINK)" >> $GITHUB_STEP_SUMMARY
+"""
+    # Additional jobs
+    REGRESSION_HASH = "7f798b66f2d2acf18cd202d9a0f39ec64fbc062b"
     ADDITIONAL_JOBS = r"""
+##########################################################################################
+##################################### ALTINITY JOBS ######################################
+##########################################################################################
   GrypeScan:
     needs: [config_workflow, docker_server_image, docker_keeper_image]
     if: ${{ !failure() && !cancelled() }}
@@ -22,9 +48,7 @@ class AltinityWorkflowTemplates:
     with:
       docker_image: altinityinfra/clickhouse-${{ matrix.image }}
       tag-suffix: ${{ matrix.suffix }}
-#############################################################################################
-##################################### REGRESSION TESTS ######################################
-#############################################################################################
+
   RegressionTestsRelease:
     needs: [config_workflow, build_amd_release]
     if: ${{ !failure() && !cancelled() && !contains(fromJson(needs.config_workflow.outputs.data).ci_settings.exclude_keywords, 'regression')}}
@@ -32,7 +56,7 @@ class AltinityWorkflowTemplates:
     secrets: inherit
     with:
       runner_type: altinity-on-demand, altinity-regression-tester
-      commit: 7f798b66f2d2acf18cd202d9a0f39ec64fbc062b
+      commit: {REGRESSION_HASH}
       arch: release
       build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       timeout_minutes: 300
@@ -44,11 +68,12 @@ class AltinityWorkflowTemplates:
     secrets: inherit
     with:
       runner_type: altinity-on-demand, altinity-regression-tester-aarch64
-      commit: 7f798b66f2d2acf18cd202d9a0f39ec64fbc062b
+      commit: {REGRESSION_HASH}
       arch: aarch64
       build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       timeout_minutes: 300
       workflow_config: ${{ needs.config_workflow.outputs.data }}
+
   SignRelease:
     needs: [config_workflow, build_amd_release]
     if: ${{ !failure() && !cancelled() }}
@@ -67,14 +92,11 @@ class AltinityWorkflowTemplates:
       test_name: Sign aarch64
       runner_type: altinity-style-checker-aarch64
       data: ${{ needs.config_workflow.outputs.data }}
+
   FinishCIReport:
     if: ${{ !cancelled() }}
     needs:
-      - config_workflow
-      - dockers_build_amd_and_merge
-      - build_amd_release
-      - sqlancer_amd_debug
-      - sqltest
+{ALL_JOBS}
       - SignRelease
       - SignAarch64
       - RegressionTestsRelease
