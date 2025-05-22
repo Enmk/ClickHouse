@@ -20,15 +20,6 @@ DATABASE_PASSWORD_VAR = "CHECKS_DATABASE_PASSWORD"
 S3_BUCKET = "altinity-build-artifacts"
 GITHUB_REPO = "Altinity/ClickHouse"
 
-# Set up the Jinja2 environment
-template_dir = os.path.dirname(__file__)
-
-# Load the template
-template = Environment(loader=FileSystemLoader(template_dir)).get_template(
-    "ci_run_report.html.jinja"
-)
-
-
 def get_commit_statuses(sha: str) -> pd.DataFrame:
     """
     Fetch commit statuses for a given SHA and return as a pandas DataFrame.
@@ -584,6 +575,14 @@ def main():
             .isin(("high", "critical"))
             .sum()
         )
+
+    # Set up the Jinja2 environment
+    template_dir = os.path.dirname(__file__)
+
+    # Load the template
+    template = Environment(loader=FileSystemLoader(template_dir)).get_template(
+        "ci_run_report.html.jinja"
+    )
 
     # Define the context for rendering
     context = {
