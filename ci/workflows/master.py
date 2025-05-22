@@ -73,9 +73,7 @@ workflow = Workflow.Config(
 )
 
 for job in workflow.jobs:
-    job.post_hooks.append(
-        "python3 .github/actions/create_workflow_report/create_workflow_report.py --mark-preview --known-fails tests/broken_tests.json --cves --actions-run-url $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-    )
+    job.post_hooks.append("./.github/actions/create_workflow_report/post_hook.sh")
 
 WORKFLOWS = [
     workflow,
