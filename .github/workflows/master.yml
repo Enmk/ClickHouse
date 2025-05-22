@@ -3753,7 +3753,7 @@ jobs:
       test_name: Sign aarch64
       runner_type: altinity-style-checker-aarch64
       data: ${{ needs.config_workflow.outputs.data }}
-  FinishCheck:
+  FinishCIReport:
     if: ${{ !cancelled() }}
     needs:
       - config_workflow
@@ -3763,8 +3763,8 @@ jobs:
       - sqltest
       - SignRelease
       - SignAarch64
-      # - RegressionTestsRelease
-      # - RegressionTestsAarch64
+      - RegressionTestsRelease
+      - RegressionTestsAarch64
       - GrypeScan
     runs-on: [self-hosted, altinity-on-demand, altinity-style-checker-aarch64]
     steps:

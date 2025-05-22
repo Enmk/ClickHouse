@@ -8,6 +8,7 @@ from .runtime import RunConfig
 from .settings import Settings
 from .utils import Shell, Utils
 
+from .yaml_additional_templates import AltinityWorkflowTemplates
 
 class YamlGenerator:
     class Templates:
@@ -267,6 +268,7 @@ class PullRequestPushYamlGen:
             needs = ", ".join(map(Utils.normalize_string, job.needs))
             job_name = job.name
             job_addons = []
+            job_addons.append(AltinityWorkflowTemplates.JOB_SETUP_STEPS)
             for addon in job.addons:
                 if addon.install_python:
                     job_addons.append(
@@ -317,12 +319,14 @@ class PullRequestPushYamlGen:
                 )
 
             secrets_envs = []
-            for secret in self.workflow_config.secret_names_gh:
-                secrets_envs.append(
-                    YamlGenerator.Templates.TEMPLATE_SETUP_ENV_SECRETS.format(
-                        SECRET_NAME=secret
-                    )
-                )
+            # note(strtgbb): This adds github secrets to praktika_setup_env.sh
+            # This makes the workflow very verbose and we don't need it
+            # for secret in self.workflow_config.secret_names_gh:
+            #     secrets_envs.append(
+            #         YamlGenerator.Templates.TEMPLATE_SETUP_ENV_SECRETS.format(
+            #             SECRET_NAME=secret
+            #         )
+            #     )
             for var in self.workflow_config.variable_names_gh:
                 secrets_envs.append(
                     YamlGenerator.Templates.TEMPLATE_SETUP_ENV_VARS.format(VAR_NAME=var)
@@ -452,6 +456,7 @@ class PullRequestPushYamlGen:
             **format_kwargs,
         )
         res = template_1.format(*job_items)
+        res += AltinityWorkflowTemplates.ADDITIONAL_JOBS
 
         return res
 
