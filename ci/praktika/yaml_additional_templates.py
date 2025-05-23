@@ -2,6 +2,7 @@ class AltinityWorkflowTemplates:
     # Envs not defined in ci/defs/defs.py SECRETS
     # Braces must be escaped
     ADDITIONAL_GLOBAL_ENV = r"""  AWS_DEFAULT_REGION: ${{{{ secrets.AWS_DEFAULT_REGION }}}}
+  CHECKS_DATABASE_HOST: ${{{{ secrets.CHECKS_DATABASE_HOST }}}}
   AZURE_STORAGE_KEY: ${{{{ secrets.AZURE_STORAGE_KEY }}}}
   AZURE_ACCOUNT_NAME: ${{{{ secrets.AZURE_ACCOUNT_NAME }}}}
   AZURE_CONTAINER_NAME: ${{{{ secrets.AZURE_CONTAINER_NAME }}}}
@@ -111,11 +112,6 @@ class AltinityWorkflowTemplates:
       - name: Finalize workflow report
         if: ${{ !cancelled() }}
         uses: ./.github/actions/create_workflow_report
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHECKS_DATABASE_HOST: ${{ secrets.CHECKS_DATABASE_HOST }}
-          CHECKS_DATABASE_USER: ${{ secrets.CLICKHOUSE_TEST_STAT_LOGIN }}
-          CHECKS_DATABASE_PASSWORD: ${{ secrets.CLICKHOUSE_TEST_STAT_PASSWORD }}
         with:
           final: true
 """
