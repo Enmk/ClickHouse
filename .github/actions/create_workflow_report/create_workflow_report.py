@@ -32,7 +32,7 @@ def get_commit_statuses(sha: str) -> pd.DataFrame:
         pd.DataFrame: DataFrame containing all statuses.
     """
     headers = {
-        "Authorization": f"token {os.getenv('GITHUB_TOKEN')}",
+        "Authorization": f"token {os.getenv('GH_TOKEN')}",
         "Accept": "application/vnd.github.v3+json",
     }
 
@@ -101,7 +101,7 @@ def get_pr_info_from_number(pr_number: str) -> dict:
         dict: Dictionary containing PR information.
     """
     headers = {
-        "Authorization": f"token {os.getenv('GITHUB_TOKEN')}",
+        "Authorization": f"token {os.getenv('GH_TOKEN')}",
         "Accept": "application/vnd.github.v3+json",
     }
 
@@ -124,7 +124,7 @@ def get_run_details(run_url: str) -> dict:
     run_id = run_url.split("/")[-1]
 
     headers = {
-        "Authorization": f"token {os.getenv('GITHUB_TOKEN')}",
+        "Authorization": f"token {os.getenv('GH_TOKEN')}",
         "Accept": "application/vnd.github.v3+json",
     }
 
