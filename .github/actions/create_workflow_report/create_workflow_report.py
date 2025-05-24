@@ -19,6 +19,7 @@ DATABASE_USER_VAR = "CLICKHOUSE_TEST_STAT_LOGIN"
 DATABASE_PASSWORD_VAR = "CLICKHOUSE_TEST_STAT_PASSWORD"
 S3_BUCKET = "altinity-build-artifacts"
 GITHUB_REPO = "Altinity/ClickHouse"
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
 
 def get_commit_statuses(sha: str) -> pd.DataFrame:
     """
@@ -506,10 +507,24 @@ def main():
         if args.commit_sha is None:
             args.commit_sha = run_details["head_commit"]["id"]
 
+    host = os.getenv(DATABASE_HOST_VAR)
+    if not host:
+        print(f"{DATABASE_HOST_VAR} is not set")
+    user = os.getenv(DATABASE_USER_VAR)
+    if not user:
+        print(f"{DATABASE_USER_VAR} is not set")
+    password = os.getenv(DATABASE_PASSWORD_VAR)
+    if not password:
+        print(f"{DATABASE_PASSWORD_VAR} is not set")
+    if not GITHUB_TOKEN:
+        print("GITHUB_TOKEN is not set")
+    if not all([host, user, password, GITHUB_TOKEN]):
+        raise Exception("Required environment variables are not set")
+
     db_client = Client(
-        host=os.getenv(DATABASE_HOST_VAR),
-        user=os.getenv(DATABASE_USER_VAR),
-        password=os.getenv(DATABASE_PASSWORD_VAR),
+        host=host,
+        user=user,
+        password=password,
         port=9440,
         secure="y",
         verify=False,
