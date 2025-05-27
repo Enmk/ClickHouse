@@ -15,6 +15,8 @@ from typing import Any
 
 from integration_test_images import get_docker_env
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ci")))
+from digest_helper import DockerDigester
 
 def random_str(length: int = 6) -> str:
     alphabet = string.ascii_lowercase + string.digits
@@ -299,7 +301,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--docker-image-version",
-        default="latest",
+        default=None,
         help="Version of docker image which runner will use to run tests",
     )
 
@@ -426,6 +428,37 @@ if __name__ == "__main__":
                 env_tags += env_tag
             else:
                 logging.info("Unknown image %s", image)
+
+    docker_digester = DockerDigester()
+    imagename_digest_dict = (
+        docker_digester.get_all_digests()
+    )  # 'image name - digest' mapping
+    if args.docker_image_version is None:
+        if DIND_INTEGRATION_TESTS_IMAGE_NAME in imagename_digest_dict:
+            args.docker_image_version = imagename_digest_dict[
+                DIND_INTEGRATION_TESTS_IMAGE_NAME
+            ]
+            print(
+                f"Using DIND integration tests image version {args.docker_image_version}"
+            )
+        else:
+            print(
+                f"DIND integration tests image version not found in digests, using latest"
+            )
+            args.docker_image_version = "latest"
+
+    BASE_INTEGRATION_TEST_IMAGE_NAME = "altinityinfra/integration-test"
+    if (
+        "DOCKER_BASE_TAG" not in env_tags
+        and BASE_INTEGRATION_TEST_IMAGE_NAME in imagename_digest_dict
+    ):
+        env_tags += get_docker_env(
+            BASE_INTEGRATION_TEST_IMAGE_NAME,
+            imagename_digest_dict[BASE_INTEGRATION_TEST_IMAGE_NAME],
+        )
+        print(
+            f"Using base integration test image version {imagename_digest_dict[BASE_INTEGRATION_TEST_IMAGE_NAME]}"
+        )
 
     # create named volume which will be used inside to store images and other docker related files,
     # to avoid redownloading it every time
