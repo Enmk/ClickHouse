@@ -429,6 +429,9 @@ if __name__ == "__main__":
             else:
                 logging.info("Unknown image %s", image)
 
+    # Get the correct image tags for the current branch.
+    # If the files an image depends on have been changed,
+    # the tag will not exist until CI job has been run.
     docker_digester = DockerDigester()
     imagename_digest_dict = (
         docker_digester.get_all_digests()
