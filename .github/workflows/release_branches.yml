@@ -442,7 +442,7 @@ jobs:
     secrets: inherit
     with:
       runner_type: altinity-on-demand, altinity-regression-tester
-      commit: a1794fbc6118362663c7496fe0ebf0ae11c31606
+      commit: 5d93251b9c260e855981ce4802225cfc72827ce7
       arch: release
       build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       timeout_minutes: 300
@@ -453,7 +453,7 @@ jobs:
     secrets: inherit
     with:
       runner_type: altinity-on-demand, altinity-regression-tester-aarch64
-      commit: a1794fbc6118362663c7496fe0ebf0ae11c31606
+      commit: 5d93251b9c260e855981ce4802225cfc72827ce7
       arch: aarch64
       build_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       timeout_minutes: 300
