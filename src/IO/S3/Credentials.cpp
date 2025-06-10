@@ -548,6 +548,91 @@ void AwsAuthSTSAssumeRoleWebIdentityCredentialsProvider::refreshIfExpired()
     Reload();
 }
 
+AWSMetadataSTSAssumeRoleProvider::AWSMetadataSTSAssumeRoleProvider(
+    const Aws::String & role_arn_,
+    const Aws::String & session_name_,
+    DB::S3::PocoHTTPClientConfiguration & aws_client_configuration,
+    uint64_t expiration_window_seconds_)
+    : role_arn(role_arn_)
+    , session_name(session_name_.empty() ? Aws::Utils::UUID::RandomUUID() : session_name_)
+    , expiration_window_seconds(expiration_window_seconds_)
+    , logger(getLogger("AWSMetadataSTSAssumeRoleProvider"))
+{
+    // Create metadata credentials provider
+    auto ec2_metadata_client = createEC2MetadataClient(aws_client_configuration);
+    auto config_loader = std::make_shared<AWSEC2InstanceProfileConfigLoader>(ec2_metadata_client, true);
+    metadata_provider = std::make_shared<AWSInstanceProfileCredentialsProvider>(config_loader);
+
+    aws_client_configuration.scheme = Aws::Http::Scheme::HTTPS;
+
+    std::vector<Aws::String> retryable_errors;
+    retryable_errors.push_back("IDPCommunicationError");
+    retryable_errors.push_back("InvalidIdentityToken");
+    aws_client_configuration.retryStrategy = std::make_shared<Aws::Client::SpecifiedRetryableErrorsRetryStrategy>(
+        retryable_errors, /*maxRetries=*/3);
+
+    sts_client = std::make_unique<Aws::Internal::STSCredentialsClient>(aws_client_configuration);
+
+    LOG_INFO(logger, "Created STS AssumeRole provider using EC2 instance metadata");
+}
+
+Aws::Auth::AWSCredentials AWSMetadataSTSAssumeRoleProvider::GetAWSCredentials()
+{
+    refreshIfExpired();
+    Aws::Utils::Threading::ReaderLockGuard guard(m_reloadLock);
+    return credentials;
+}
+
+void AWSMetadataSTSAssumeRoleProvider::Reload()
+{
+    LOG_INFO(logger, "Refreshing credentials using AssumeRole with metadata credentials");
+
+    // Get fresh metadata credentials
+    auto metadata_creds = metadata_provider->GetAWSCredentials();
+    if (metadata_creds.IsEmpty())
+    {
+        LOG_ERROR(logger, "Failed to obtain metadata credentials");
+        return;
+    }
+
+    // Update STS client credentials
+    sts_client->UpdateCredentials(metadata_creds);
+
+    // Perform AssumeRole
+    Aws::STS::Model::AssumeRoleRequest request;
+    request.SetRoleArn(role_arn);
+    request.SetRoleSessionName(session_name);
+
+    auto outcome = sts_client->AssumeRole(request);
+    if (!outcome.IsSuccess())
+    {
+        LOG_ERROR(logger, "Failed to assume role: {}", outcome.GetError().GetMessage());
+        return;
+    }
+
+    const auto & result = outcome.GetResult().GetCredentials();
+    credentials = Aws::Auth::AWSCredentials(
+        result.GetAccessKeyId(),
+        result.GetSecretAccessKey(),
+        result.GetSessionToken(),
+        result.GetExpiration().SecondsWithMSPrecision());
+
+    LOG_TRACE(logger, "Successfully assumed role using metadata credentials");
+}
+
+void AWSMetadataSTSAssumeRoleProvider::refreshIfExpired()
+{
+    Aws::Utils::Threading::ReaderLockGuard guard(m_reloadLock);
+    if (!areCredentialsEmptyOrExpired(credentials, expiration_window_seconds))
+        return;
+
+    guard.UpgradeToWriterLock();
+    if (!areCredentialsEmptyOrExpired(credentials, expiration_window_seconds)) // double-checked lock
+        return;
+
+    Reload();
+}
+
 
 SSOCredentialsProvider::SSOCredentialsProvider(DB::S3::PocoHTTPClientConfiguration aws_client_configuration_, uint64_t expiration_window_seconds_)
     : profile_to_use(Aws::Auth::GetConfigProfileName())
@@ -688,13 +773,53 @@ S3CredentialsProviderChain::S3CredentialsProviderChain(
     if (credentials_configuration.no_sign_request)
         return;
 
-    /// add explicit credentials to the front of the chain
-    /// because it's manually defined by the user
-    if (!credentials.IsEmpty())
+    // /// add explicit credentials to the front of the chain
+    // /// because it's manually defined by the user
+    // if (!credentials.IsEmpty())
+    // {
+    //     if (credentials_configuration.role_arn.empty())
+    //         AddProvider(std::make_shared<Aws::Auth::SimpleAWSCredentialsProvider>(credentials));
+    //     else
+    //     {
+    //         auto sts_client_config = Aws::STS::STSClientConfiguration();
+    //
+    //         if (!credentials_configuration.sts_endpoint_override.empty())
+    //         {
+    //             auto endpoint_uri = Poco::URI(credentials_configuration.sts_endpoint_override);
+    //
+    //             String url_without_scheme = endpoint_uri.getHost();
+    //             if (endpoint_uri.getPort() != 0)
+    //                 url_without_scheme += ":" + std::to_string(endpoint_uri.getPort());
+    //
+    //             sts_client_config.endpointOverride = url_without_scheme;
+    //             sts_client_config.scheme = endpoint_uri.getScheme() == "https" ? Aws::Http::Scheme::HTTPS : Aws::Http::Scheme::HTTP;
+    //         }
+    //
+    //         AddProvider(std::make_shared<Aws::Auth::STSAssumeRoleCredentialsProvider>(
+    //             credentials_configuration.role_arn,
+    //             /* sessionName */ credentials_configuration.role_session_name,
+    //             /* externalId */ Aws::String(),
+    //             /* loadFrequency */ Aws::Auth::DEFAULT_CREDS_LOAD_FREQ_SECONDS,
+    //             std::make_shared<Aws::STS::STSClient>(credentials,
+    //                                                   /* endpointProvider */ Aws::MakeShared<Aws::STS::STSEndpointProvider>(Aws::STS::STSClient::ALLOCATION_TAG),
+    //                                                   /* clientConfiguration */ sts_client_config)
+    //             )
+    //         );
+    //     }
+    //     return;
+    // }
+
+    if (credentials_configuration.role_arn.empty())
     {
-        if (credentials_configuration.role_arn.empty())
+        if (!credentials.IsEmpty())
+        {
             AddProvider(std::make_shared<Aws::Auth::SimpleAWSCredentialsProvider>(credentials));
-        else
+            return;
+        }
+    }
+    else
+    {
+        if (!credentials.IsEmpty())
         {
             auto sts_client_config = Aws::STS::STSClientConfiguration();
 
@@ -720,6 +845,15 @@ S3CredentialsProviderChain::S3CredentialsProviderChain(
                                                       /* clientConfiguration */ sts_client_config)
                 )
             );
+        }
+        else
+        {
+            // Use metadata credentials for AssumeRole
+            AddProvider(std::make_shared<AWSMetadataSTSAssumeRoleProvider>(
+                credentials_configuration.role_arn,
+                credentials_configuration.role_session_name,
+                configuration,
+                credentials_configuration.expiration_window_seconds));
         }
         return;
     }

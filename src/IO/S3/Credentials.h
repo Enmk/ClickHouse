@@ -134,6 +134,32 @@ private:
     uint64_t expiration_window_seconds;
 };
 
+class AWSMetadataSTSAssumeRoleProvider : public Aws::Auth::AWSCredentialsProvider
+{
+public:
+    explicit AWSMetadataSTSAssumeRoleProvider(
+        const Aws::String & role_arn_,
+        const Aws::String & session_name_,
+        DB::S3::PocoHTTPClientConfiguration & aws_client_configuration,
+        uint64_t expiration_window_seconds_);
+
+    Aws::Auth::AWSCredentials GetAWSCredentials() override;
+
+protected:
+    void Reload() override;
+
+private:
+    void refreshIfExpired();
+
+    std::shared_ptr<AWSInstanceProfileCredentialsProvider> metadata_provider;
+    std::unique_ptr<Aws::Internal::STSCredentialsClient> sts_client;
+    Aws::Auth::AWSCredentials credentials;
+    Aws::String role_arn;
+    Aws::String session_name;
+    LoggerPtr logger;
+    uint64_t expiration_window_seconds;
+};
+
 class SSOCredentialsProvider : public Aws::Auth::AWSCredentialsProvider
 {
 public:
