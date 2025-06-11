@@ -674,3 +674,17 @@ jobs:
             echo "Error: $REPORT_LINK" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
+      - name: Comparison report
+        if: ${{ !cancelled() }}
+        env:
+          COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          PREVIOUS_TAG_COMMIT=$(git log -1 --until=yesterday --tags=v24.8*.altinity* | grep -Po "(?<=commit ).*")
+          UPSTREAM_TAG_COMMIT=$(git log -1 --tags=v24.8*-lts | grep -Po "(?<=commit ).*")
+          echo "PREVIOUS_TAG: $(git tag --contains $PREVIOUS_TAG_COMMIT) $PREVIOUS_TAG_COMMIT"
+          echo "UPSTREAM_TAG: $(git tag --contains $UPSTREAM_TAG_COMMIT) $UPSTREAM_TAG_COMMIT"
+
+          git clone --revision=c5751cefd4f56bd7300b5f6d84a5ae9d0b686772 --depth=1 https://github.com/Altinity/actions.git
+          cd actions
+          python3 scripts/compare_ci_fails.py --current-ref $COMMIT_SHA --previous-ref $PREVIOUS_TAG_COMMIT --upstream-ref $UPSTREAM_TAG_COMMIT
+          cat comparison_results.md >> $GITHUB_STEP_SUMMARY
