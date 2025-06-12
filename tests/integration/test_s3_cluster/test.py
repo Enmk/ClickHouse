@@ -1199,4 +1199,6 @@ def test_graceful_shutdown(started_cluster):
     for thread in threads:
         thread.join()
 
+    node_to_shutdown.start_clickhouse()
+
     assert errors == 0
